@@ -1,3 +1,18 @@
+Important commands:
+
+`npm start`
+  Starts the development server.
+
+`npm run build`
+  Bundles the app into static files for production.
+
+`npm test`
+  Starts the test runner.
+
+`npm run deploy`
+  Publishes to gh-pages.
+
+
 This project was bootstrapped with [Create React App](https://github.com/facebookincubator/create-react-app).
 
 Below you will find some information on how to perform common tasks.<br>
