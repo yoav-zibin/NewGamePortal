@@ -2,12 +2,14 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 
-import App from './App';
+import MyGames from './MyGames';
 import registerServiceWorker from './registerServiceWorker';
 import './index.css';
 
 ReactDOM.render(
-  <App />,
+  <MuiThemeProvider>
+    <MyGames />
+  </MuiThemeProvider>,
   document.getElementById('root') as HTMLElement
 );
 registerServiceWorker();
