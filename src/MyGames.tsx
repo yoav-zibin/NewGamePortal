@@ -82,7 +82,7 @@ class MyGames extends React.Component {
               <GridTile
                 key={tile.img}
                 title={tile.title}
-                subtitle={<span>by <b>{tile.author}</b></span>}
+                subtitle={''}
                 actionIcon={<IconButton><StarBorder color="white" /></IconButton>}
               >
                 <img src={tile.img} />
