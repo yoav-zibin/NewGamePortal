@@ -24,6 +24,7 @@
     "@types/react-dom": "^16.0.3",
     "gh-pages": "^1.1.0",
     "material-ui": "^0.20.0",
+    "tslint": "^5.9.1",
     "typescript": "^2.7.1"
   }
 }

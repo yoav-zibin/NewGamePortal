@@ -38,7 +38,7 @@ const tilesData = images.map((img)=>{
   };
 });
 
-class MyGames extends React.Component {
+class GamesList extends React.Component {
   render() {
     return (
       <div>
@@ -53,7 +53,7 @@ class MyGames extends React.Component {
               <GridTile
                 key={tile.img}
                 title={tile.title}
-                subtitle={'Opponents | 2 days ago'}
+                subtitle={''}
                 actionIcon={<IconButton><StarBorder color="white" /></IconButton>}
               >
                 <img src={tile.img} />
@@ -66,4 +66,4 @@ class MyGames extends React.Component {
   }
 }
 
-export default MyGames;
+export default GamesList;
