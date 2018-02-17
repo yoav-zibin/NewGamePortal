@@ -7,7 +7,8 @@ const mapStateToProps = (state: StoreState) => ({
   pieces: state.games.current.info.pieces
 });
 
-const mapDispatchToProps = (dispatch: any) => ({
+// Later this will take dispatch: any as argument
+const mapDispatchToProps = () => ({
 });
 
 const BoardGameContainer = connect(

@@ -1,9 +1,14 @@
 // TODO: Add more information to the state
 export interface StoreState {
-  game: {
-    info: {
-      boardImage: string;
-      pieces: Piece[]
+  games: {
+    current: {
+      info: {
+        boardImage: string;
+        pieces: Piece[]
+      };
+    };
+    list: {
+      // TODO: Create a new type explaining everything about spec.
     }
   };
 }

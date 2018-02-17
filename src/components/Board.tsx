@@ -22,7 +22,11 @@ class Board extends React.Component<Props, {}> {
         <Layer>
           {this.props.pieces.length ?
             this.props.pieces.map((piece: Piece, key: number) => {
-              return <div key={key}/>;
+              return (
+                <div key={key}>
+                  {piece}
+                </div>
+              );
             })
             : ''
           };
