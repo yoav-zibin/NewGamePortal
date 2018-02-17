@@ -3,7 +3,7 @@ import RaisedButton from 'material-ui/RaisedButton';
 import IconButton from 'material-ui/IconButton';
 import Subheader from 'material-ui/Subheader';
 import StarBorder from 'material-ui/svg-icons/toggle/star-border';
-import {GridList, GridTile} from 'material-ui/GridList';
+import { GridList, GridTile } from 'material-ui/GridList';
 import spec from './spec';
 
 const styles: any = {
@@ -41,6 +41,17 @@ const tilesData = images.map((img)=>{
   };
 });
 
+/**
+ * TODOS:
+ * 1. Move this to components folder
+ * 2. Wrap this in a redux container which gets gameslist as props with required information
+ * 3. Add componentDidMount function to component
+ * 4. In componentDidMount dispatch an action for fetching list which will change the storestate's
+ * list of games through a reducer. This will ultimately lead to a rerender of this component
+ * with games. For now use the game list from hardcoded information
+ * 5. onClick of any of the grid tile dispatch an action which changes the currently selected game
+ * and reroutes to that game's route.
+ */
 class GamesList extends React.Component {
   render() {
     return (
