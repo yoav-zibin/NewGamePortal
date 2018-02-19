@@ -63,7 +63,7 @@ const tilesData = [
   },
 ];
 
-class MyGames extends React.Component {
+class MatchesList extends React.Component {
   render() {
     return (
       <div>
@@ -95,4 +95,4 @@ class MyGames extends React.Component {
   }
 }
 
-export default MyGames;
+export default MatchesList;

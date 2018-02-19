@@ -16,12 +16,14 @@
   "scripts": {
     "start": "react-scripts-ts start",
     "build": "react-scripts-ts build",
+    "ci-test": "CI=true react-scripts-ts test --env=jsdom",
     "test": "react-scripts-ts test --env=jsdom",
     "eject": "react-scripts-ts eject",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d build"
+    "deploy": "CI=true react-scripts-ts test --env=jsdom & gh-pages -d build"
   },
   "devDependencies": {
+    "@types/firebase": "^3.2.1",
     "@types/jest": "^22.1.2",
     "@types/material-ui": "^0.20.5",
     "@types/node": "^4.2.23",

@@ -3,7 +3,6 @@ import { Piece } from '../types';
 import { Layer, Stage } from 'react-konva';
 
 interface Props {
-  boardImage: string;
   pieces: Piece[];
 }
 

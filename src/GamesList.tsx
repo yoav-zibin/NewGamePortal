@@ -4,7 +4,6 @@ import IconButton from 'material-ui/IconButton';
 import Subheader from 'material-ui/Subheader';
 import StarBorder from 'material-ui/svg-icons/toggle/star-border';
 import { GridList, GridTile } from 'material-ui/GridList';
-import spec from './spec';
 
 const styles: any = {
   root: {
@@ -19,7 +18,8 @@ const styles: any = {
   },
 };
 
-console.log('Our db: ', spec.gameBuilder.gameSpecs['-KxLz3CaPRPIBc-0mRP7']);
+// TODO: delete! It's just for demonstration purposes.
+console.log('Our db: ', window['spec'].gameBuilder.gameSpecs['-KxLz3CaPRPIBc-0mRP7']);
 
 const images = [
   '3 Men Chess',
