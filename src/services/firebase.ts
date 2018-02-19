@@ -1,4 +1,4 @@
-// import { StoreState } from '../types/index';
+import { Contact } from '../types/index';
 import { store } from '../stores/index';
 import * as firebase from 'firebase';
 
@@ -45,8 +45,9 @@ export module ourFirebase {
     // TODO: implement
   }
 
-  export function fetchUsersList() {
+  export function fetchUsers(contacts: Contact[]) {
     // TODO: implement, use phone number index.
+    contacts.pop();
   }
 
   // TODO: export function fetchGameSpec(game: GameInfo) {}
