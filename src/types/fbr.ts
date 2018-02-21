@@ -115,29 +115,39 @@ declare namespace fbr { // fbr stands for Fire Base Rules
     [gameSpecId: string]: GameSpec;
   }
 
+  interface GameBuilderUser {
+    avatarImageUrl: string;
+    displayName: string;
+    lastSeen: number/*firebase.database.ServerValue.TIMESTAMP*/;
+    email: string;
+    createdOn: number/*firebase.database.ServerValue.TIMESTAMP*/;
+  }
+
+  interface GameBuilderUsers {
+    [gameBuilderUserId: string]: GameBuilderUser;
+  }
+
   interface GameBuilder {
     images: Images;
     elements: Elements;
     gameSpecs: GameSpecs;
+    gameBuilderUsers: GameBuilderUsers;
   }
 
   interface PublicFields {
-    avatarImageUrl: string;
-    displayName: string;
     isConnected: boolean;
     supportsWebRTC: boolean;
     lastSeen: number/*firebase.database.ServerValue.TIMESTAMP*/;
   }
 
-  interface Friends {
-    [friendUserId: string]: boolean;
+  interface Contacts {
+    [phoneNumber: string]: string;
   }
 
   interface FcmToken {
     createdOn: number/*firebase.database.ServerValue.TIMESTAMP*/;
     lastTimeReceived: number/*firebase.database.ServerValue.TIMESTAMP*/;
     platform: 'web'|'ios'|'android';
-    app: 'GamePortalAngular'|'GamePortalReact'|'GamePortalReactNative'|'GamePortalAndroid';
   }
 
   interface FcmTokens {
@@ -145,108 +155,55 @@ declare namespace fbr { // fbr stands for Fire Base Rules
   }
 
   interface PrivateFields {
-    email: string;
     createdOn: number/*firebase.database.ServerValue.TIMESTAMP*/;
     phoneNumber: string;
-    facebookId: string;
-    googleId: string;
-    twitterId: string;
-    githubId: string;
-    friends: Friends;
-    pushNotificationsToken: string;
+    newContacts: string;
+    contacts: Contacts;
     fcmTokens: FcmTokens;
   }
 
-  interface GroupMembership {
+  interface MatchMembership {
     addedByUid: string;
     timestamp: number/*firebase.database.ServerValue.TIMESTAMP*/;
   }
 
-  interface GroupMemberships {
-    [memberOfGroupId: string]: GroupMembership;
+  interface MatchMemberships {
+    [matchMembershipId: string]: MatchMembership;
   }
 
   interface SignalEntry {
     addedByUid: string;
     timestamp: number/*firebase.database.ServerValue.TIMESTAMP*/;
-    signalType: 'WannaTalk'|'YesLetsTalk'|'Nope'|'sdp'|'candidate';
+    signalType: 'sdp'|'candidate';
     signalData: string;
   }
 
-  interface Signal {
+  interface Signals {
     [signalEntryId: string]: SignalEntry;
   }
 
   interface PrivateButAddable {
-    groups: GroupMemberships;
-    signal: Signal;
+    matchMemberships: MatchMemberships;
+    signals: Signals;
   }
 
-  interface User {
+  interface GamePortalUser {
     publicFields: PublicFields;
     privateFields: PrivateFields;
     privateButAddable: PrivateButAddable;
   }
 
-  interface Users {
-    [userId: string]: User;
-  }
-
-  interface RecentlyConnectedEntry {
-    userId: string;
-    timestamp: number/*firebase.database.ServerValue.TIMESTAMP*/;
-  }
-
-  interface RecentlyConnected {
-    [recentlyConnectedEntryId: string]: RecentlyConnectedEntry;
-  }
-
-  interface StarReview {
-    timestamp: number/*firebase.database.ServerValue.TIMESTAMP*/;
-    stars: number;
-  }
-
-  interface StarReviewsForGame {
-    [reviewerUserId: string]: StarReview;
-  }
-
-  interface Reviews {
-    [reviewedGameSpecId: string]: StarReviewsForGame;
-  }
-
-  interface StarsSummaryForGame {
-    stars1Count: number;
-    stars2Count: number;
-    stars3Count: number;
-    stars4Count: number;
-    stars5Count: number;
-  }
-
-  interface StarsSummary {
-    [reviewedGameSpecId: string]: StarsSummaryForGame;
-  }
-
-  interface GamesReviews {
-    reviews: Reviews;
-    starsSummary: StarsSummary;
+  interface GamePortalUsers {
+    [gamePortalUserId: string]: GamePortalUser;
   }
 
   interface ParticipantUser {
     participantIndex: number;
+    pingOpponents: number/*firebase.database.ServerValue.TIMESTAMP*/;
   }
 
   interface Participants {
     [participantUserId: string]: ParticipantUser;
-  }
-
-  interface Message {
-    senderUid: string;
-    message: string;
-    timestamp: number/*firebase.database.ServerValue.TIMESTAMP*/;
-  }
-
-  interface Messages {
-    [messageId: string]: Message;
   }
 
   interface CurrentState {
@@ -268,9 +225,10 @@ declare namespace fbr { // fbr stands for Fire Base Rules
   }
 
   interface Match {
-    gameSpecId: string;
+    participants: Participants;
     createdOn: number/*firebase.database.ServerValue.TIMESTAMP*/;
     lastUpdatedOn: number/*firebase.database.ServerValue.TIMESTAMP*/;
+    gameSpecId: string;
     pieces: PiecesState;
   }
 
@@ -278,70 +236,13 @@ declare namespace fbr { // fbr stands for Fire Base Rules
     [matchId: string]: Match;
   }
 
-  interface Group {
-    participants: Participants;
-    groupName: string;
-    createdOn: number/*firebase.database.ServerValue.TIMESTAMP*/;
-    messages: Messages;
-    matches: Matches;
-  }
-
-  interface Groups {
-    [groupId: string]: Group;
-  }
-
-  interface FieldValue {
-    [userId: string]: number/*firebase.database.ServerValue.TIMESTAMP*/;
-  }
-
-  interface DisplayNameIndex {
-    [fieldValue: string]: FieldValue;
-  }
-
-  interface EmailIndex {
-    [fieldValue: string]: FieldValue;
-  }
-
-  interface PhoneNumberIndex {
-    [fieldValue: string]: FieldValue;
-  }
-
-  interface FacebookIndex {
-    [fieldValue: string]: FieldValue;
-  }
-
-  interface GoogleIndex {
-    [fieldValue: string]: FieldValue;
-  }
-
-  interface TwitterIndex {
-    [fieldValue: string]: FieldValue;
-  }
-
-  interface GithubIndex {
-    [fieldValue: string]: FieldValue;
-  }
-
-  interface UserIdIndices {
-    displayName: DisplayNameIndex;
-    email: EmailIndex;
-    phoneNumber: PhoneNumberIndex;
-    facebookId: FacebookIndex;
-    googleId: GoogleIndex;
-    twitterId: TwitterIndex;
-    githubId: GithubIndex;
-  }
-
   interface GamePortal {
-    recentlyConnected: RecentlyConnected;
-    gameSpec: GamesReviews;
-    groups: Groups;
-    userIdIndices: UserIdIndices;
+    gamePortalUsers: GamePortalUsers;
+    matches: Matches;
   }
 
   interface FirebaseDb {
     gameBuilder: GameBuilder;
-    users: Users;
     gamePortal: GamePortal;
   }
 
