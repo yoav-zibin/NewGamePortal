@@ -64,6 +64,9 @@ function reduce(state: StoreState, action: Action) {
   } else if (action.setMyUser) {
     return { ...state, myUser: action.setMyUser };
     // TODO: support all other reducers.
+  } else if (action.setCurrentMatchIndex) {
+    return {...state, currentMatchIndex: action.setCurrentMatchIndex};
+
   } else if (action.updateGameSpecs) {
     let {
       imageIdToImage,
