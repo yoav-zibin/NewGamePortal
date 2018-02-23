@@ -2,14 +2,22 @@ import * as React from 'react';
 import './App.css';
 
 import AppHeader from './AppHeader';
-import GamesList from './GamesList';
+import GamesList from './components/GamesList';
 
-class App extends React.Component {
+interface AppProps {
+  fetchList: any;
+}
+
+class App extends React.Component<AppProps> {
+
+  constructor(props: AppProps) {
+    super(props);
+  }
   render() {
     return (
       <div>
         <AppHeader />
-        <GamesList />
+        <GamesList fetchList={this.props.fetchList} />
       </div>
     );
   }
