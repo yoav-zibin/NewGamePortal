@@ -4,6 +4,7 @@ import IconButton from 'material-ui/IconButton';
 import Subheader from 'material-ui/Subheader';
 import StarBorder from 'material-ui/svg-icons/toggle/star-border';
 import { GridList, GridTile } from 'material-ui/GridList';
+import { GameInfo } from './types';
 
 const styles: any = {
   root: {
@@ -18,28 +19,9 @@ const styles: any = {
   },
 };
 
-// TODO: delete! It's just for demonstration purposes.
-console.log('Our db: ', window['spec'].gameBuilder.gameSpecs['-KxLz3CaPRPIBc-0mRP7']);
-
-const images = [
-  '3 Men Chess',
-  'Checkers',
-  'Five in a row',
-  'Alquerque',
-  'Chess',
-  'Game_of_Y',
-  'Blue Nile',
-  'Dvonn',
-  'Chaturanga',
-  'Emergo',
-];
-
-const tilesData = images.map((img)=>{
-  return {
-    img: require(`./images/${img}.png`),
-    title: img,
-  };
-});
+interface Props {
+  gamesList: GameInfo[];
+}
 
 /**
  * TODOS:
@@ -52,7 +34,7 @@ const tilesData = images.map((img)=>{
  * 5. onClick of any of the grid tile dispatch an action which changes the currently selected game
  * and reroutes to that game's route.
  */
-class GamesList extends React.Component {
+class GamesList extends React.Component<Props, {}> {
   render() {
     return (
       <div>
@@ -63,14 +45,14 @@ class GamesList extends React.Component {
             style={styles.gridList}
           >
             <Subheader>Card games</Subheader>
-            {tilesData.map((tile) => (
+            {this.props.gamesList.map((gameInfo: GameInfo) => (
               <GridTile
-                key={tile.img}
-                title={tile.title}
+                key={gameInfo.gameSpecId}
+                title={gameInfo.gameName}
                 subtitle={''}
                 actionIcon={<IconButton><StarBorder color="white" /></IconButton>}
               >
-                <img src={tile.img} />
+                <img src={gameInfo.screenShoot.downloadURL} />
               </GridTile>
             ))}
           </GridList>

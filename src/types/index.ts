@@ -35,7 +35,7 @@ export interface GameInfo {
   gameName: string;
   screenShoot: Image;
 
-  gameSpec: GameSpec; // Lazily loaded.
+  gameSpec?: GameSpec; // Lazily loaded.
 }
 
 export interface GameSpec {
@@ -60,7 +60,7 @@ export interface MatchInfo {
   game: GameInfo;
   participants: User[]; // including myself
   lastUpdatedOn: number/*firebase.database.ServerValue.TIMESTAMP*/;
-  piecesState: PiecesState; // Lazily loaded.
+  piecesState?: PiecesState; // Lazily loaded.
 }
 
 export interface PiecesState {
