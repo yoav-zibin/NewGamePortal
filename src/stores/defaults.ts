@@ -5,20 +5,20 @@ let image: Image = {
   width: 100,
   height: 100,
   isBoardImage: false,
-  downloadURL: './images/3 Men Chess.png',
+  downloadURL: 'blabla.png',
 };
 let gameSpec: any = null;
 
 export const storeStateDefault: StoreState = {
   gamesList: [
     {
-      gameSpecId: '',
+      gameSpecId: '123',
       gameName: '3 Men Chess',
       screenShoot: image,
       gameSpec: gameSpec,
     },
     {
-      gameSpecId: '',
+      gameSpecId: '456',
       gameName: 'Checkers',
       screenShoot: image,
       gameSpec: gameSpec,
