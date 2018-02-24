@@ -1,11 +1,13 @@
 // TODO: Add more information to the state
 export interface StoreState {
   gamesList: GameInfo[];
-  imageIdToImage: ImageIdToImage;
-  elementIdToElement: ElementIdToImage;
+
+  gameSpecs: GameSpecs;
 
   matchesList: MatchInfo[];
   currentMatchIndex: number; // an index in matchesList
+
+  matchIdToMatchState: MatchIdToMatchState;
 
   contacts: Contact[]; // Coming from the phone contacts
   phoneNumberToUserId: PhoneNumberToUserId; // Coming from firebase.
@@ -22,20 +24,46 @@ export interface SignalEntry {
   signalData: string;
 }
 
-export interface ImageIdToImage {
+export interface GameSpecs {
+  imageIdToImage: ImageIdToImage;
+  elementIdToElement: ElementIdToImage;
+  gameSpecIdToGameSpec: GameSpecIdToGameSpec;
+}
+
+export interface IdIndexer<T> {
+  [id: string]: T;
+}
+
+export interface GameSpecIdToGameSpec extends IdIndexer<GameSpec> {
+  [gameSpecId: string]: GameSpec;
+}
+
+export interface MatchIdToMatchState extends IdIndexer<MatchState> {
+  [matchId: string]: MatchState;
+}
+
+export interface ImageIdToImage extends IdIndexer<Image> {
   [imageId: string]: Image;
 }
 
-export interface ElementIdToImage {
+export interface ElementIdToImage extends IdIndexer<Element> {
   [elementId: string]: Element;
 }
 
-export interface PhoneNumberToUserId {
+export interface PhoneNumberToUserId extends IdIndexer<string> {
   [phoneNumber: string]: string;
 }
 
-export interface UserIdToPhoneNumber {
+export interface UserIdToPhoneNumber extends IdIndexer<string> {
   [userId: string]: string;
+}
+
+export interface CardVisibility extends IdIndexer<boolean> {
+  [participantIndex: string]: boolean;
+}
+
+export interface MatchState extends IdIndexer<PieceState> {
+  [pieceIndex: string]: PieceState;
 }
 
 export interface Contact {
@@ -57,17 +85,11 @@ export interface GameInfo {
   gameSpecId: string;
   gameName: string;
   screenShoot: Image;
-
-  gameSpec?: GameSpec; // Lazily loaded.
 }
 
 export interface GameSpec {
   board: Image;
   pieces: Piece[];
-}
-
-export interface CardVisibility {
-  [participantIndex: string]: boolean;
 }
 
 export interface PieceState {
@@ -83,11 +105,6 @@ export interface MatchInfo {
   game: GameInfo;
   participantsUserIds: string[]; // including myself
   lastUpdatedOn: number/*firebase.database.ServerValue.TIMESTAMP*/;
-  matchState?: MatchState; // Lazily loaded.
-}
-
-export interface MatchState {
-  [pieceIndex: string]: PieceState;
 }
 
 export interface Piece {

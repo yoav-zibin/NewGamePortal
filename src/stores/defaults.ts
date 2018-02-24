@@ -7,7 +7,6 @@ let image: Image = {
   isBoardImage: false,
   downloadURL: 'blabla.png',
 };
-let gameSpec: any = null;
 
 export const storeStateDefault: StoreState = {
   // This initial gamesList is just for debugging the components.
@@ -17,13 +16,11 @@ export const storeStateDefault: StoreState = {
       gameSpecId: '123',
       gameName: '3 Men Chess',
       screenShoot: image,
-      gameSpec: gameSpec,
     },
     {
       gameSpecId: '456',
       gameName: 'Checkers',
       screenShoot: image,
-      gameSpec: gameSpec,
     },
   ],
   imageIdToImage: {},
