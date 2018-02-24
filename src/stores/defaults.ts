@@ -34,4 +34,5 @@ export const storeStateDefault: StoreState = {
   phoneNumberToUserId: {},
   userIdToPhoneNumber: {},
   myUserId: '',
+  signals: [],
 };

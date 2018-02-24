@@ -59,10 +59,14 @@ export module ourFirebase {
   // TODO: export function createMatch(game: GameInfo): MatchInfo {}
   // TODO: export function addParticipant(match: MatchInfo, user: User) {}
   // TODO: export function updateMatchState(matchState: MatchState) {}
+  // TODO: export function pingOpponentsInMatch(match: MatchInfo) {}
 
   // TODO: export function setNewContacts(newContacts: string) {}
   // TODO: export function fetchPhoneNumberToUserId() {}
   // TODO: export function addFcmToken(fcmToken: string, platform: 'ios'|'android') {}
+
+  // TODO: export function listenToSignals() {}
+  // TODO: export function sendSignal(toUserId: string, signalType: 'sdp'|'candidate', signalData: string;) {}
 
   /////////////////////////////////////////////////////////////////////////////
   // All the non-exported functions (i.e., private functions).

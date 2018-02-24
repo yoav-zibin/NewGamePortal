@@ -11,6 +11,15 @@ export interface StoreState {
   phoneNumberToUserId: PhoneNumberToUserId; // Coming from firebase.
   userIdToPhoneNumber: UserIdToPhoneNumber; // Coming from firebase.
   myUserId: string;
+
+  signals: SignalEntry[];
+}
+
+export interface SignalEntry {
+  addedByUid: string;
+  timestamp: number/*firebase.database.ServerValue.TIMESTAMP*/;
+  signalType: 'sdp'|'candidate';
+  signalData: string;
 }
 
 export interface ImageIdToImage {

@@ -1,5 +1,5 @@
 import { Reducer } from 'redux';
-import { StoreState, GameInfo, MatchInfo, Contact, PhoneNumberToUserId } from '../types';
+import { StoreState, GameInfo, MatchInfo, Contact, PhoneNumberToUserId, SignalEntry } from '../types';
 import { storeStateDefault } from '../stores/defaults';
 
 interface Action {
@@ -10,6 +10,7 @@ interface Action {
   setContacts?: Contact[];
   setPhoneNumberToUserId?: PhoneNumberToUserId; // Updates both phoneNumberToUserId and userIdToPhoneNumber.  
   setMyUserId?: string;
+  setSignals?: SignalEntry[];
   // TODO: add more.
 }
 
