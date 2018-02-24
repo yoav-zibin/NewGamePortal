@@ -10,6 +10,8 @@ let image: Image = {
 let gameSpec: any = null;
 
 export const storeStateDefault: StoreState = {
+  // This initial gamesList is just for debugging the components.
+  // TODO: change to [] once firebase is finished.
   gamesList: [
     {
       gameSpecId: '123',
@@ -28,4 +30,5 @@ export const storeStateDefault: StoreState = {
   currentMatchIndex: -1,
   contacts: [],
   users: [],
+  myUserId: '',
 };

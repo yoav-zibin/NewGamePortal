@@ -5,6 +5,7 @@ export interface StoreState {
   currentMatchIndex: number; // an index in matchesList
   contacts: Contact[];
   users: User[];
+  myUserId: string;
 }
 
 export interface Contact {
@@ -15,7 +16,7 @@ export interface Contact {
 
 export interface User {
   userId: string;
-  conact: Contact;
+  contact: Contact;
 }
 
 export interface Image {
@@ -53,7 +54,7 @@ export interface PieceState {
 }
 
 export interface MatchInfo {
-  groupId: string;
+  matchId: string;
   game: GameInfo;
   participants: User[]; // including myself
   lastUpdatedOn: number/*firebase.database.ServerValue.TIMESTAMP*/;

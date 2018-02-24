@@ -9,6 +9,7 @@ interface Action {
   setCurrentMatchIndex?: number; // an index in matchesList
   setContacts?: Contact[];
   setUsers?: User[];
+  setMyUserId?: string;
 }
 
 export const reducer: Reducer<StoreState> = 
