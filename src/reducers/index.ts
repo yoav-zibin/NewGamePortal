@@ -31,7 +31,8 @@ function checkCondition(desc: string, cond: boolean) {
 }
 
 function checkStoreInvariants(state: StoreState) {
-  // TODO: check invariants, e.g., that every Image object in the store is also present in
+  // TODO: check invariants, e.g.,
+  // that every Image object in the store (except screenshots) is also present in
   // store.gameSpecs.imageIdToImage.
   
   checkCondition(
