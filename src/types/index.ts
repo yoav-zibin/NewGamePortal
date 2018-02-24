@@ -1,22 +1,38 @@
 // TODO: Add more information to the state
 export interface StoreState {
   gamesList: GameInfo[];
+  imageIdToImage: ImageIdToImage;
+  elementIdToElement: ElementIdToImage;
+
   matchesList: MatchInfo[];
   currentMatchIndex: number; // an index in matchesList
-  contacts: Contact[];
-  users: User[];
+
+  contacts: Contact[]; // Coming from the phone contacts
+  phoneNumberToUserId: PhoneNumberToUserId; // Coming from firebase.
+  userIdToPhoneNumber: UserIdToPhoneNumber; // Coming from firebase.
   myUserId: string;
 }
 
-export interface Contact {
-  name: string;
-  phoneNumber: string;
-  avatarImage: string;
+export interface ImageIdToImage {
+  [imageId: string]: Image;
 }
 
-export interface User {
-  userId: string;
-  contact: Contact;
+export interface ElementIdToImage {
+  [elementId: string]: Element;
+}
+
+export interface PhoneNumberToUserId {
+  [phoneNumber: string]: string;
+}
+
+export interface UserIdToPhoneNumber {
+  [userId: string]: string;
+}
+
+export interface Contact {
+  phoneNumber: string; // Must match /^[+0-9]{5,20}$/
+  name: string;
+  avatarImage: string;
 }
 
 export interface Image {
@@ -56,12 +72,12 @@ export interface PieceState {
 export interface MatchInfo {
   matchId: string;
   game: GameInfo;
-  participants: User[]; // including myself
+  participantsUserIds: string[]; // including myself
   lastUpdatedOn: number/*firebase.database.ServerValue.TIMESTAMP*/;
-  piecesState?: PiecesState; // Lazily loaded.
+  matchState?: MatchState; // Lazily loaded.
 }
 
-export interface PiecesState {
+export interface MatchState {
   [pieceIndex: string]: PieceState;
 }
 
@@ -72,6 +88,7 @@ export interface Piece {
 }
 
 export interface Element {
+  elementId: string;
   width: number;
   height: number;
   images: Image[];

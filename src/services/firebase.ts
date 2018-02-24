@@ -25,22 +25,26 @@ export module ourFirebase {
   export function signInWithPhoneNumber(
       phoneNumber: string,
       applicationVerifier: firebase.auth.ApplicationVerifier): Promise<any> {
+    // TODO: create or update /gamePortal/gamePortalUsers/$myUserId
+    // TODO: set recaptcha
     return firebase.auth().signInWithPhoneNumber(phoneNumber, applicationVerifier);
   }
 
   // In the real app we'll sign in only using phone numbers.
   // Only call signInAnonymously for testing/debugging purposes.
   export function signInAnonymously(): Promise<any> {
+    // TODO: create or update /gamePortal/gamePortalUsers/$myUserId
     return firebase.auth().signInAnonymously();
   }
 
-  // Fetch the list of GameSpecInfo from fb and saves it in the redux store.
+  // Eventually dispatches the action setGamesList.
   export function fetchGamesList() {
     assertLoggedIn();
     // TODO: implement.
     db().ref('TODO').once('value', gotGamesList);
   }
 
+  // Eventually dispatches the action setMatchesList.
   export function fetchMatchesList() {
     // TODO: implement
   }
@@ -51,11 +55,14 @@ export module ourFirebase {
   }
 
   // TODO: export function fetchGameSpec(game: GameInfo) {}
-  // TODO: export function fetchMatcheState(match: MatchInfo) {}
+  // TODO: export function fetchMatchState(match: MatchInfo) {}
   // TODO: export function createMatch(game: GameInfo): MatchInfo {}
   // TODO: export function addParticipant(match: MatchInfo, user: User) {}
-  // TODO: export function updatePiecesState(piecesState: PiecesState) {}
-  // TODO: export function addContacts(contacts: Contact[]) {}
+  // TODO: export function updateMatchState(matchState: MatchState) {}
+
+  // TODO: export function setNewContacts(newContacts: string) {}
+  // TODO: export function fetchPhoneNumberToUserId() {}
+  // TODO: export function addFcmToken(fcmToken: string, platform: 'ios'|'android') {}
 
   /////////////////////////////////////////////////////////////////////////////
   // All the non-exported functions (i.e., private functions).

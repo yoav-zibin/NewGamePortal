@@ -134,14 +134,13 @@ declare namespace fbr { // fbr stands for Fire Base Rules
     gameBuilderUsers: GameBuilderUsers;
   }
 
-  interface Contacts {
+  interface PhoneNumberToUser {
     [phoneNumber: string]: string;
   }
 
   interface FcmToken {
-    createdOn: number/*firebase.database.ServerValue.TIMESTAMP*/;
     lastTimeReceived: number/*firebase.database.ServerValue.TIMESTAMP*/;
-    platform: 'web'|'ios'|'android';
+    platform: 'ios'|'android';
   }
 
   interface FcmTokens {
@@ -152,7 +151,7 @@ declare namespace fbr { // fbr stands for Fire Base Rules
     createdOn: number/*firebase.database.ServerValue.TIMESTAMP*/;
     phoneNumber: string;
     newContacts: string;
-    contacts: Contacts;
+    phoneNumberToUserId: PhoneNumberToUser;
     fcmTokens: FcmTokens;
   }
 

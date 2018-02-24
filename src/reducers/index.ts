@@ -1,5 +1,5 @@
 import { Reducer } from 'redux';
-import { StoreState, GameInfo, MatchInfo, Contact, User } from '../types';
+import { StoreState, GameInfo, MatchInfo, Contact, PhoneNumberToUserId } from '../types';
 import { storeStateDefault } from '../stores/defaults';
 
 interface Action {
@@ -8,8 +8,9 @@ interface Action {
   setMatchesList?: MatchInfo[];
   setCurrentMatchIndex?: number; // an index in matchesList
   setContacts?: Contact[];
-  setUsers?: User[];
+  setPhoneNumberToUserId?: PhoneNumberToUserId; // Updates both phoneNumberToUserId and userIdToPhoneNumber.  
   setMyUserId?: string;
+  // TODO: add more.
 }
 
 export const reducer: Reducer<StoreState> = 

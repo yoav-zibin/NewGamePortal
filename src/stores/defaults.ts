@@ -26,9 +26,12 @@ export const storeStateDefault: StoreState = {
       gameSpec: gameSpec,
     },
   ],
+  imageIdToImage: {},
+  elementIdToElement: {},
   matchesList: [],
   currentMatchIndex: -1,
   contacts: [],
-  users: [],
+  phoneNumberToUserId: {},
+  userIdToPhoneNumber: {},
   myUserId: '',
 };
