@@ -36,3 +36,5 @@ it('setGamesList', () => {
   let expectedState = Object.assign(storeStateDefault, {gamesList: gamesList});
   expect(reduce(initialState, action)).toEqual(expectedState);
 });
+
+// TODO: add tests for all other reducers.
