@@ -4,8 +4,9 @@ import { storeStateDefault } from '../stores/defaults';
 
 interface Action {
   setGamesList?: GameInfo[];
-  addMatch?: MatchInfo;
+  setGameSpec?: GameInfo;
   setMatchesList?: MatchInfo[];
+  setMatch?: MatchInfo;
   setCurrentMatchIndex?: number; // an index in matchesList
   setContacts?: Contact[];
   setPhoneNumberToUserId?: PhoneNumberToUserId; // Updates both phoneNumberToUserId and userIdToPhoneNumber.  
