@@ -79,7 +79,7 @@ export module ourFirebase {
     // firebase.storage().ref('images/blabla.jpg').getDownloadURL()
     store.dispatch(updateGameListAction);
   }
-  
+
   function assertLoggedIn() {
     if (!currentUser()) {
       throw new Error('You must be logged in');
@@ -92,5 +92,5 @@ export module ourFirebase {
 
   function db() {
     return firebase.database();
-  } 
+  }
 }
