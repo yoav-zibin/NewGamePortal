@@ -16,9 +16,6 @@ export interface Contact {
 export interface User {
   userId: string;
   conact: Contact;
-  isConnected: boolean;
-  supportsWebRTC: boolean;
-  lastSeen: number/*firebase.database.ServerValue.TIMESTAMP*/;
 }
 
 export interface Image {

@@ -134,12 +134,6 @@ declare namespace fbr { // fbr stands for Fire Base Rules
     gameBuilderUsers: GameBuilderUsers;
   }
 
-  interface PublicFields {
-    isConnected: boolean;
-    supportsWebRTC: boolean;
-    lastSeen: number/*firebase.database.ServerValue.TIMESTAMP*/;
-  }
-
   interface Contacts {
     [phoneNumber: string]: string;
   }
@@ -188,7 +182,6 @@ declare namespace fbr { // fbr stands for Fire Base Rules
   }
 
   interface GamePortalUser {
-    publicFields: PublicFields;
     privateFields: PrivateFields;
     privateButAddable: PrivateButAddable;
   }
