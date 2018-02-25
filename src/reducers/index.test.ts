@@ -31,6 +31,8 @@ const sigEntry: SignalEntry = {
   signalData: 'some String',
 };
 
+const currentMatchIndex: number = 1;
+
 function reduce(state: StoreState, action: Action): StoreState {
   return reducer(state, <any> action);
 }
@@ -66,6 +68,16 @@ it('setMyUser', () => {
   };
   let initialState = storeStateDefault;
   let expectedState = Object.assign(storeStateDefault, {userDetails: userDetails});
+  expect(reduce(initialState, action)).toEqual(expectedState);
+});
+
+it('setCurrentMatchIndex', () => {
+  let currentIndex = currentMatchIndex;
+  let action: Action = {
+    setCurrentMatchIndex: currentIndex
+  };
+  let initialState = storeStateDefault;
+  let expectedState = Object.assign(storeStateDefault, {currentMatchIndex: currentIndex});
   expect(reduce(initialState, action)).toEqual(expectedState);
 });
 // TODO: add tests for all other reducers.
