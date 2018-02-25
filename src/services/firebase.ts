@@ -1,4 +1,4 @@
-import { Contact } from '../types/index';
+// import { Contact } from '../types/index';
 import { store } from '../stores/index';
 import * as firebase from 'firebase';
 
@@ -25,37 +25,53 @@ export module ourFirebase {
   export function signInWithPhoneNumber(
       phoneNumber: string,
       applicationVerifier: firebase.auth.ApplicationVerifier): Promise<any> {
+    // TODO: create or update /gamePortal/gamePortalUsers/$myUserId
+    // TODO: set recaptcha
     return firebase.auth().signInWithPhoneNumber(phoneNumber, applicationVerifier);
   }
 
   // In the real app we'll sign in only using phone numbers.
   // Only call signInAnonymously for testing/debugging purposes.
   export function signInAnonymously(): Promise<any> {
+    // TODO: create or update /gamePortal/gamePortalUsers/$myUserId
     return firebase.auth().signInAnonymously();
   }
 
-  // Fetch the list of GameSpecInfo from fb and saves it in the redux store.
-  export function fetchGamesList() {
+  // Eventually dispatches the action setGamesList.
+  export function setGamesList() {
     assertLoggedIn();
     // TODO: implement.
     db().ref('TODO').once('value', gotGamesList);
   }
 
-  export function fetchMatchesList() {
+  // Eventually dispatches the action setMatchesList
+  // every time this field is updated:
+  //  /gamePortal/gamePortalUsers/$myUserId/privateButAddable/matchMemberships
+  export function listenToMyMatchesList() {
     // TODO: implement
   }
 
-  export function fetchUsers(contacts: Contact[]) {
-    // TODO: implement, use phone number index.
-    contacts.pop();
-  }
+  // TODO: export function updateGameSpec(game: GameInfo) {}
 
-  // TODO: export function fetchGameSpec(game: GameInfo) {}
-  // TODO: export function fetchMatcheState(match: MatchInfo) {}
+  // Eventually dispatches updateMatchIdToMatchState, and it will dispatch
+  // it again every time the match is updated
+  // (e.g. a participant was added or the state of pieces changed).
+  // TODO: export function listenForMatchUpdates(match: MatchInfo) {}
+
   // TODO: export function createMatch(game: GameInfo): MatchInfo {}
   // TODO: export function addParticipant(match: MatchInfo, user: User) {}
-  // TODO: export function updatePiecesState(piecesState: PiecesState) {}
-  // TODO: export function addContacts(contacts: Contact[]) {}
+  // TODO: export function updateMatchState(match: MatchInfo, matchState: MatchState) {}
+  // TODO: export function pingOpponentsInMatch(match: MatchInfo) {}
+
+  // Dispatches updateUserIdsAndPhoneNumbers (reading from /gamePortal/phoneNumberToUserId)
+  // TODO: export function updateUserIdsAndPhoneNumbers(phoneNumbers: string[]) {}
+
+  // TODO: export function addFcmToken(fcmToken: string, platform: 'ios'|'android') {}
+
+  // Dispatches setSignals.
+  // TODO: export function listenToSignals() {}
+
+  // TODO: export function sendSignal(toUserId: string, signalType: 'sdp'|'candidate', signalData: string;) {}
 
   /////////////////////////////////////////////////////////////////////////////
   // All the non-exported functions (i.e., private functions).

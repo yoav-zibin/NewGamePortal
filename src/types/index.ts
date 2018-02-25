@@ -1,24 +1,89 @@
 // TODO: Add more information to the state
 export interface StoreState {
   gamesList: GameInfo[];
+
+  gameSpecs: GameSpecs;
+
   matchesList: MatchInfo[];
   currentMatchIndex: number; // an index in matchesList
-  contacts: Contact[];
-  users: User[];
+
+  matchIdToMatchState: MatchIdToMatchState;
+
+  phoneNumberToContact: PhoneNumberToContact; // Coming from the phone contacts
+  userIdsAndPhoneNumbers: UserIdsAndPhoneNumbers; // Coming from firebase.
+
+  myUser: MyUser;
+
+  signals: SignalEntry[];
+}
+
+export interface UserIdsAndPhoneNumbers {
+  phoneNumberToUserId: PhoneNumberToUserId; 
+  userIdToPhoneNumber: UserIdToPhoneNumber; // Calculated whenever 
+}
+
+export interface MyUser {
+  myUserId: string;
+  myPhoneNumber: string;
+}
+
+export interface SignalEntry {
+  addedByUid: string;
+  timestamp: number/*firebase.database.ServerValue.TIMESTAMP*/;
+  signalType: 'sdp'|'candidate';
+  signalData: string;
+}
+
+export interface GameSpecs {
+  imageIdToImage: ImageIdToImage;
+  elementIdToElement: ElementIdToImage;
+  gameSpecIdToGameSpec: GameSpecIdToGameSpec;
+}
+
+export interface IdIndexer<T> {
+  [id: string]: T;
+}
+
+export interface PhoneNumberToContact extends IdIndexer<Contact> {
+  [phoneNumber: string]: Contact;
+}
+
+export interface GameSpecIdToGameSpec extends IdIndexer<GameSpec> {
+  [gameSpecId: string]: GameSpec;
+}
+
+export interface MatchIdToMatchState extends IdIndexer<MatchState> {
+  [matchId: string]: MatchState;
+}
+
+export interface ImageIdToImage extends IdIndexer<Image> {
+  [imageId: string]: Image;
+}
+
+export interface ElementIdToImage extends IdIndexer<Element> {
+  [elementId: string]: Element;
+}
+
+export interface PhoneNumberToUserId extends IdIndexer<string> {
+  [phoneNumber: string]: string;
+}
+
+export interface UserIdToPhoneNumber extends IdIndexer<string> {
+  [userId: string]: string;
+}
+
+export interface CardVisibility extends IdIndexer<boolean> {
+  [participantIndex: string]: boolean;
+}
+
+export interface MatchState extends IdIndexer<PieceState> {
+  [pieceIndex: string]: PieceState;
 }
 
 export interface Contact {
+  phoneNumber: string; // Must match /^[+0-9]{5,20}$/
   name: string;
-  phoneNumber: string;
   avatarImage: string;
-}
-
-export interface User {
-  userId: string;
-  conact: Contact;
-  isConnected: boolean;
-  supportsWebRTC: boolean;
-  lastSeen: number/*firebase.database.ServerValue.TIMESTAMP*/;
 }
 
 export interface Image {
@@ -34,17 +99,11 @@ export interface GameInfo {
   gameSpecId: string;
   gameName: string;
   screenShoot: Image;
-
-  gameSpec: GameSpec; // Lazily loaded.
 }
 
 export interface GameSpec {
   board: Image;
   pieces: Piece[];
-}
-
-export interface CardVisibility {
-  [participantIndex: string]: boolean;
 }
 
 export interface PieceState {
@@ -56,15 +115,10 @@ export interface PieceState {
 }
 
 export interface MatchInfo {
-  groupId: string;
+  matchId: string;
   game: GameInfo;
-  participants: User[]; // including myself
+  participantsUserIds: string[]; // including myself
   lastUpdatedOn: number/*firebase.database.ServerValue.TIMESTAMP*/;
-  piecesState: PiecesState; // Lazily loaded.
-}
-
-export interface PiecesState {
-  [pieceIndex: string]: PieceState;
 }
 
 export interface Piece {
@@ -74,6 +128,7 @@ export interface Piece {
 }
 
 export interface Element {
+  elementId: string;
   width: number;
   height: number;
   images: Image[];

@@ -134,20 +134,18 @@ declare namespace fbr { // fbr stands for Fire Base Rules
     gameBuilderUsers: GameBuilderUsers;
   }
 
-  interface PublicFields {
-    isConnected: boolean;
-    supportsWebRTC: boolean;
-    lastSeen: number/*firebase.database.ServerValue.TIMESTAMP*/;
+  interface PhoneNumber {
+    userId: string;
+    timestamp: number/*firebase.database.ServerValue.TIMESTAMP*/;
   }
 
-  interface Contacts {
-    [phoneNumber: string]: string;
+  interface PhoneNumberToUser {
+    [phoneNumber: string]: PhoneNumber;
   }
 
   interface FcmToken {
-    createdOn: number/*firebase.database.ServerValue.TIMESTAMP*/;
     lastTimeReceived: number/*firebase.database.ServerValue.TIMESTAMP*/;
-    platform: 'web'|'ios'|'android';
+    platform: 'ios'|'android';
   }
 
   interface FcmTokens {
@@ -157,8 +155,6 @@ declare namespace fbr { // fbr stands for Fire Base Rules
   interface PrivateFields {
     createdOn: number/*firebase.database.ServerValue.TIMESTAMP*/;
     phoneNumber: string;
-    newContacts: string;
-    contacts: Contacts;
     fcmTokens: FcmTokens;
   }
 
@@ -188,7 +184,6 @@ declare namespace fbr { // fbr stands for Fire Base Rules
   }
 
   interface GamePortalUser {
-    publicFields: PublicFields;
     privateFields: PrivateFields;
     privateButAddable: PrivateButAddable;
   }
@@ -237,6 +232,7 @@ declare namespace fbr { // fbr stands for Fire Base Rules
   }
 
   interface GamePortal {
+    phoneNumberToUserId: PhoneNumberToUser;
     gamePortalUsers: GamePortalUsers;
     matches: Matches;
   }

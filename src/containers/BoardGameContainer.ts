@@ -3,7 +3,7 @@ import { StoreState } from '../types/index';
 import Board from '../components/Board';
 
 const mapStateToProps = (state: StoreState) => ({
-  pieces: state.matchesList[state.currentMatchIndex].game.gameSpec.pieces
+  pieces: state.gameSpecs.gameSpecIdToGameSpec[state.matchesList[state.currentMatchIndex].game.gameSpecId].pieces
 });
 
 // Later this will take dispatch: any as argument
