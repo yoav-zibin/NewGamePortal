@@ -1,4 +1,4 @@
-import { Contact } from '../types/index';
+// import { Contact } from '../types/index';
 import { store } from '../stores/index';
 import * as firebase from 'firebase';
 
@@ -38,34 +38,39 @@ export module ourFirebase {
   }
 
   // Eventually dispatches the action setGamesList.
-  export function fetchGamesList() {
+  export function setGamesList() {
     assertLoggedIn();
     // TODO: implement.
     db().ref('TODO').once('value', gotGamesList);
   }
 
-  // Eventually dispatches the action setMatchesList.
-  export function fetchMatchesList() {
+  // Eventually dispatches the action setMatchesList
+  // every time this field is updated:
+  //  /gamePortal/gamePortalUsers/$myUserId/privateButAddable/matchMemberships
+  export function listenToMyMatchesList() {
     // TODO: implement
   }
 
-  export function fetchUsers(contacts: Contact[]) {
-    // TODO: implement, use phone number index.
-    contacts.pop();
-  }
+  // TODO: export function updateGameSpec(game: GameInfo) {}
 
-  // TODO: export function fetchGameSpec(game: GameInfo) {}
-  // TODO: export function fetchMatchState(match: MatchInfo) {}
+  // Eventually dispatches updateMatchIdToMatchState, and it will dispatch
+  // it again every time the match is updated
+  // (e.g. a participant was added or the state of pieces changed).
+  // TODO: export function listenForMatchUpdates(match: MatchInfo) {}
+
   // TODO: export function createMatch(game: GameInfo): MatchInfo {}
   // TODO: export function addParticipant(match: MatchInfo, user: User) {}
-  // TODO: export function updateMatchState(matchState: MatchState) {}
+  // TODO: export function updateMatchState(match: MatchInfo, matchState: MatchState) {}
   // TODO: export function pingOpponentsInMatch(match: MatchInfo) {}
 
-  // TODO: export function setNewContacts(newContacts: string) {}
-  // TODO: export function fetchPhoneNumberToUserId() {}
+  // Dispatches updateUserIdsAndPhoneNumbers (reading from /gamePortal/phoneNumberToUserId)
+  // TODO: export function updateUserIdsAndPhoneNumbers(phoneNumbers: string[]) {}
+
   // TODO: export function addFcmToken(fcmToken: string, platform: 'ios'|'android') {}
 
+  // Dispatches setSignals.
   // TODO: export function listenToSignals() {}
+
   // TODO: export function sendSignal(toUserId: string, signalType: 'sdp'|'candidate', signalData: string;) {}
 
   /////////////////////////////////////////////////////////////////////////////

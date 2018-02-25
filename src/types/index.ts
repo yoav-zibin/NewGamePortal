@@ -11,8 +11,8 @@ export interface StoreState {
 
   phoneNumberToContact: PhoneNumberToContact; // Coming from the phone contacts
   userIdsAndPhoneNumbers: UserIdsAndPhoneNumbers; // Coming from firebase.
-  
-  myUserId: string;
+
+  myUser: MyUser;
 
   signals: SignalEntry[];
 }
@@ -20,6 +20,11 @@ export interface StoreState {
 export interface UserIdsAndPhoneNumbers {
   phoneNumberToUserId: PhoneNumberToUserId; 
   userIdToPhoneNumber: UserIdToPhoneNumber; // Calculated whenever 
+}
+
+export interface MyUser {
+  myUserId: string;
+  myPhoneNumber: string;
 }
 
 export interface SignalEntry {

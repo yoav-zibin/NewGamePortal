@@ -2,7 +2,8 @@ import { Reducer } from 'redux';
 import {
   StoreState, GameInfo, GameSpecs, MatchInfo, PhoneNumberToContact,
   UserIdsAndPhoneNumbers, MatchIdToMatchState, SignalEntry,
-  IdIndexer
+  IdIndexer,
+  MyUser
 } from '../types';
 import { storeStateDefault } from '../stores/defaults';
 
@@ -18,12 +19,12 @@ export interface Action {
   updateMatchIdToMatchState?: MatchIdToMatchState;
   updatePhoneNumberToContact?: PhoneNumberToContact;
   updateUserIdsAndPhoneNumbers?: UserIdsAndPhoneNumbers;
-  setMyUserId?: string;
+  setMyUser?: MyUser;
   setSignals?: SignalEntry[];
 }
 
 function mergeMaps<T>(
-  original: IdIndexer<T>, 
+  original: IdIndexer<T>,
   updateWithEntries: IdIndexer<T>): IdIndexer<T> {
   return Object.assign(original, updateWithEntries);
 }
@@ -56,13 +57,15 @@ function reduce(state: StoreState, action: Action) {
     // TODO: support all other reducers.
 
   } else if (action.updateGameSpecs) {
-    let {imageIdToImage, elementIdToElement, gameSpecIdToGameSpec} = action.updateGameSpecs;
+    let { imageIdToImage, elementIdToElement, gameSpecIdToGameSpec } = action.updateGameSpecs;
     let { gameSpecs, ...rest } = state;
-    return { gameSpecs: {
-        imageIdToImage: mergeMaps(gameSpecs.imageIdToImage, imageIdToImage), 
-        elementIdToElement: mergeMaps(gameSpecs.elementIdToElement, elementIdToElement), 
-        gameSpecIdToGameSpec: mergeMaps(gameSpecs.gameSpecIdToGameSpec, gameSpecIdToGameSpec), 
-      }, ...rest };
+    return {
+      gameSpecs: {
+        imageIdToImage: mergeMaps(gameSpecs.imageIdToImage, imageIdToImage),
+        elementIdToElement: mergeMaps(gameSpecs.elementIdToElement, elementIdToElement),
+        gameSpecIdToGameSpec: mergeMaps(gameSpecs.gameSpecIdToGameSpec, gameSpecIdToGameSpec),
+      }, ...rest
+    };
   } else {
     return state;
   }
