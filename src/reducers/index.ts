@@ -1,19 +1,23 @@
 import { Reducer } from 'redux';
 import {
-  StoreState, GameInfo, GameSpecs, MatchInfo, Contact,
-  PhoneNumberToUserId, MatchIdToMatchState, SignalEntry,
+  StoreState, GameInfo, GameSpecs, MatchInfo, PhoneNumberToContact,
+  UserIdsAndPhoneNumbers, MatchIdToMatchState, SignalEntry,
   IdIndexer
 } from '../types';
 import { storeStateDefault } from '../stores/defaults';
 
 export interface Action {
+  // Actions that start with "set" mean that they replace the matching 
+  // part in the store.
+  // In contrast, actions that start with "update" will update mappigns
+  // (using mergeMaps below).
   setGamesList?: GameInfo[];
   updateGameSpecs?: GameSpecs;
   setMatchesList?: MatchInfo[];
   setCurrentMatchIndex?: number; // an index in matchesList
-  updateMatchStates?: MatchIdToMatchState;
-  setContacts?: Contact[];
-  updatePhoneNumberToUserId?: PhoneNumberToUserId; // Updates both phoneNumberToUserId and userIdToPhoneNumber.  
+  updateMatchIdToMatchState?: MatchIdToMatchState;
+  updatePhoneNumberToContact?: PhoneNumberToContact;
+  updateUserIdsAndPhoneNumbers?: UserIdsAndPhoneNumbers;
   setMyUserId?: string;
   setSignals?: SignalEntry[];
 }
@@ -34,7 +38,7 @@ function checkStoreInvariants(state: StoreState) {
   // TODO: check invariants, e.g.,
   // that every Image object in the store (except screenshots) is also present in
   // store.gameSpecs.imageIdToImage.
-  
+  // Ensure UserIdsAndPhoneNumbers have two mappings that are exactly the reverse of each other.
   checkCondition(
     'currentMatchIndex is in range',
     state.currentMatchIndex >= -1 && state.currentMatchIndex <= state.matchesList.length);

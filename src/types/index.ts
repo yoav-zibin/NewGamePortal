@@ -9,12 +9,17 @@ export interface StoreState {
 
   matchIdToMatchState: MatchIdToMatchState;
 
-  contacts: Contact[]; // Coming from the phone contacts
-  phoneNumberToUserId: PhoneNumberToUserId; // Coming from firebase.
-  userIdToPhoneNumber: UserIdToPhoneNumber; // Coming from firebase.
+  phoneNumberToContact: PhoneNumberToContact; // Coming from the phone contacts
+  userIdsAndPhoneNumbers: UserIdsAndPhoneNumbers; // Coming from firebase.
+  
   myUserId: string;
 
   signals: SignalEntry[];
+}
+
+export interface UserIdsAndPhoneNumbers {
+  phoneNumberToUserId: PhoneNumberToUserId; 
+  userIdToPhoneNumber: UserIdToPhoneNumber; // Calculated whenever 
 }
 
 export interface SignalEntry {
@@ -32,6 +37,10 @@ export interface GameSpecs {
 
 export interface IdIndexer<T> {
   [id: string]: T;
+}
+
+export interface PhoneNumberToContact extends IdIndexer<Contact> {
+  [phoneNumber: string]: Contact;
 }
 
 export interface GameSpecIdToGameSpec extends IdIndexer<GameSpec> {
