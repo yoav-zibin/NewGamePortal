@@ -54,6 +54,13 @@ function reduce(state: StoreState, action: Action) {
     let { matchesList, ...rest } = state;
     return { matchesList: action.setMatchesList, ...rest };
 
+  } else if (action.setSignals) {
+    let { signals, ...rest } = state;
+    return { signals: action.setSignals, ...rest };
+
+  } else if (action.setMyUser) {
+    let { myUser, ...rest } = state;
+    return { myUser: action.setMyUser, ...rest };
     // TODO: support all other reducers.
 
   } else if (action.updateGameSpecs) {
