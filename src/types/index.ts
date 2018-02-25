@@ -18,8 +18,8 @@ export interface StoreState {
 }
 
 export interface UserIdsAndPhoneNumbers {
-  phoneNumberToUserId: PhoneNumberToUserId; 
-  userIdToPhoneNumber: UserIdToPhoneNumber; // Calculated whenever 
+  phoneNumberToUserId: PhoneNumberToUserId;
+  userIdToPhoneNumber: UserIdToPhoneNumber; // Calculated whenever
 }
 
 export interface MyUser {
@@ -29,8 +29,8 @@ export interface MyUser {
 
 export interface SignalEntry {
   addedByUid: string;
-  timestamp: number/*firebase.database.ServerValue.TIMESTAMP*/;
-  signalType: 'sdp'|'candidate';
+  timestamp: number /*firebase.database.ServerValue.TIMESTAMP*/;
+  signalType: 'sdp' | 'candidate';
   signalData: string;
 }
 
@@ -98,7 +98,7 @@ export interface Image {
 export interface GameInfo {
   gameSpecId: string;
   gameName: string;
-  screenShoot: Image;
+  screenShot: Image;
 }
 
 export interface GameSpec {
@@ -118,7 +118,7 @@ export interface MatchInfo {
   matchId: string;
   game: GameInfo;
   participantsUserIds: string[]; // including myself
-  lastUpdatedOn: number/*firebase.database.ServerValue.TIMESTAMP*/;
+  lastUpdatedOn: number /*firebase.database.ServerValue.TIMESTAMP*/;
 }
 
 export interface Piece {
@@ -133,7 +133,13 @@ export interface Element {
   height: number;
   images: Image[];
   isDraggable: boolean;
-  elementKind: 'standard'|'toggable'|'dice'|'card'|'cardsDeck'|'piecesDeck';
+  elementKind:
+    | 'standard'
+    | 'toggable'
+    | 'dice'
+    | 'card'
+    | 'cardsDeck'
+    | 'piecesDeck';
   deckElements: Element[];
   // rotatableDegrees: number;
   // isDrawable: boolean;

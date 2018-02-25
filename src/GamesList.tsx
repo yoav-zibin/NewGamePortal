@@ -10,13 +10,13 @@ const styles: any = {
   root: {
     display: 'flex',
     flexWrap: 'wrap',
-    justifyContent: 'space-around',
+    justifyContent: 'space-around'
   },
   gridList: {
     width: 500,
     height: 450,
-    overflowY: 'auto',
-  },
+    overflowY: 'auto'
+  }
 };
 
 interface Props {
@@ -39,24 +39,27 @@ class GamesList extends React.Component<Props, {}> {
     return (
       <div>
         <RaisedButton label="Default" />
-        {<div style={styles.root}>
-          <GridList
-            cellHeight={180}
-            style={styles.gridList}
-          >
-            <Subheader>Card games</Subheader>
-            {this.props.gamesList.map((gameInfo: GameInfo) => (
-              <GridTile
-                key={gameInfo.gameSpecId}
-                title={gameInfo.gameName}
-                subtitle={''}
-                actionIcon={<IconButton><StarBorder color="white" /></IconButton>}
-              >
-                <img src={gameInfo.screenShoot.downloadURL} />
-              </GridTile>
-            ))}
-          </GridList>
-        </div>}
+        {
+          <div style={styles.root}>
+            <GridList cellHeight={180} style={styles.gridList}>
+              <Subheader>Card games</Subheader>
+              {this.props.gamesList.map((gameInfo: GameInfo) => (
+                <GridTile
+                  key={gameInfo.gameSpecId}
+                  title={gameInfo.gameName}
+                  subtitle={''}
+                  actionIcon={
+                    <IconButton>
+                      <StarBorder color="white" />
+                    </IconButton>
+                  }
+                >
+                  <img src={gameInfo.screenShot.downloadURL} />
+                </GridTile>
+              ))}
+            </GridList>
+          </div>
+        }
       </div>
     );
   }

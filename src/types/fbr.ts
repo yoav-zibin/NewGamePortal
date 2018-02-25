@@ -1,9 +1,10 @@
-declare namespace fbr { // fbr stands for Fire Base Rules
+declare namespace fbr {
+  // fbr stands for Fire Base Rules
 
   interface Image {
     uploaderEmail: string;
     uploaderUid: string;
-    createdOn: number/*firebase.database.ServerValue.TIMESTAMP*/;
+    createdOn: number /*firebase.database.ServerValue.TIMESTAMP*/;
     width: number;
     height: number;
     isBoardImage: boolean;
@@ -36,13 +37,19 @@ declare namespace fbr { // fbr stands for Fire Base Rules
   interface Element {
     uploaderEmail: string;
     uploaderUid: string;
-    createdOn: number/*firebase.database.ServerValue.TIMESTAMP*/;
+    createdOn: number /*firebase.database.ServerValue.TIMESTAMP*/;
     width: number;
     height: number;
     name: string;
     images: ElementImages;
     isDraggable: boolean;
-    elementKind: 'standard'|'toggable'|'dice'|'card'|'cardsDeck'|'piecesDeck';
+    elementKind:
+      | 'standard'
+      | 'toggable'
+      | 'dice'
+      | 'card'
+      | 'cardsDeck'
+      | 'piecesDeck';
     rotatableDegrees: number;
     deckElements: DeckElements;
     isDrawable: boolean;
@@ -64,7 +71,7 @@ declare namespace fbr { // fbr stands for Fire Base Rules
 
   interface Line {
     userId: string;
-    timestamp: number/*firebase.database.ServerValue.TIMESTAMP*/;
+    timestamp: number /*firebase.database.ServerValue.TIMESTAMP*/;
     color: string;
     lineThickness: number;
     fromX: number;
@@ -100,11 +107,11 @@ declare namespace fbr { // fbr stands for Fire Base Rules
   interface GameSpec {
     uploaderEmail: string;
     uploaderUid: string;
-    createdOn: number/*firebase.database.ServerValue.TIMESTAMP*/;
+    createdOn: number /*firebase.database.ServerValue.TIMESTAMP*/;
     gameName: string;
     gameIcon50x50: string;
     gameIcon512x512: string;
-    screenShootImageId: string;
+    screenShotImageId: string;
     wikipediaUrl: string;
     tutorialYoutubeVideo: string;
     board: Board;
@@ -118,9 +125,9 @@ declare namespace fbr { // fbr stands for Fire Base Rules
   interface GameBuilderUser {
     avatarImageUrl: string;
     displayName: string;
-    lastSeen: number/*firebase.database.ServerValue.TIMESTAMP*/;
+    lastSeen: number /*firebase.database.ServerValue.TIMESTAMP*/;
     email: string;
-    createdOn: number/*firebase.database.ServerValue.TIMESTAMP*/;
+    createdOn: number /*firebase.database.ServerValue.TIMESTAMP*/;
   }
 
   interface GameBuilderUsers {
@@ -136,7 +143,7 @@ declare namespace fbr { // fbr stands for Fire Base Rules
 
   interface PhoneNumber {
     userId: string;
-    timestamp: number/*firebase.database.ServerValue.TIMESTAMP*/;
+    timestamp: number /*firebase.database.ServerValue.TIMESTAMP*/;
   }
 
   interface PhoneNumberToUser {
@@ -144,8 +151,8 @@ declare namespace fbr { // fbr stands for Fire Base Rules
   }
 
   interface FcmToken {
-    lastTimeReceived: number/*firebase.database.ServerValue.TIMESTAMP*/;
-    platform: 'ios'|'android';
+    lastTimeReceived: number /*firebase.database.ServerValue.TIMESTAMP*/;
+    platform: 'ios' | 'android';
   }
 
   interface FcmTokens {
@@ -153,14 +160,14 @@ declare namespace fbr { // fbr stands for Fire Base Rules
   }
 
   interface PrivateFields {
-    createdOn: number/*firebase.database.ServerValue.TIMESTAMP*/;
+    createdOn: number /*firebase.database.ServerValue.TIMESTAMP*/;
     phoneNumber: string;
     fcmTokens: FcmTokens;
   }
 
   interface MatchMembership {
     addedByUid: string;
-    timestamp: number/*firebase.database.ServerValue.TIMESTAMP*/;
+    timestamp: number /*firebase.database.ServerValue.TIMESTAMP*/;
   }
 
   interface MatchMemberships {
@@ -169,8 +176,8 @@ declare namespace fbr { // fbr stands for Fire Base Rules
 
   interface SignalEntry {
     addedByUid: string;
-    timestamp: number/*firebase.database.ServerValue.TIMESTAMP*/;
-    signalType: 'sdp'|'candidate';
+    timestamp: number /*firebase.database.ServerValue.TIMESTAMP*/;
+    signalType: 'sdp' | 'candidate';
     signalData: string;
   }
 
@@ -194,7 +201,7 @@ declare namespace fbr { // fbr stands for Fire Base Rules
 
   interface ParticipantUser {
     participantIndex: number;
-    pingOpponents: number/*firebase.database.ServerValue.TIMESTAMP*/;
+    pingOpponents: number /*firebase.database.ServerValue.TIMESTAMP*/;
   }
 
   interface Participants {
@@ -221,8 +228,8 @@ declare namespace fbr { // fbr stands for Fire Base Rules
 
   interface Match {
     participants: Participants;
-    createdOn: number/*firebase.database.ServerValue.TIMESTAMP*/;
-    lastUpdatedOn: number/*firebase.database.ServerValue.TIMESTAMP*/;
+    createdOn: number /*firebase.database.ServerValue.TIMESTAMP*/;
+    lastUpdatedOn: number /*firebase.database.ServerValue.TIMESTAMP*/;
     gameSpecId: string;
     pieces: PiecesState;
   }
@@ -241,5 +248,4 @@ declare namespace fbr { // fbr stands for Fire Base Rules
     gameBuilder: GameBuilder;
     gamePortal: GamePortal;
   }
-
 }
