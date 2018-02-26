@@ -1,14 +1,20 @@
 import { Reducer } from 'redux';
 import {
-  StoreState, GameInfo, GameSpecs, MatchInfo, PhoneNumberToContact,
-  UserIdsAndPhoneNumbers, MatchIdToMatchState, SignalEntry,
+  StoreState,
+  GameInfo,
+  GameSpecs,
+  MatchInfo,
+  PhoneNumberToContact,
+  UserIdsAndPhoneNumbers,
+  MatchIdToMatchState,
+  SignalEntry,
   IdIndexer,
   MyUser
 } from '../types';
 import { storeStateDefault } from '../stores/defaults';
 
 export interface Action {
-  // Actions that start with "set" mean that they replace the matching 
+  // Actions that start with "set" mean that they replace the matching
   // part in the store.
   // In contrast, actions that start with "update" will update mappigns
   // (using mergeMaps below).
@@ -25,7 +31,8 @@ export interface Action {
 
 function mergeMaps<T>(
   original: IdIndexer<T>,
-  updateWithEntries: IdIndexer<T>): IdIndexer<T> {
+  updateWithEntries: IdIndexer<T>
+): IdIndexer<T> {
   return Object.assign(original, updateWithEntries);
 }
 
@@ -42,46 +49,53 @@ function checkStoreInvariants(state: StoreState) {
   // Ensure UserIdsAndPhoneNumbers have two mappings that are exactly the reverse of each other.
   checkCondition(
     'currentMatchIndex is in range',
-    state.currentMatchIndex >= -1 && state.currentMatchIndex <= state.matchesList.length);
+    state.currentMatchIndex >= -1 &&
+      state.currentMatchIndex <= state.matchesList.length
+  );
 }
 
 function reduce(state: StoreState, action: Action) {
   if (action.setGamesList) {
-    let { gamesList, ...rest } = state;
-    return { gamesList: action.setGamesList, ...rest };
-
+    return { ...state, gamesList: action.setGamesList };
   } else if (action.setMatchesList) {
-    let { matchesList, ...rest } = state;
-    return { matchesList: action.setMatchesList, ...rest };
-
+    return { ...state, matchesList: action.setMatchesList };
   } else if (action.setSignals) {
-    let { signals, ...rest } = state;
-    return { signals: action.setSignals, ...rest };
-
+    return { ...state, signals: action.setSignals };
   } else if (action.setMyUser) {
-    let { myUser, ...rest } = state;
-    return { myUser: action.setMyUser, ...rest };
+    return { ...state, myUser: action.setMyUser };
     // TODO: support all other reducers.
-
   } else if (action.updateGameSpecs) {
-    let { imageIdToImage, elementIdToElement, gameSpecIdToGameSpec } = action.updateGameSpecs;
+    let {
+      imageIdToImage,
+      elementIdToElement,
+      gameSpecIdToGameSpec
+    } = action.updateGameSpecs;
     let { gameSpecs, ...rest } = state;
     return {
       gameSpecs: {
         imageIdToImage: mergeMaps(gameSpecs.imageIdToImage, imageIdToImage),
-        elementIdToElement: mergeMaps(gameSpecs.elementIdToElement, elementIdToElement),
-        gameSpecIdToGameSpec: mergeMaps(gameSpecs.gameSpecIdToGameSpec, gameSpecIdToGameSpec),
-      }, ...rest
+        elementIdToElement: mergeMaps(
+          gameSpecs.elementIdToElement,
+          elementIdToElement
+        ),
+        gameSpecIdToGameSpec: mergeMaps(
+          gameSpecs.gameSpecIdToGameSpec,
+          gameSpecIdToGameSpec
+        )
+      },
+      ...rest
     };
   } else {
     return state;
   }
 }
 
-export const reducer: Reducer<StoreState> =
-  (state: StoreState = storeStateDefault, actionWithAnyType: any) => {
-    checkStoreInvariants(state);
-    const newState = reduce(state, actionWithAnyType);
-    checkStoreInvariants(newState);
-    return newState;
-  };
+export const reducer: Reducer<StoreState> = (
+  state: StoreState = storeStateDefault,
+  actionWithAnyType: any
+) => {
+  checkStoreInvariants(state);
+  const newState = reduce(state, actionWithAnyType);
+  checkStoreInvariants(newState);
+  return newState;
+};
