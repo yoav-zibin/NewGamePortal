@@ -3,7 +3,7 @@
  */
 import { reducer, Action } from './index';
 import { storeStateDefault } from '../stores/defaults';
-import { GameInfo, MatchInfo, MyUser, SignalEntry, Image, StoreState } from '../types';
+import { GameInfo, MyUser, SignalEntry, Image, StoreState } from '../types';
 
 const image: Image = {
   imageId: 'someImageId',
@@ -76,8 +76,8 @@ it('setCurrentMatchIndex', () => {
   let action: Action = {
     setCurrentMatchIndex: currentIndex
   };
-  let initialState = storeStateDefault;
-  let expectedState = Object.assign(storeStateDefault, {currentMatchIndex: currentIndex});
+  const initialState = storeStateDefault;
+  const expectedState = {...storeStateDefault, currentMatchIndex: currentIndex};
   expect(reduce(initialState, action)).toEqual(expectedState);
 });
 // TODO: add tests for all other reducers.
