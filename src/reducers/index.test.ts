@@ -3,40 +3,40 @@
  */
 import { reducer, Action } from './index';
 import { storeStateDefault } from '../stores/defaults';
-import { GameInfo, MatchInfo, MyUser, SignalEntry, Image, StoreState } from '../types';
+import { GameInfo, MyUser, SignalEntry, Image, StoreState } from '../types';
 
 const image: Image = {
   imageId: 'someImageId',
   downloadURL: 'https://someurl.com/foo.png',
   height: 1024,
   width: 700,
-  isBoardImage: true,
+  isBoardImage: true
 };
 
 const gameInfo: GameInfo = {
   gameSpecId: 'someId',
   gameName: 'Some game name',
-  screenShoot: image,
+  screenShoot: image
 };
 
 const userInfo: MyUser = {
   myUserId: 'someId',
-  myPhoneNumber: 'Some phone number',
+  myPhoneNumber: 'Some phone number'
 };
 
 const sigEntry: SignalEntry = {
   addedByUid: 'someId',
-  timestamp: 1234/*firebase.database.ServerValue.TIMESTAMP*/,
+  timestamp: 1234 /*firebase.database.ServerValue.TIMESTAMP*/,
   signalType: 'sdp',
-  signalData: 'some String',
+  signalData: 'some String'
 };
 
 function reduce(state: StoreState, action: Action): StoreState {
-  return reducer(state, <any> action);
+  return reducer(state, <any>action);
 }
 
 it('get initial state', () => {
-  expect(reduce(<any> undefined, {})).toEqual(storeStateDefault);
+  expect(reduce(<any>undefined, {})).toEqual(storeStateDefault);
 });
 
 it('setGamesList', () => {
@@ -45,7 +45,7 @@ it('setGamesList', () => {
     setGamesList: gamesList
   };
   let initialState = storeStateDefault;
-  let expectedState = Object.assign(storeStateDefault, {gamesList: gamesList});
+  const expectedState = { ...storeStateDefault, gamesList: gamesList };
   expect(reduce(initialState, action)).toEqual(expectedState);
 });
 
@@ -55,7 +55,7 @@ it('setSignals', () => {
     setSignals: signalsList
   };
   let initialState = storeStateDefault;
-  let expectedState = Object.assign(storeStateDefault, {signalsList: signalsList});
+  const expectedState = { ...storeStateDefault, signals: signalsList };
   expect(reduce(initialState, action)).toEqual(expectedState);
 });
 
@@ -65,7 +65,7 @@ it('setMyUser', () => {
     setMyUser: userDetails
   };
   let initialState = storeStateDefault;
-  let expectedState = Object.assign(storeStateDefault, {userDetails: userDetails});
+  const expectedState = { ...storeStateDefault, myUser: userDetails };
   expect(reduce(initialState, action)).toEqual(expectedState);
 });
 // TODO: add tests for all other reducers.
