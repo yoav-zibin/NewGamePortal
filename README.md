@@ -1,4 +1,7 @@
 # NewGamePortal
+
+![https://travis-ci.org/yoav-zibin/NewGamePortal](https://travis-ci.org/yoav-zibin/NewGamePortal.svg?branch=master)
+
 Important commands:
 
 `npm start`
