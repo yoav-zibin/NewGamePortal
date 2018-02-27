@@ -29,7 +29,7 @@ export interface Action {
   setSignals?: SignalEntry[];
 }
 
-function mergeMaps<T>(
+export function mergeMaps<T>(
   original: IdIndexer<T>,
   updateWithEntries: IdIndexer<T>
 ): IdIndexer<T> {
@@ -52,21 +52,50 @@ function checkStoreInvariants(state: StoreState) {
     state.currentMatchIndex >= -1 &&
       state.currentMatchIndex <= state.matchesList.length
   );
+
+  checkCondition(
+    'every matchId in matchesList is also present in matchIdToMatchState',
+    state.matchesList.reduce(
+      (a, e) => a && e.matchId in state.matchIdToMatchState,
+      true
+    )
+  );
 }
 
 function reduce(state: StoreState, action: Action) {
   if (action.setGamesList) {
     return { ...state, gamesList: action.setGamesList };
   } else if (action.setMatchesList) {
-    return { ...state, matchesList: action.setMatchesList };
+    let { matchesList, matchIdToMatchState, ...rest } = state;
+    let newMatchIdToMatchState = {};
+    action.setMatchesList.forEach(e => {
+      if (e.matchId in matchIdToMatchState) {
+        newMatchIdToMatchState[e.matchId] = matchIdToMatchState[e.matchId];
+      } else {
+        newMatchIdToMatchState[e.matchId] = {};
+      }
+    });
+    return {
+      matchesList: action.setMatchesList,
+      matchIdToMatchState: newMatchIdToMatchState,
+      ...rest
+    };
   } else if (action.setSignals) {
     return { ...state, signals: action.setSignals };
   } else if (action.setMyUser) {
     return { ...state, myUser: action.setMyUser };
     // TODO: support all other reducers.
   } else if (action.setCurrentMatchIndex) {
-    return {...state, currentMatchIndex: action.setCurrentMatchIndex};
-
+    return { ...state, currentMatchIndex: action.setCurrentMatchIndex };
+  } else if (action.updateMatchIdToMatchState) {
+    let { matchIdToMatchState, ...rest } = state;
+    return {
+      matchIdToMatchState: mergeMaps(
+        matchIdToMatchState,
+        action.updateMatchIdToMatchState
+      ),
+      ...rest
+    };
   } else if (action.updateGameSpecs) {
     let {
       imageIdToImage,

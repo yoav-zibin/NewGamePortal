@@ -1,7 +1,7 @@
 /**
  * @jest-environment node
  */
-import { reducer, Action } from './index';
+import { reducer, Action, mergeMaps } from './index';
 import { storeStateDefault } from '../stores/defaults';
 import {
   GameInfo,
@@ -9,7 +9,9 @@ import {
   MyUser,
   SignalEntry,
   Image,
-  StoreState
+  StoreState,
+  MatchState,
+  MatchIdToMatchState
 } from '../types';
 
 const image: Image = {
@@ -71,7 +73,20 @@ it('setMatchesList', () => {
     setMatchesList: matchesList
   };
   let initialState = storeStateDefault;
-  const expectedState = { ...storeStateDefault, matchesList: matchesList };
+  let { matchIdToMatchState } = initialState;
+  let newMatchIdToMatchState: MatchIdToMatchState = {};
+  matchesList.forEach(e => {
+    if (e.matchId in matchIdToMatchState) {
+      newMatchIdToMatchState[e.matchId] = matchIdToMatchState[e.matchId];
+    } else {
+      newMatchIdToMatchState[e.matchId] = {};
+    }
+  });
+  const expectedState = {
+    ...storeStateDefault,
+    matchesList: matchesList,
+    matchIdToMatchState: newMatchIdToMatchState
+  };
   expect(reduce(initialState, action)).toEqual(expectedState);
 });
 
@@ -107,4 +122,32 @@ it('setCurrentMatchIndex', () => {
   };
   expect(reduce(initialState, action)).toEqual(expectedState);
 });
+
+it('updateMatchIdToMatchState', () => {
+  const initialState = storeStateDefault;
+  let { matchIdToMatchState, ...rest } = initialState;
+  var someId = '';
+  var count = 0;
+  // select a random matchId to update
+  for (var prop in matchIdToMatchState) {
+    if (Math.random() < 1 / ++count) {
+      someId = prop;
+    }
+  }
+  let someMatchState: MatchState = {};
+  let newMatchIdToMatchState: MatchIdToMatchState = {};
+  newMatchIdToMatchState[someId] = someMatchState;
+  let action: Action = {
+    updateMatchIdToMatchState: newMatchIdToMatchState
+  };
+  const expectedState = {
+    matchIdToMatchState: mergeMaps(
+      storeStateDefault.matchIdToMatchState,
+      newMatchIdToMatchState
+    ),
+    ...rest
+  };
+  expect(reduce(initialState, action)).toEqual(expectedState);
+});
+
 // TODO: add tests for all other reducers.

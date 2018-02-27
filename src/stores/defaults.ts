@@ -51,7 +51,10 @@ export const storeStateDefault: StoreState = {
     }
   ],
   currentMatchIndex: 1,
-  matchIdToMatchState: {},
+  matchIdToMatchState: {
+    '1': {},
+    '2': {}
+  },
   phoneNumberToContact: {},
   userIdsAndPhoneNumbers: {
     phoneNumberToUserId: {},
