@@ -5,7 +5,7 @@ let image: Image = {
   width: 100,
   height: 100,
   isBoardImage: false,
-  downloadURL: 'blabla.png',
+  downloadURL: 'blabla.png'
 };
 
 export const storeStateDefault: StoreState = {
@@ -15,30 +15,58 @@ export const storeStateDefault: StoreState = {
     {
       gameSpecId: '123',
       gameName: '3 Men Chess',
-      screenShoot: image,
+      screenShoot: image
     },
     {
       gameSpecId: '456',
       gameName: 'Checkers',
-      screenShoot: image,
-    },
+      screenShoot: image
+    }
   ],
   gameSpecs: {
     imageIdToImage: {},
     elementIdToElement: {},
-    gameSpecIdToGameSpec: {},
+    gameSpecIdToGameSpec: {}
   },
-  matchesList: [],
-  currentMatchIndex: -1,
+  matchesList: [
+    {
+      matchId: '1',
+      game: {
+        gameSpecId: '123',
+        gameName: '3 Men Chess',
+        screenShoot: image
+      },
+      participantsUserIds: ['7UbETkgeXxe0RId6KxYioSJdARs1'], // including myself
+      lastUpdatedOn: 1234
+    },
+    {
+      matchId: '2',
+      game: {
+        gameSpecId: '456',
+        gameName: 'Checkers',
+        screenShoot: image
+      },
+      participantsUserIds: ['7UbETkgeXxe0RId6KxYioSJdARs1'], // including myself
+      lastUpdatedOn: 1564
+    }
+  ],
+  currentMatchIndex: 1,
   matchIdToMatchState: {},
   phoneNumberToContact: {},
   userIdsAndPhoneNumbers: {
     phoneNumberToUserId: {},
-    userIdToPhoneNumber: {},
+    userIdToPhoneNumber: {}
   },
   myUser: {
-    myPhoneNumber: '',
-    myUserId: '',
+    myPhoneNumber: '111111111',
+    myUserId: '7UbETkgeXxe0RId6KxYioSJdARs1'
   },
-  signals: [],
+  signals: [
+    {
+      addedByUid: '7UbETkgeXxe0RId6KxYioSJdARs1',
+      timestamp: 1234 /*firebase.database.ServerValue.TIMESTAMP*/,
+      signalType: 'sdp',
+      signalData: '3 Men Chess'
+    }
+  ]
 };
