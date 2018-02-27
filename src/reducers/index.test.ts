@@ -3,7 +3,14 @@
  */
 import { reducer, Action } from './index';
 import { storeStateDefault } from '../stores/defaults';
-import { GameInfo, MyUser, SignalEntry, Image, StoreState } from '../types';
+import {
+  GameInfo,
+  MatchInfo,
+  MyUser,
+  SignalEntry,
+  Image,
+  StoreState
+} from '../types';
 
 const image: Image = {
   imageId: 'someImageId',
@@ -17,6 +24,13 @@ const gameInfo: GameInfo = {
   gameSpecId: 'someId',
   gameName: 'Some game name',
   screenShoot: image
+};
+
+const matchInfo: MatchInfo = {
+  matchId: 'someId',
+  game: gameInfo,
+  participantsUserIds: [], // including myself
+  lastUpdatedOn: 1234 /*firebase.database.ServerValue.TIMESTAMP*/
 };
 
 const userInfo: MyUser = {
@@ -51,6 +65,16 @@ it('setGamesList', () => {
   expect(reduce(initialState, action)).toEqual(expectedState);
 });
 
+it('setMatchesList', () => {
+  let matchesList = [matchInfo];
+  let action: Action = {
+    setMatchesList: matchesList
+  };
+  let initialState = storeStateDefault;
+  const expectedState = { ...storeStateDefault, matchesList: matchesList };
+  expect(reduce(initialState, action)).toEqual(expectedState);
+});
+
 it('setSignals', () => {
   let signalsList = [sigEntry];
   let action: Action = {
@@ -77,7 +101,10 @@ it('setCurrentMatchIndex', () => {
     setCurrentMatchIndex: currentIndex
   };
   const initialState = storeStateDefault;
-  const expectedState = {...storeStateDefault, currentMatchIndex: currentIndex};
+  const expectedState = {
+    ...storeStateDefault,
+    currentMatchIndex: currentIndex
+  };
   expect(reduce(initialState, action)).toEqual(expectedState);
 });
 // TODO: add tests for all other reducers.

@@ -28,8 +28,29 @@ export const storeStateDefault: StoreState = {
     elementIdToElement: {},
     gameSpecIdToGameSpec: {}
   },
-  matchesList: [],
-  currentMatchIndex: -1,
+  matchesList: [
+    {
+      matchId: '1',
+      game: {
+        gameSpecId: '123',
+        gameName: '3 Men Chess',
+        screenShoot: image
+      },
+      participantsUserIds: ['7UbETkgeXxe0RId6KxYioSJdARs1'], // including myself
+      lastUpdatedOn: 1234
+    },
+    {
+      matchId: '2',
+      game: {
+        gameSpecId: '456',
+        gameName: 'Checkers',
+        screenShoot: image
+      },
+      participantsUserIds: ['7UbETkgeXxe0RId6KxYioSJdARs1'], // including myself
+      lastUpdatedOn: 1564
+    }
+  ],
+  currentMatchIndex: 1,
   matchIdToMatchState: {},
   phoneNumberToContact: {},
   userIdsAndPhoneNumbers: {

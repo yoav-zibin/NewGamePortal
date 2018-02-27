@@ -5,24 +5,27 @@ import Subheader from 'material-ui/Subheader';
 import StarBorder from 'material-ui/svg-icons/toggle/star-border';
 import { GridList, GridTile } from 'material-ui/GridList';
 
-import {connect} from 'react-redux';
-import {createStore, combineReducers} from 'redux';
+import { connect } from 'react-redux';
+import { createStore, combineReducers } from 'redux';
 
 const styles: any = {
   root: {
     display: 'flex',
     flexWrap: 'wrap',
-    justifyContent: 'space-around',
+    justifyContent: 'space-around'
   },
   gridList: {
     width: 500,
     height: 450,
-    overflowY: 'auto',
-  },
+    overflowY: 'auto'
+  }
 };
 
 // TODO: delete! It's just for demonstration purposes.
-console.log('Our db: ', window['spec'].gameBuilder.gameSpecs['-KxLz3CaPRPIBc-0mRP7']);
+console.log(
+  'Our db: ',
+  window['spec'].gameBuilder.gameSpecs['-KxLz3CaPRPIBc-0mRP7']
+);
 
 const images = [
   '3 Men Chess',
@@ -34,7 +37,7 @@ const images = [
   'Blue Nile',
   'Dvonn',
   'Chaturanga',
-  'Emergo',
+  'Emergo'
 ];
 
 // const tilesData = images.map((img)=>{
@@ -56,33 +59,36 @@ const images = [
  * and reroutes to that game's route.
  */
 
-const GamesListRes = (props:any) => {
+const GamesListRes = (props: any) => {
   return (
     <div>
       <RaisedButton label="Default" />
-      {<div style={styles.root}>
-        <GridList
-          cellHeight={180}
-          style={styles.gridList}
-        >
-          <Subheader>Card games</Subheader>
-          {props.tilesData.map((tile:any) => (
-            <GridTile
-              key={tile.img}
-              title={tile.title}
-              subtitle={''}
-              actionIcon={<IconButton><StarBorder color="white" /></IconButton>}
-            >
-              < img src={tile.img} />
-            </GridTile>
-          ))}
-        </GridList>
-      </div>}
+      {
+        <div style={styles.root}>
+          <GridList cellHeight={180} style={styles.gridList}>
+            <Subheader>Card games</Subheader>
+            {props.tilesData.map((tile: any) => (
+              <GridTile
+                key={tile.img}
+                title={tile.title}
+                subtitle={''}
+                actionIcon={
+                  <IconButton>
+                    <StarBorder color="white" />
+                  </IconButton>
+                }
+              >
+                <img src={tile.img} />
+              </GridTile>
+            ))}
+          </GridList>
+        </div>
+      }
     </div>
   );
 };
 
-const mapStateToPropsForGameList = (state:any) => {
+const mapStateToPropsForGameList = (state: any) => {
   return {
     tilesData: state.tilesData
   };
@@ -98,7 +104,6 @@ interface GLProps {
 // }
 
 class GamesList extends React.Component<GLProps> {
-
   constructor(props: GLProps) {
     super(props);
   }
@@ -109,18 +114,9 @@ class GamesList extends React.Component<GLProps> {
   }
 
   render() {
-    return (
-      <GamesList2 />
-    );
+    return <GamesList2 />;
   }
 }
-
-const mapDispatherToPropsForGL = (dispatch:any) => {
-  return {
-    fetchList: () => dispatch(actions.fetchList())
-  };
-};
-
 const actions = {
   fetchList: () => {
     return {
@@ -129,15 +125,21 @@ const actions = {
   }
 };
 
+const mapDispatherToPropsForGL = (dispatch: any) => {
+  return {
+    fetchList: () => dispatch(actions.fetchList())
+  };
+};
+
 connect(null, mapDispatherToPropsForGL)(GamesList);
 
-const tilesDataReducer = (state = [], action:any) => {
-  switch(action.type) {
+const tilesDataReducer = (state = [], action: any) => {
+  switch (action.type) {
     case 'Fetch List': {
-      return images.map((img)=>{
+      return images.map(img => {
         return {
           img: require(`../images/${img}.png`),
-          title: img,
+          title: img
         };
       });
     }
