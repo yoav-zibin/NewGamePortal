@@ -56,8 +56,10 @@ function checkStoreInvariants(state: StoreState) {
   checkCondition(
     'every matchId in matchIdToMatchState is also present in matchesList',
     Object.keys(state.matchIdToMatchState).reduce(
-      (a, e) =>
-        a && state.matchesList.filter(v => v.matchId === e).length === 1,
+      (accum, matchId) =>
+        accum &&
+        state.matchesList.filter(match => match.matchId === matchId).length ===
+          1,
       true
     )
   );
@@ -86,6 +88,15 @@ function reduce(state: StoreState, action: Action) {
   } else if (action.setMyUser) {
     return { ...state, myUser: action.setMyUser };
     // TODO: support all other reducers.
+  } else if (action.updatePhoneNumberToContact) {
+    let { phoneNumberToContact, ...rest } = state;
+    return {
+      phoneNumberToContact: mergeMaps(
+        phoneNumberToContact,
+        action.updatePhoneNumberToContact
+      ),
+      ...rest
+    };
   } else if (action.setCurrentMatchIndex) {
     return { ...state, currentMatchIndex: action.setCurrentMatchIndex };
   } else if (action.updateMatchIdToMatchState) {

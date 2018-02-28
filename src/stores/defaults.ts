@@ -55,7 +55,13 @@ export const storeStateDefault: StoreState = {
     '1': {},
     '2': {}
   },
-  phoneNumberToContact: {},
+  phoneNumberToContact: {
+    phoneNumber: {
+      phoneNumber: '+1234567890',
+      name: 'someName',
+      avatarImage: 'someImage'
+    }
+  },
   userIdsAndPhoneNumbers: {
     phoneNumberToUserId: {},
     userIdToPhoneNumber: {}
