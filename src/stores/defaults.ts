@@ -54,7 +54,7 @@ export const storeStateDefault: StoreState = {
   matchIdToMatchState: {},
   phoneNumberToContact: {
     phoneNumber: {
-      phoneNumber: '0987654321',
+      phoneNumber: '+1234567890',
       name: 'someName',
       avatarImage: 'someImage'
     }

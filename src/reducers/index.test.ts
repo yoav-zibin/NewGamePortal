@@ -121,7 +121,7 @@ it('updatePhoneNumberToContact', () => {
   };
 
   let newPhoneNumberToContact: PhoneNumberToContact = {};
-  newPhoneNumberToContact['phoneNumber'] = someContact;
+  newPhoneNumberToContact['+1234567890'] = someContact;
 
   let action: Action = {
     updatePhoneNumberToContact: newPhoneNumberToContact
