@@ -52,7 +52,13 @@ export const storeStateDefault: StoreState = {
   ],
   currentMatchIndex: 1,
   matchIdToMatchState: {},
-  phoneNumberToContact: {},
+  phoneNumberToContact: {
+    phoneNumber: {
+      phoneNumber: '+1234567890',
+      name: 'someName',
+      avatarImage: 'someImage'
+    }
+  },
   userIdsAndPhoneNumbers: {
     phoneNumberToUserId: {},
     userIdToPhoneNumber: {}

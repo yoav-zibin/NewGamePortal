@@ -1,13 +1,15 @@
 /**
  * @jest-environment node
  */
-import { reducer, Action } from './index';
+import { reducer, Action, mergeMaps } from './index';
 import { storeStateDefault } from '../stores/defaults';
 import {
   GameInfo,
   MatchInfo,
   MyUser,
   SignalEntry,
+  Contact,
+  PhoneNumberToContact,
   Image,
   StoreState
 } from '../types';
@@ -107,4 +109,33 @@ it('setCurrentMatchIndex', () => {
   };
   expect(reduce(initialState, action)).toEqual(expectedState);
 });
+
+it('updatePhoneNumberToContact', () => {
+  const initialState = storeStateDefault;
+  let { phoneNumberToContact, ...rest } = initialState;
+
+  let someContact: Contact = {
+    phoneNumber: '+1234567890',
+    name: 'someName',
+    avatarImage: 'someImage'
+  };
+
+  let newPhoneNumberToContact: PhoneNumberToContact = {};
+  newPhoneNumberToContact['+1234567890'] = someContact;
+
+  let action: Action = {
+    updatePhoneNumberToContact: newPhoneNumberToContact
+  };
+
+  const expectedState = {
+    phoneNumberToContact: mergeMaps(
+      storeStateDefault.phoneNumberToContact,
+      newPhoneNumberToContact
+    ),
+    ...rest
+  };
+
+  expect(reduce(initialState, action)).toEqual(expectedState);
+});
+
 // TODO: add tests for all other reducers.
