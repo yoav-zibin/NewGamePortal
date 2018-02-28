@@ -75,20 +75,7 @@ it('setMatchesList', () => {
     setMatchesList: matchesList
   };
   let initialState = storeStateDefault;
-  let { matchIdToMatchState } = initialState;
-  let newMatchIdToMatchState: MatchIdToMatchState = {};
-  matchesList.forEach(e => {
-    if (e.matchId in matchIdToMatchState) {
-      newMatchIdToMatchState[e.matchId] = matchIdToMatchState[e.matchId];
-    } else {
-      newMatchIdToMatchState[e.matchId] = {};
-    }
-  });
-  const expectedState = {
-    ...storeStateDefault,
-    matchesList: matchesList,
-    matchIdToMatchState: newMatchIdToMatchState
-  };
+  const expectedState = { ...storeStateDefault, matchesList: matchesList };
   expect(reduce(initialState, action)).toEqual(expectedState);
 });
 
@@ -126,22 +113,24 @@ it('setCurrentMatchIndex', () => {
 });
 
 it('updateMatchIdToMatchState', () => {
-  const initialState = storeStateDefault;
+  let initialState = storeStateDefault;
   let { matchIdToMatchState, ...rest } = initialState;
-  var someId = '';
-  var count = 0;
-  // select a random matchId to update
-  for (var prop in matchIdToMatchState) {
-    if (Math.random() < 1 / ++count) {
-      someId = prop;
-    }
-  }
-  let someMatchState: MatchState = {};
+
   let newMatchIdToMatchState: MatchIdToMatchState = {};
-  newMatchIdToMatchState[someId] = someMatchState;
+  newMatchIdToMatchState['1'] = {
+    somePieceId: {
+      x: 0,
+      y: 0,
+      zDepth: 0,
+      currentImageIndex: 0,
+      cardVisibility: {}
+    }
+  };
+
   let action: Action = {
     updateMatchIdToMatchState: newMatchIdToMatchState
   };
+
   const expectedState = {
     matchIdToMatchState: mergeMaps(
       storeStateDefault.matchIdToMatchState,
@@ -149,6 +138,27 @@ it('updateMatchIdToMatchState', () => {
     ),
     ...rest
   };
+
+  expect(reduce(initialState, action)).toEqual(expectedState);
+});
+
+it('set matchesList to empty list and updates currentMatchIndex accordingly', () => {
+  const initialState = storeStateDefault;
+  let { matchesList, matchIdToMatchState, ...rest } = initialState;
+
+  let action: Action = {
+    setMatchesList: []
+  };
+
+  let newMatches: MatchInfo[] = [];
+
+  const expectedState = {
+    ...rest,
+    matchesList: newMatches,
+    matchIdToMatchState: {},
+    currentMatchIndex: 0
+  };
+
   expect(reduce(initialState, action)).toEqual(expectedState);
 });
 

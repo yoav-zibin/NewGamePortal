@@ -69,18 +69,28 @@ function reduce(state: StoreState, action: Action) {
   if (action.setGamesList) {
     return { ...state, gamesList: action.setGamesList };
   } else if (action.setMatchesList) {
-    let { matchesList, matchIdToMatchState, ...rest } = state;
-    let newMatchIdToMatchState = {};
+    let {
+      matchesList,
+      matchIdToMatchState,
+      currentMatchIndex,
+      ...rest
+    } = state;
+    let newMatchIdToMatchState: MatchIdToMatchState = {};
     action.setMatchesList.forEach(e => {
       if (e.matchId in matchIdToMatchState) {
         newMatchIdToMatchState[e.matchId] = matchIdToMatchState[e.matchId];
-      } else {
-        newMatchIdToMatchState[e.matchId] = {};
       }
     });
+    if (
+      currentMatchIndex > action.setMatchesList.length ||
+      currentMatchIndex < -1
+    ) {
+      currentMatchIndex = action.setMatchesList.length;
+    }
     return {
       matchesList: action.setMatchesList,
       matchIdToMatchState: newMatchIdToMatchState,
+      currentMatchIndex: currentMatchIndex,
       ...rest
     };
   } else if (action.setSignals) {
@@ -100,13 +110,12 @@ function reduce(state: StoreState, action: Action) {
   } else if (action.setCurrentMatchIndex) {
     return { ...state, currentMatchIndex: action.setCurrentMatchIndex };
   } else if (action.updateMatchIdToMatchState) {
-    let { matchIdToMatchState, ...rest } = state;
     return {
       matchIdToMatchState: mergeMaps(
-        matchIdToMatchState,
+        state.matchIdToMatchState,
         action.updateMatchIdToMatchState
       ),
-      ...rest
+      ...state
     };
   } else if (action.updateGameSpecs) {
     let {
