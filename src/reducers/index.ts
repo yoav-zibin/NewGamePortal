@@ -54,9 +54,10 @@ function checkStoreInvariants(state: StoreState) {
   );
 
   checkCondition(
-    'every matchId in matchesList is also present in matchIdToMatchState',
-    state.matchesList.reduce(
-      (a, e) => a && e.matchId in state.matchIdToMatchState,
+    'every matchId in matchIdToMatchState is also present in matchesList',
+    Object.keys(state.matchIdToMatchState).reduce(
+      (a, e) =>
+        a && state.matchesList.filter(v => v.matchId === e).length === 1,
       true
     )
   );
