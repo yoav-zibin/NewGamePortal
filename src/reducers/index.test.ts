@@ -115,7 +115,7 @@ it('updatePhoneNumberToContact', () => {
   let { phoneNumberToContact, ...rest } = initialState;
 
   let someContact: Contact = {
-    phoneNumber: '1234567890',
+    phoneNumber: '+1234567890',
     name: 'someName',
     avatarImage: 'someImage'
   };
