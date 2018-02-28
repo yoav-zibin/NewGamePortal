@@ -2,11 +2,15 @@
 export interface StoreState {
   gamesList: GameInfo[];
 
+  // gameSpecs will be loaded lazily, i.e.,
+  // not every game in gamesList will have an entry in gameSpecs.
   gameSpecs: GameSpecs;
 
   matchesList: MatchInfo[];
   currentMatchIndex: number; // an index in matchesList
 
+  // Match state will be loaded lazily, i.e.,
+  // not every match in matchesList will have an entry in matchIdToMatchState.
   matchIdToMatchState: MatchIdToMatchState;
 
   phoneNumberToContact: PhoneNumberToContact; // Coming from the phone contacts
@@ -18,8 +22,8 @@ export interface StoreState {
 }
 
 export interface UserIdsAndPhoneNumbers {
-  phoneNumberToUserId: PhoneNumberToUserId; 
-  userIdToPhoneNumber: UserIdToPhoneNumber; // Calculated whenever 
+  phoneNumberToUserId: PhoneNumberToUserId;
+  userIdToPhoneNumber: UserIdToPhoneNumber; // Calculated whenever
 }
 
 export interface MyUser {
@@ -29,8 +33,8 @@ export interface MyUser {
 
 export interface SignalEntry {
   addedByUid: string;
-  timestamp: number/*firebase.database.ServerValue.TIMESTAMP*/;
-  signalType: 'sdp'|'candidate';
+  timestamp: number /*firebase.database.ServerValue.TIMESTAMP*/;
+  signalType: 'sdp' | 'candidate';
   signalData: string;
 }
 
@@ -118,7 +122,7 @@ export interface MatchInfo {
   matchId: string;
   game: GameInfo;
   participantsUserIds: string[]; // including myself
-  lastUpdatedOn: number/*firebase.database.ServerValue.TIMESTAMP*/;
+  lastUpdatedOn: number /*firebase.database.ServerValue.TIMESTAMP*/;
 }
 
 export interface Piece {
@@ -133,7 +137,13 @@ export interface Element {
   height: number;
   images: Image[];
   isDraggable: boolean;
-  elementKind: 'standard'|'toggable'|'dice'|'card'|'cardsDeck'|'piecesDeck';
+  elementKind:
+    | 'standard'
+    | 'toggable'
+    | 'dice'
+    | 'card'
+    | 'cardsDeck'
+    | 'piecesDeck';
   deckElements: Element[];
   // rotatableDegrees: number;
   // isDrawable: boolean;
