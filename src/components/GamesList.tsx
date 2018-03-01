@@ -82,8 +82,7 @@ const GamesListRes = (props: any) => {
               </GridTile>
             ))}
           </GridList>
-        </div>
-      }
+        </div>}
     </div>
   );
 };
