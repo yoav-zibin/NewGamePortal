@@ -84,7 +84,7 @@ function checkStoreInvariants(state: StoreState) {
     );
     gameSpec.pieces.forEach(piece => {
       checkCondition(
-        "Every piece's element must be in elementIdToElement",
+        'Every piece element must be in elementIdToElement',
         piece.element === elementIdToElement[piece.element.elementId]
       );
       if (piece.deckPieceIndex !== -1) {
@@ -94,7 +94,7 @@ function checkStoreInvariants(state: StoreState) {
         );
         const deck = gameSpec.pieces[piece.deckPieceIndex].element;
         checkCondition(
-          "deckPieceIndex points to a deck that contains this piece's element",
+          'deckPieceIndex points to a deck that contains this piece element',
           deck.elementKind.endsWith('Deck') &&
             deck.deckElements.indexOf(piece.element) !== -1
         );
