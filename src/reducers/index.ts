@@ -42,6 +42,10 @@ function checkCondition(desc: string, cond: boolean) {
   }
 }
 
+function isInRange(currentMatchIndex: number, matchesList: MatchInfo[]) {
+  return currentMatchIndex >= -1 && currentMatchIndex < matchesList.length;
+}
+
 function checkStoreInvariants(state: StoreState) {
   // TODO: check invariants, e.g.,
   // that every Image object in the store (except screenshots) is also present in
@@ -49,8 +53,7 @@ function checkStoreInvariants(state: StoreState) {
   // Ensure UserIdsAndPhoneNumbers have two mappings that are exactly the reverse of each other.
   checkCondition(
     'currentMatchIndex is in range',
-    state.currentMatchIndex >= -1 &&
-      state.currentMatchIndex <= state.matchesList.length
+    isInRange(state.currentMatchIndex, state.matchesList)
   );
 
   checkCondition(
@@ -81,17 +84,14 @@ function reduce(state: StoreState, action: Action) {
         newMatchIdToMatchState[e.matchId] = matchIdToMatchState[e.matchId];
       }
     });
-    if (
-      currentMatchIndex > action.setMatchesList.length ||
-      currentMatchIndex < -1
-    ) {
-      currentMatchIndex = action.setMatchesList.length;
+    if (!isInRange(state.currentMatchIndex, action.setMatchesList)) {
+      currentMatchIndex = -1;
     }
     return {
+      ...rest,
       matchesList: action.setMatchesList,
       matchIdToMatchState: newMatchIdToMatchState,
-      currentMatchIndex: currentMatchIndex,
-      ...rest
+      currentMatchIndex: currentMatchIndex
     };
   } else if (action.setSignals) {
     return { ...state, signals: action.setSignals };

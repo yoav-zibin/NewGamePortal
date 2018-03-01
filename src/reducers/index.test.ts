@@ -12,7 +12,6 @@ import {
   PhoneNumberToContact,
   Image,
   StoreState,
-  MatchState,
   MatchIdToMatchState
 } from '../types';
 
@@ -69,13 +68,17 @@ it('setGamesList', () => {
   expect(reduce(initialState, action)).toEqual(expectedState);
 });
 
-it('setMatchesList', () => {
+it('setMatchesList (and updates currentMatchIndex accordingly)', () => {
   let matchesList = [matchInfo];
   let action: Action = {
     setMatchesList: matchesList
   };
   let initialState = storeStateDefault;
-  const expectedState = { ...storeStateDefault, matchesList: matchesList };
+  const expectedState = {
+    ...storeStateDefault,
+    matchesList: matchesList,
+    currentMatchIndex: -1
+  };
   expect(reduce(initialState, action)).toEqual(expectedState);
 });
 
@@ -142,21 +145,20 @@ it('updateMatchIdToMatchState', () => {
   expect(reduce(initialState, action)).toEqual(expectedState);
 });
 
-it('set matchesList to empty list and updates currentMatchIndex accordingly', () => {
+it('set matchesList to empty list (and updates currentMatchIndex accordingly)', () => {
   const initialState = storeStateDefault;
   let { matchesList, matchIdToMatchState, ...rest } = initialState;
 
-  let action: Action = {
-    setMatchesList: []
-  };
-
   let newMatches: MatchInfo[] = [];
+  let action: Action = {
+    setMatchesList: newMatches
+  };
 
   const expectedState = {
     ...rest,
     matchesList: newMatches,
     matchIdToMatchState: {},
-    currentMatchIndex: 0
+    currentMatchIndex: -1
   };
 
   expect(reduce(initialState, action)).toEqual(expectedState);
