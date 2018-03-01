@@ -10,6 +10,7 @@ import {
   SignalEntry,
   Contact,
   PhoneNumberToContact,
+  UserIdsAndPhoneNumbers,
   Image,
   StoreState,
   MatchIdToMatchState
@@ -189,6 +190,44 @@ it('updatePhoneNumberToContact', () => {
     ...rest
   };
 
+  expect(reduce(initialState, action)).toEqual(expectedState);
+});
+
+it('updateUserIdsAndPhoneNumbers', () => {
+  const initialState = storeStateDefault;
+  let { userIdsAndPhoneNumbers, ...rest } = initialState;
+
+  let newUserIdsAndPhoneNumbers: UserIdsAndPhoneNumbers = {
+    phoneNumberToUserId: {},
+    userIdToPhoneNumber: {}
+  };
+  newUserIdsAndPhoneNumbers['phoneNumberToUserId'] = {
+    x: 'y',
+    z: 'u'
+  };
+  newUserIdsAndPhoneNumbers['userIdToPhoneNumber'] = {
+    y: 'x',
+    u: 'z'
+  };
+  // newUserIdsAndPhoneNumbers['+1234567890'] = someContact;
+
+  let action: Action = {
+    updateUserIdsAndPhoneNumbers: newUserIdsAndPhoneNumbers
+  };
+
+  const expectedState = {
+    userIdsAndPhoneNumbers: {
+      phoneNumberToUserId: mergeMaps(
+        storeStateDefault.userIdsAndPhoneNumbers.phoneNumberToUserId,
+        newUserIdsAndPhoneNumbers.phoneNumberToUserId
+      ),
+      userIdToPhoneNumber: mergeMaps(
+        storeStateDefault.userIdsAndPhoneNumbers.userIdToPhoneNumber,
+        newUserIdsAndPhoneNumbers.userIdToPhoneNumber
+      ),
+    },
+    ...rest
+  };
   expect(reduce(initialState, action)).toEqual(expectedState);
 });
 

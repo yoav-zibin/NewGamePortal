@@ -19,10 +19,10 @@ export interface Action {
   // In contrast, actions that start with "update" will update mappigns
   // (using mergeMaps below).
   setGamesList?: GameInfo[];
-  updateGameSpecs?: GameSpecs;
+  updateGameSpecs?: GameSpecs; 
   setMatchesList?: MatchInfo[];
-  setCurrentMatchIndex?: number; // an index in matchesList
-  updateMatchIdToMatchState?: MatchIdToMatchState;
+  setCurrentMatchIndex?: number; // an index in matchesList   
+  updateMatchIdToMatchState?: MatchIdToMatchState;  
   updatePhoneNumberToContact?: PhoneNumberToContact;
   updateUserIdsAndPhoneNumbers?: UserIdsAndPhoneNumbers;
   setMyUser?: MyUser;
@@ -190,7 +190,23 @@ function reduce(state: StoreState, action: Action) {
       ),
       ...rest
     };
-  } else if (action.setCurrentMatchIndex) {
+  } else if (action.updateUserIdsAndPhoneNumbers) {                               
+    let { userIdsAndPhoneNumbers, ...rest } = state;
+    return {
+      userIdsAndPhoneNumbers: {
+        phoneNumberToUserId: mergeMaps(
+          userIdsAndPhoneNumbers.phoneNumberToUserId,
+          action.updateUserIdsAndPhoneNumbers.phoneNumberToUserId
+        ),
+        userIdToPhoneNumber: mergeMaps(
+          userIdsAndPhoneNumbers.userIdToPhoneNumber,
+          action.updateUserIdsAndPhoneNumbers.userIdToPhoneNumber
+        ),
+      },
+      ...rest
+    };
+  }
+  else if (action.setCurrentMatchIndex) {
     return { ...state, currentMatchIndex: action.setCurrentMatchIndex };
   } else if (action.updateMatchIdToMatchState) {
     return {
