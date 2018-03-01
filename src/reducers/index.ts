@@ -42,6 +42,10 @@ function checkCondition(desc: string, cond: boolean) {
   }
 }
 
+function isInRange(currentMatchIndex: number, matchesList: MatchInfo[]) {
+  return currentMatchIndex >= -1 && currentMatchIndex < matchesList.length;
+}
+
 function checkStoreInvariants(state: StoreState) {
   // TODO: check invariants, e.g.,
   // that every Image object in the store (except screenshots) is also present in
@@ -49,8 +53,18 @@ function checkStoreInvariants(state: StoreState) {
   // Ensure UserIdsAndPhoneNumbers have two mappings that are exactly the reverse of each other.
   checkCondition(
     'currentMatchIndex is in range',
-    state.currentMatchIndex >= -1 &&
-      state.currentMatchIndex <= state.matchesList.length
+    isInRange(state.currentMatchIndex, state.matchesList)
+  );
+
+  checkCondition(
+    'every matchId in matchIdToMatchState is also present in matchesList',
+    Object.keys(state.matchIdToMatchState).reduce(
+      (accum, matchId) =>
+        accum &&
+        state.matchesList.filter(match => match.matchId === matchId).length ===
+          1,
+      true
+    )
   );
 }
 
@@ -58,7 +72,27 @@ function reduce(state: StoreState, action: Action) {
   if (action.setGamesList) {
     return { ...state, gamesList: action.setGamesList };
   } else if (action.setMatchesList) {
-    return { ...state, matchesList: action.setMatchesList };
+    let {
+      matchesList,
+      matchIdToMatchState,
+      currentMatchIndex,
+      ...rest
+    } = state;
+    let newMatchIdToMatchState: MatchIdToMatchState = {};
+    action.setMatchesList.forEach(e => {
+      if (e.matchId in matchIdToMatchState) {
+        newMatchIdToMatchState[e.matchId] = matchIdToMatchState[e.matchId];
+      }
+    });
+    if (!isInRange(state.currentMatchIndex, action.setMatchesList)) {
+      currentMatchIndex = -1;
+    }
+    return {
+      ...rest,
+      matchesList: action.setMatchesList,
+      matchIdToMatchState: newMatchIdToMatchState,
+      currentMatchIndex: currentMatchIndex
+    };
   } else if (action.setSignals) {
     return { ...state, signals: action.setSignals };
   } else if (action.setMyUser) {
@@ -75,6 +109,14 @@ function reduce(state: StoreState, action: Action) {
     };
   } else if (action.setCurrentMatchIndex) {
     return { ...state, currentMatchIndex: action.setCurrentMatchIndex };
+  } else if (action.updateMatchIdToMatchState) {
+    return {
+      matchIdToMatchState: mergeMaps(
+        state.matchIdToMatchState,
+        action.updateMatchIdToMatchState
+      ),
+      ...state
+    };
   } else if (action.updateGameSpecs) {
     let {
       imageIdToImage,
