@@ -9,7 +9,8 @@ import {
   MatchIdToMatchState,
   SignalEntry,
   IdIndexer,
-  MyUser
+  MyUser,
+  CardVisibility
 } from '../types';
 import { storeStateDefault } from '../stores/defaults';
 
@@ -27,6 +28,7 @@ export interface Action {
   updateUserIdsAndPhoneNumbers?: UserIdsAndPhoneNumbers;
   setMyUser?: MyUser;
   setSignals?: SignalEntry[];
+  updateCardVisibility?: CardVisibility;
 }
 
 export function mergeMaps<T>(
@@ -94,6 +96,12 @@ function reduce(state: StoreState, action: Action) {
           gameSpecIdToGameSpec
         )
       },
+      ...rest
+    };
+  } else if (action.updateCardVisibility) {
+    let { cardVisibility, ...rest } = state;
+    return {
+      cardVisibility: mergeMaps(cardVisibility, action.updateCardVisibility),
       ...rest
     };
   } else {
