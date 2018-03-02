@@ -15,9 +15,9 @@ const testConfig = {
 ourFirebase.init(testConfig);
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 
-// function prettyJson(obj: any): string {
-//   return JSON.stringify(obj, null, '  ');
-// }
+function prettyJson(obj: any): string {
+  return JSON.stringify(obj, null, '  ');
+}
 
 beforeAll(async done => {
   await firebase
@@ -47,3 +47,4 @@ it('TODO: delete eventually. Just checking things work in firebase.', () => {
       console.log(prettyJson(snap.val()));
     });
 });
+// test
