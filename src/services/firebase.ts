@@ -113,21 +113,22 @@ export namespace ourFirebase {
   // TODO: export function createMatch(game: GameInfo): MatchInfo {}
   // TODO: export function addParticipant(match: MatchInfo, user: User) {}
   export function updateMatchState(match: MatchInfo, matchState: MatchState) {
-    const newState: fbr.CurrentState = {
-      x: matchState.pieceIndex.x,
-      y: matchState.pieceIndex.y,
-      zDepth: matchState.pieceIndex.zDepth,
-      currentImageIndex: matchState.pieceIndex.currentImageIndex,
-      cardVisibility: matchState.pieceIndex.cardVisibility,
-      rotationDegrees: 360,
-      drawing: {}
-    };
+    const newState: fbr.CurrentState = {};
+    for (let item in matchState) {
+      console.log(item);
+      newState[item] = {
+        y: matchState[item].y,
+        zDepth: matchState[item].zDepth,
+        currentImageIndex: matchState[item].currentImageIndex,
+        cardVisibility: matchState[item].cardVisibility,
+        rotationDegrees: 360,
+        drawing: {}
+      };
+    }
 
     const updates: any = {};
     updates[
-      `gamePortal/gamePortalUsers/matches/${match.matchId}/pieces/${
-        matchState.pieceIndex
-      }/currentState`
+      `gamePortal/gamePortalUsers/matches/${match.matchId}/pieces`
     ] = newState;
 
     return db()

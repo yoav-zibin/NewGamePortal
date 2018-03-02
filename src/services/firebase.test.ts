@@ -3,6 +3,7 @@
  */
 import { ourFirebase } from './firebase';
 import * as firebase from 'firebase';
+import { MatchState, MatchInfo } from '../types/index';
 
 const testConfig = {
   apiKey: 'AIzaSyA_UNWBNj7zXrrwMYq49aUaSQqygDg66SI',
@@ -41,6 +42,49 @@ it('writeUser succeeds', done => {
     done();
   });
 });
+it('Should update the match state', done => {
+  // take match state and matchinfo
+  const state: MatchState = {
+    '0': {
+      x: 100,
+      y: 100,
+      zDepth: 1,
+      currentImageIndex: 0,
+      cardVisibility: { '0': true }
+    }
+  };
+
+  const info: MatchInfo = {
+    matchId: 'matchId3470079098562955xxxx',
+    game: {
+      gameSpecId: 'something',
+      gameName: 'someGameName',
+      screenShoot: {
+        imageId: '',
+        width: 100,
+        height: 100,
+        isBoardImage: false,
+        downloadURL: 'blabla.png'
+      }
+    },
+    participantsUserIds: [],
+    lastUpdatedOn: 0
+  };
+  ourFirebase.updateMatchState(info, state).then(() => {
+    firebase
+      .database()
+      .ref(
+        `gamePortal/matches/${info.matchId}/pieces/${
+          state.currentImageIndex
+        }/currentState`
+      )
+      .once('value')
+      .then((snapshot: DeltaSnapshot) => {
+        expect(snapshot.val()).toEqual(state);
+        done();
+      });
+  });
+});
 
 it('TODO: delete eventually. Just checking things work in firebase.', () => {
   prettyJson(firebase.auth().currentUser);
@@ -49,6 +93,6 @@ it('TODO: delete eventually. Just checking things work in firebase.', () => {
     .ref('gameBuilder/gameSpecs')
     .limitToFirst(1)
     .once('value', snap => {
-      console.log(prettyJson(snap.val()));
+      // console.log(prettyJson(snap.val()));
     });
 });
