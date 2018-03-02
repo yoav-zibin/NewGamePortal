@@ -15,9 +15,9 @@ const testConfig = {
 ourFirebase.init(testConfig);
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 
-// function prettyJson(obj: any): string {
-//   return JSON.stringify(obj, null, '  ');
-// }
+function prettyJson(obj: any): string {
+  return JSON.stringify(obj, null, '  ');
+}
 
 beforeAll(async done => {
   await firebase
@@ -35,15 +35,15 @@ beforeAll(async done => {
 
 it('signInAnonymously finished successfully', () => {
   expect(firebase.auth().currentUser).toBeDefined();
-  // prettyJson(firebase.auth().currentUser);
+  prettyJson(firebase.auth().currentUser);
 });
 
-// it('TODO: delete eventually. Just checking things work in firebase.', () => {
-//   firebase
-//     .database()
-//     .ref('gameBuilder/gameSpecs')
-//     .limitToFirst(1)
-//     .once('value', snap => {
-//       console.log(prettyJson(snap.val()));
-//     });
-// });
+it('TODO: delete eventually. Just checking things work in firebase.', () => {
+  firebase
+    .database()
+    .ref('gameBuilder/gameSpecs')
+    .limitToFirst(1)
+    .once('value', snap => {
+      console.log(prettyJson(snap.val()));
+    });
+});
