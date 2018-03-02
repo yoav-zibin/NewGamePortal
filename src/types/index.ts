@@ -19,6 +19,8 @@ export interface StoreState {
   myUser: MyUser;
 
   signals: SignalEntry[];
+
+  cardVisibility: CardVisibility;
 }
 
 export interface UserIdsAndPhoneNumbers {
