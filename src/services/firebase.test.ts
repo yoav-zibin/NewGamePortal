@@ -47,7 +47,4 @@ it('TODO: delete eventually. Just checking things work in firebase.', () => {
       console.log(prettyJson(snap.val()));
     });
 });
-<<<<<<< HEAD
 // test
-=======
->>>>>>> upstream/master
