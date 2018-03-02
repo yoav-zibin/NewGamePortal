@@ -198,18 +198,9 @@ it('updateUserIdsAndPhoneNumbers', () => {
   let { userIdsAndPhoneNumbers, ...rest } = initialState;
 
   let newUserIdsAndPhoneNumbers: UserIdsAndPhoneNumbers = {
-    phoneNumberToUserId: {},
-    userIdToPhoneNumber: {}
+    phoneNumberToUserId: { x: 'y', z: 'u' },
+    userIdToPhoneNumber: { y: 'x', u: 'z' }
   };
-  newUserIdsAndPhoneNumbers['phoneNumberToUserId'] = {
-    x: 'y',
-    z: 'u'
-  };
-  newUserIdsAndPhoneNumbers['userIdToPhoneNumber'] = {
-    y: 'x',
-    u: 'z'
-  };
-  // newUserIdsAndPhoneNumbers['+1234567890'] = someContact;
 
   let action: Action = {
     updateUserIdsAndPhoneNumbers: newUserIdsAndPhoneNumbers
@@ -224,7 +215,7 @@ it('updateUserIdsAndPhoneNumbers', () => {
       userIdToPhoneNumber: mergeMaps(
         storeStateDefault.userIdsAndPhoneNumbers.userIdToPhoneNumber,
         newUserIdsAndPhoneNumbers.userIdToPhoneNumber
-      ),
+      )
     },
     ...rest
   };
