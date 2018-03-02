@@ -92,6 +92,22 @@ export namespace ourFirebase {
       .on('value', snap => getMatchMemberships(snap ? snap.val() : {}));
   }
 
+  export function addFcmToken(fcmToken: string, platform: 'ios' | 'android') {
+    checkFunctionIsCalledOnce('addFcmToken');
+    const user = assertLoggedIn();
+    const fcmTokenObj: fbr.FcmToken = {
+      lastTimeReceived: <any>firebase.database.ServerValue.TIMESTAMP,
+      platform: platform
+    };
+    return db()
+      .ref(
+        `gamePortal/gamePortalUsers${
+          user.uid
+        }/privateFields/fcmTokens/${fcmToken}`
+      )
+      .set(fcmTokenObj);
+  }
+
   function getMatchMemberships(matchMemberships: fbr.MatchMemberships) {
     const matchIds = Object.keys(matchMemberships);
     // TODO: get all matches in one call to firebase, then later call dispatch.
