@@ -210,7 +210,6 @@ it('updateUserIdsAndPhoneNumbers', () => {
     u: 'z'
   };
   // newUserIdsAndPhoneNumbers['+1234567890'] = someContact;
-
   let action: Action = {
     updateUserIdsAndPhoneNumbers: newUserIdsAndPhoneNumbers
   };
@@ -224,7 +223,7 @@ it('updateUserIdsAndPhoneNumbers', () => {
       userIdToPhoneNumber: mergeMaps(
         storeStateDefault.userIdsAndPhoneNumbers.userIdToPhoneNumber,
         newUserIdsAndPhoneNumbers.userIdToPhoneNumber
-      ),
+      )
     },
     ...rest
   };
