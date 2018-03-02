@@ -187,6 +187,21 @@ function reduce(state: StoreState, action: Action) {
       ),
       ...rest
     };
+  } else if (action.updateUserIdsAndPhoneNumbers) {
+    let { userIdsAndPhoneNumbers, ...rest } = state;
+    return {
+      userIdsAndPhoneNumbers: {
+        phoneNumberToUserId: mergeMaps(
+          userIdsAndPhoneNumbers.phoneNumberToUserId,
+          action.updateUserIdsAndPhoneNumbers.phoneNumberToUserId
+        ),
+        userIdToPhoneNumber: mergeMaps(
+          userIdsAndPhoneNumbers.userIdToPhoneNumber,
+          action.updateUserIdsAndPhoneNumbers.userIdToPhoneNumber
+        )
+      },
+      ...rest
+    };
   } else if (action.setCurrentMatchIndex) {
     return { ...state, currentMatchIndex: action.setCurrentMatchIndex };
   } else if (action.updateMatchIdToMatchState) {
