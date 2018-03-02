@@ -3,6 +3,7 @@
  */
 import { ourFirebase } from './firebase';
 import * as firebase from 'firebase';
+import { GameInfo } from '../types/index';
 
 const testConfig = {
   apiKey: 'AIzaSyA_UNWBNj7zXrrwMYq49aUaSQqygDg66SI',
@@ -51,4 +52,19 @@ it('TODO: delete eventually. Just checking things work in firebase.', () => {
     .once('value', snap => {
       console.log(prettyJson(snap.val()));
     });
+});
+
+it('adds a new match in firebase', () => {
+  const gameInfo: GameInfo = {
+    gameSpecId: '-KxLz3AY3-xB47ZXN9Az',
+    gameName: '3 Man Chess',
+    screenShoot: {
+      imageId: '-KuXdJ2ZJPJ-Ad_k02Tf',
+      downloadURL: 'https://someurl.com/foo.png',
+      height: 1024,
+      width: 700,
+      isBoardImage: true
+    }
+  };
+  ourFirebase.createMatch(gameInfo);
 });
