@@ -35,7 +35,7 @@ beforeAll(async done => {
 
 it('signInAnonymously finished successfully', () => {
   expect(firebase.auth().currentUser).toBeDefined();
-  // prettyJson(firebase.auth().currentUser);
+  prettyJson(firebase.auth().currentUser);
 });
 
 it('TODO: delete eventually. Just checking things work in firebase.', () => {
@@ -47,4 +47,7 @@ it('TODO: delete eventually. Just checking things work in firebase.', () => {
       console.log(prettyJson(snap.val()));
     });
 });
+<<<<<<< HEAD
 // test
+=======
+>>>>>>> upstream/master
