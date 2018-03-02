@@ -19,26 +19,33 @@ function prettyJson(obj: any): string {
   return JSON.stringify(obj, null, '  ');
 }
 
-beforeAll(async done => {
-  await firebase
+// Must be the first test.
+it('signInAnonymously finished successfully', done => {
+  console.error('running signInAnonymously');
+  firebase
     .auth()
     .signInAnonymously()
     .then(() => {
+      console.error('finished signInAnonymously');
       done();
     })
     .catch(err => {
       console.error('error in signInAnonymously with err=', err);
       throw new Error('error in signInAnonymously err=' + err);
     });
-  done();
 });
 
-it('signInAnonymously finished successfully', () => {
-  expect(firebase.auth().currentUser).toBeDefined();
-  prettyJson(firebase.auth().currentUser);
+it('writeUser succeeds', done => {
+  console.error('running writeUser');
+  const user = firebase.auth().currentUser;
+  expect(user).toBeDefined();
+  ourFirebase.writeUser().then(() => {
+    done();
+  });
 });
 
 it('TODO: delete eventually. Just checking things work in firebase.', () => {
+  prettyJson(firebase.auth().currentUser);
   firebase
     .database()
     .ref('gameBuilder/gameSpecs')
