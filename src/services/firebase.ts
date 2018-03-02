@@ -3,7 +3,9 @@ import { store } from '../stores/index';
 import * as firebase from 'firebase';
 
 // All interactions with firebase must be in this module.
-export module ourFirebase {
+export namespace ourFirebase {
+  let testUser = '518vWpI2HzZajYERnlOvZWpDqQ92';
+
   // We're using redux, so all state must be stored in the store.
   // I.e., we can't have any state/variables/etc.
 
@@ -23,11 +25,14 @@ export module ourFirebase {
 
   // See https://firebase.google.com/docs/auth/web/phone-auth
   export function signInWithPhoneNumber(
-      phoneNumber: string,
-      applicationVerifier: firebase.auth.ApplicationVerifier): Promise<any> {
+    phoneNumber: string,
+    applicationVerifier: firebase.auth.ApplicationVerifier
+  ): Promise<any> {
     // TODO: create or update /gamePortal/gamePortalUsers/$myUserId
     // TODO: set recaptcha
-    return firebase.auth().signInWithPhoneNumber(phoneNumber, applicationVerifier);
+    return firebase
+      .auth()
+      .signInWithPhoneNumber(phoneNumber, applicationVerifier);
   }
 
   // In the real app we'll sign in only using phone numbers.
@@ -41,7 +46,9 @@ export module ourFirebase {
   export function setGamesList() {
     assertLoggedIn();
     // TODO: implement.
-    db().ref('TODO').once('value', gotGamesList);
+    db()
+      .ref('TODO')
+      .once('value', gotGamesList);
   }
 
   // Eventually dispatches the action setMatchesList
@@ -49,6 +56,33 @@ export module ourFirebase {
   //  /gamePortal/gamePortalUsers/$myUserId/privateButAddable/matchMemberships
   export function listenToMyMatchesList() {
     // TODO: implement
+    assertLoggedIn();
+    db()
+      .ref(
+        'gamePortal/gamePortalUsers' +
+          testUser +
+          '/privateButAddable/matchMemberships'
+      )
+      .on('value', getMatchLists);
+  }
+
+  function getMatchLists(snap: firebase.database.DataSnapshot) {
+    let updateMatchList: any = new Array();
+    snap.forEach(function(childSnapshot: firebase.database.DataSnapshot) {
+      let matchId = childSnapshot.key;
+      updateMatchList.push(getMatchDetail(matchId));
+      return false;
+    });
+    store.dispatch(updateMatchList);
+  }
+
+  function getMatchDetail(matchId: any) {
+    db()
+      .ref('gamePortal/matches' + matchId)
+      .once('value')
+      .then(function(snap: firebase.database.DataSnapshot) {
+        return snap.val;
+      });
   }
 
   // TODO: export function updateGameSpec(game: GameInfo) {}
@@ -84,7 +118,7 @@ export module ourFirebase {
     // firebase.storage().ref('images/blabla.jpg').getDownloadURL()
     store.dispatch(updateGameListAction);
   }
-  
+
   function assertLoggedIn() {
     if (!currentUser()) {
       throw new Error('You must be logged in');
@@ -97,5 +131,5 @@ export module ourFirebase {
 
   function db() {
     return firebase.database();
-  } 
+  }
 }
