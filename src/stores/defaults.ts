@@ -60,8 +60,12 @@ export const storeStateDefault: StoreState = {
     }
   },
   userIdsAndPhoneNumbers: {
-    phoneNumberToUserId: {},
-    userIdToPhoneNumber: {}
+    phoneNumberToUserId: {
+      '+1234': '999'
+    },
+    userIdToPhoneNumber: {
+      '999': '+1234'
+    }
   },
   myUser: {
     myPhoneNumber: '111111111',

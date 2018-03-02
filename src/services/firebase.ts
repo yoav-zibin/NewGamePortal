@@ -41,6 +41,32 @@ export namespace ourFirebase {
       .signInWithPhoneNumber(phoneNumber, applicationVerifier);
   }
 
+  export function getTimestamp(): number {
+    return <number>firebase.database.ServerValue.TIMESTAMP;
+  }
+
+  export function writeUser() {
+    checkFunctionIsCalledOnce('writeUser');
+    const user = assertLoggedIn();
+    const userFbr: fbr.GamePortalUser = {
+      privateButAddable: {
+        signals: {},
+        matchMemberships: {}
+      },
+      privateFields: {
+        createdOn: getTimestamp(),
+        fcmTokens: {},
+        phoneNumber: user.phoneNumber ? user.phoneNumber : ''
+      }
+    };
+    return (
+      db()
+        .ref(`gamePortal/gamePortalUsers/${user.uid}`)
+        // TODO: use transact to ensure we don't override an existing user and deleting data.
+        .set(userFbr)
+    );
+  }
+
   // Eventually dispatches the action setGamesList.
   export function setGamesList() {
     checkFunctionIsCalledOnce('setGamesList');
@@ -59,9 +85,9 @@ export namespace ourFirebase {
     const user = assertLoggedIn();
     db()
       .ref(
-        'gamePortal/gamePortalUsers' +
-          user.uid +
-          '/privateButAddable/matchMemberships'
+        `gamePortal/gamePortalUsers${
+          user.uid
+        }/privateButAddable/matchMemberships`
       )
       .on('value', snap => getMatchMemberships(snap ? snap.val() : {}));
   }
