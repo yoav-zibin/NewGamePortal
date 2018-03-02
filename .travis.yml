@@ -6,3 +6,4 @@ cache:
   - node_modules
 script:
   - npm run ci-test
+  - npm run build
