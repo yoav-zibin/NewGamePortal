@@ -47,6 +47,8 @@ export interface GameSpecs {
 export interface IdIndexer<T> {
   [id: string]: T;
 }
+export type StringIndexer = IdIndexer<string>;
+export type BooleanIndexer = IdIndexer<boolean>;
 
 export interface PhoneNumberToContact extends IdIndexer<Contact> {
   [phoneNumber: string]: Contact;

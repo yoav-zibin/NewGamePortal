@@ -12,6 +12,7 @@ import {
   MyUser
 } from '../types';
 import { storeStateDefault } from '../stores/defaults';
+import { checkCondition } from '../globals';
 
 export interface Action {
   // Actions that start with "set" mean that they replace the matching
@@ -34,12 +35,6 @@ export function mergeMaps<T>(
   updateWithEntries: IdIndexer<T>
 ): IdIndexer<T> {
   return Object.assign(original, updateWithEntries);
-}
-
-function checkCondition(desc: string, cond: boolean) {
-  if (!cond) {
-    throw new Error('Condition check failed for: ' + desc);
-  }
 }
 
 function isInRange(currentMatchIndex: number, matchesList: MatchInfo[]) {

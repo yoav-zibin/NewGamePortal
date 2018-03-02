@@ -1,13 +1,18 @@
 // import { Contact } from '../types/index';
 import { store } from '../stores/index';
 import * as firebase from 'firebase';
+import { checkCondition } from '../globals';
+import { BooleanIndexer } from '../types/index';
 
 // All interactions with firebase must be in this module.
 export namespace ourFirebase {
-  let testUser = '518vWpI2HzZajYERnlOvZWpDqQ92';
-
   // We're using redux, so all state must be stored in the store.
-  // I.e., we can't have any state/variables/etc.
+  // I.e., we can't have any state/variables/etc that is used externally.
+  let calledFunctions: BooleanIndexer = {};
+  function checkFunctionIsCalledOnce(functionName: string) {
+    checkCondition('checkFunctionIsCalledOnce', !calledFunctions[functionName]);
+    calledFunctions[functionName] = true;
+  }
 
   // Call init exactly once to connect to firebase.
   export function init() {
@@ -28,6 +33,7 @@ export namespace ourFirebase {
     phoneNumber: string,
     applicationVerifier: firebase.auth.ApplicationVerifier
   ): Promise<any> {
+    checkFunctionIsCalledOnce('signInWithPhoneNumber');
     // TODO: create or update /gamePortal/gamePortalUsers/$myUserId
     // TODO: set recaptcha
     return firebase
@@ -38,12 +44,14 @@ export namespace ourFirebase {
   // In the real app we'll sign in only using phone numbers.
   // Only call signInAnonymously for testing/debugging purposes.
   export function signInAnonymously(): Promise<any> {
+    checkFunctionIsCalledOnce('signInAnonymously');
     // TODO: create or update /gamePortal/gamePortalUsers/$myUserId
     return firebase.auth().signInAnonymously();
   }
 
   // Eventually dispatches the action setGamesList.
   export function setGamesList() {
+    checkFunctionIsCalledOnce('setGamesList');
     assertLoggedIn();
     // TODO: implement.
     db()
@@ -55,35 +63,27 @@ export namespace ourFirebase {
   // every time this field is updated:
   //  /gamePortal/gamePortalUsers/$myUserId/privateButAddable/matchMemberships
   export function listenToMyMatchesList() {
-    // TODO: implement
-    assertLoggedIn();
+    checkFunctionIsCalledOnce('listenToMyMatchesList');
+    const user = assertLoggedIn();
     db()
       .ref(
         'gamePortal/gamePortalUsers' +
-          testUser +
+          user.uid +
           '/privateButAddable/matchMemberships'
       )
-      .on('value', getMatchLists);
+      .on('value', snap => getMatchMemberships(snap ? snap.val() : {}));
   }
 
-  function getMatchLists(snap: firebase.database.DataSnapshot) {
-    let updateMatchList: any = new Array();
-    snap.forEach(function(childSnapshot: firebase.database.DataSnapshot) {
-      let matchId = childSnapshot.key;
-      updateMatchList.push(getMatchDetail(matchId));
-      return false;
-    });
-    store.dispatch(updateMatchList);
+  function getMatchMemberships(matchMemberships: fbr.MatchMemberships) {
+    const matchIds = Object.keys(matchMemberships);
+    // TODO: get all matches in one call to firebase, then later call dispatch.
+    // Make sure we listen to match changes only once.
+    // 'gamePortal/matches'
+    // store.dispatch(updateMatchList);
+    db().ref('gamePortal/matches' + matchIds); // TODO
   }
 
-  function getMatchDetail(matchId: any) {
-    db()
-      .ref('gamePortal/matches' + matchId)
-      .once('value')
-      .then(function(snap: firebase.database.DataSnapshot) {
-        return snap.val;
-      });
-  }
+  // TODO: make sure we call certain functions only once (checkFunctionIsCalledOnce).
 
   // TODO: export function updateGameSpec(game: GameInfo) {}
 
@@ -119,10 +119,12 @@ export namespace ourFirebase {
     store.dispatch(updateGameListAction);
   }
 
-  function assertLoggedIn() {
-    if (!currentUser()) {
+  function assertLoggedIn(): firebase.User {
+    const user = currentUser();
+    if (!user) {
       throw new Error('You must be logged in');
     }
+    return user;
   }
 
   function currentUser() {
