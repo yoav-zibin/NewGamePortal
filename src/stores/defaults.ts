@@ -67,6 +67,7 @@ export const storeStateDefault: StoreState = {
     myPhoneNumber: '111111111',
     myUserId: '7UbETkgeXxe0RId6KxYioSJdARs1'
   },
+  // communicate with other audio user
   signals: [
     {
       addedByUid: '7UbETkgeXxe0RId6KxYioSJdARs1',

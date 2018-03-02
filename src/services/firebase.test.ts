@@ -38,12 +38,12 @@ it('signInAnonymously finished successfully', () => {
   prettyJson(firebase.auth().currentUser);
 });
 
-// it('TODO: delete eventually. Just checking things work in firebase.', () => {
-//   firebase
-//     .database()
-//     .ref('gameBuilder/gameSpecs')
-//     .limitToFirst(1)
-//     .once('value', snap => {
-//       console.log(prettyJson(snap.val()));
-//     });
-// });
+it('TODO: delete eventually. Just checking things work in firebase.', () => {
+  firebase
+    .database()
+    .ref('gameBuilder/gameSpecs')
+    .limitToFirst(1)
+    .once('value', snap => {
+      console.log(prettyJson(snap.val()));
+    });
+});
