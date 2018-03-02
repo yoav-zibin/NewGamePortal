@@ -2,7 +2,7 @@
 import { store } from '../stores/index';
 import * as firebase from 'firebase';
 import { checkCondition } from '../globals';
-import { BooleanIndexer } from '../types/index';
+import { BooleanIndexer, MatchInfo, MatchState } from '../types/index';
 
 // All interactions with firebase must be in this module.
 export namespace ourFirebase {
@@ -86,7 +86,28 @@ export namespace ourFirebase {
 
   // TODO: export function createMatch(game: GameInfo): MatchInfo {}
   // TODO: export function addParticipant(match: MatchInfo, user: User) {}
-  // TODO: export function updateMatchState(match: MatchInfo, matchState: MatchState) {}
+  export function updateMatchState(match: MatchInfo, matchState: MatchState) {
+    const newState: fbr.CurrentState = {
+      x: matchState.pieceIndex.x,
+      y: matchState.pieceIndex.y,
+      zDepth: matchState.pieceIndex.zDepth,
+      currentImageIndex: matchState.pieceIndex.currentImageIndex,
+      cardVisibility: matchState.pieceIndex.cardVisibility,
+      rotationDegrees: 360,
+      drawing: {}
+    };
+
+    const updates: any = {};
+    updates[
+      `gamePortal/gamePortalUsers/matches/${match.matchId}/pieces/${
+        matchState.pieceIndex
+      }/currentState`
+    ] = newState;
+
+    return db()
+      .ref()
+      .update(updates);
+  }
   // TODO: export function pingOpponentsInMatch(match: MatchInfo) {}
 
   // Dispatches updateUserIdsAndPhoneNumbers (reading from /gamePortal/phoneNumberToUserId)
