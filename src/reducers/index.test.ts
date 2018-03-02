@@ -13,7 +13,6 @@ import {
   UserIdsAndPhoneNumbers,
   Image,
   StoreState,
-  CardVisibility,
   MatchIdToMatchState
 } from '../types';
 
@@ -191,26 +190,6 @@ it('updatePhoneNumberToContact', () => {
     ...rest
   };
 
-  expect(reduce(initialState, action)).toEqual(expectedState);
-});
-
-it('updateCardVisibility', () => {
-  const initialState = storeStateDefault;
-  let { cardVisibility, ...rest } = initialState;
-
-  let newCardVisibility = !cardVisibility.visibility;
-
-  let newCard: CardVisibility = {};
-  newCard['1'] = newCardVisibility;
-
-  let action: Action = {
-    updateCardVisibility: newCard
-  };
-
-  const expectedState = {
-    cardVisibility: mergeMaps(storeStateDefault.cardVisibility, newCard),
-    ...rest
-  };
   expect(reduce(initialState, action)).toEqual(expectedState);
 });
 

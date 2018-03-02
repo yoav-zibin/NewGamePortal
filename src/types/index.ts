@@ -8,19 +8,15 @@ export interface StoreState {
 
   matchesList: MatchInfo[];
   currentMatchIndex: number; // an index in matchesList
-
   // Match state will be loaded lazily, i.e.,
   // not every match in matchesList will have an entry in matchIdToMatchState.
   matchIdToMatchState: MatchIdToMatchState;
 
   phoneNumberToContact: PhoneNumberToContact; // Coming from the phone contacts
   userIdsAndPhoneNumbers: UserIdsAndPhoneNumbers; // Coming from firebase.
-
   myUser: MyUser;
 
   signals: SignalEntry[];
-
-  cardVisibility: CardVisibility;
 }
 
 export interface UserIdsAndPhoneNumbers {

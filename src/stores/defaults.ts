@@ -78,8 +78,5 @@ export const storeStateDefault: StoreState = {
       signalType: 'sdp',
       signalData: '3 Men Chess'
     }
-  ],
-  cardVisibility: {
-    visibility: false
-  }
+  ]
 };
