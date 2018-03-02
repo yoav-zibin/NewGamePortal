@@ -6,8 +6,8 @@ import * as React from 'react';
 declare global {
   interface Window {
     Image: {
-        prototype: HTMLImageElement;
-        new (): HTMLImageElement;
+      prototype: HTMLImageElement;
+      new (): HTMLImageElement;
     };
   }
 }
@@ -31,7 +31,6 @@ interface CanvasImageState {
 }
 
 class CanvasImage extends React.Component<CanvasImageProps, CanvasImageState> {
-
   constructor(props: CanvasImageProps) {
     super(props);
     this.state = {
@@ -63,10 +62,12 @@ class CanvasImage extends React.Component<CanvasImageProps, CanvasImageState> {
         image: image
       });
     };
-  }
+  };
 
   render() {
-    return <Image ref={() => 'image'} {...this.props} image={this.state.image} />;
+    return (
+      <Image ref={() => 'image'} {...this.props} image={this.state.image} />
+    );
   }
 }
 

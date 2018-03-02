@@ -7,7 +7,5 @@ const loggerMiddleware = createLogger();
 
 export const store: Store<StoreState> = createStore(
   reducer,
-  applyMiddleware(
-    loggerMiddleware
-  )
+  applyMiddleware(loggerMiddleware)
 );

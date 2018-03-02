@@ -17,18 +17,13 @@ class Board extends React.Component<Props, {}> {
     // TODO: Complete layer for pieces
     return (
       <Stage>
-        <Layer/>
+        <Layer />
         <Layer>
-          {this.props.pieces.length ?
-            this.props.pieces.map((piece: Piece, key: number) => {
-              return (
-                <div key={key}>
-                  {piece}
-                </div>
-              );
-            })
-            : ''
-          };
+          {this.props.pieces.length
+            ? this.props.pieces.map((piece: Piece, key: number) => {
+                return <div key={key}>{piece}</div>;
+              })
+            : ''};
         </Layer>
       </Stage>
     );

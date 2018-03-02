@@ -15,7 +15,7 @@ export namespace ourFirebase {
   }
 
   // Call init exactly once to connect to firebase.
-  export function init() {
+  export function init(testConfig?: Object) {
     // Initialize Firebase
     let config = {
       apiKey: 'AIzaSyDA5tCzxNzykHgaSv1640GanShQze3UK-M',
@@ -25,7 +25,7 @@ export namespace ourFirebase {
       storageBucket: 'universalgamemaker.appspot.com',
       messagingSenderId: '144595629077'
     };
-    firebase.initializeApp(config);
+    firebase.initializeApp(testConfig ? testConfig : config);
   }
 
   // See https://firebase.google.com/docs/auth/web/phone-auth
@@ -39,14 +39,6 @@ export namespace ourFirebase {
     return firebase
       .auth()
       .signInWithPhoneNumber(phoneNumber, applicationVerifier);
-  }
-
-  // In the real app we'll sign in only using phone numbers.
-  // Only call signInAnonymously for testing/debugging purposes.
-  export function signInAnonymously(): Promise<any> {
-    checkFunctionIsCalledOnce('signInAnonymously');
-    // TODO: create or update /gamePortal/gamePortalUsers/$myUserId
-    return firebase.auth().signInAnonymously();
   }
 
   // Eventually dispatches the action setGamesList.
