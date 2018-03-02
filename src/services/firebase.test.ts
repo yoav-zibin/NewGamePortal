@@ -21,12 +21,10 @@ function prettyJson(obj: any): string {
 
 // Must be the first test: signs in anonyously.
 it('signInAnonymously finished successfully', done => {
-  console.error('running signInAnonymously');
   firebase
     .auth()
     .signInAnonymously()
     .then(() => {
-      console.error('finished signInAnonymously');
       done();
     })
     .catch(err => {
@@ -37,7 +35,6 @@ it('signInAnonymously finished successfully', done => {
 
 // Must be the second test: writes the user data to gamePortal/gamePortalUsers/<user.uid>
 it('writeUser succeeds', done => {
-  console.error('running writeUser');
   const user = firebase.auth().currentUser;
   expect(user).toBeDefined();
   ourFirebase.writeUser().then(() => {
