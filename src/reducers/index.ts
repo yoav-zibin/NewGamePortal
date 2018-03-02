@@ -9,7 +9,8 @@ import {
   MatchIdToMatchState,
   SignalEntry,
   IdIndexer,
-  MyUser
+  MyUser,
+  StringIndexer
 } from '../types';
 import { storeStateDefault } from '../stores/defaults';
 import { checkCondition } from '../globals';
@@ -20,10 +21,10 @@ export interface Action {
   // In contrast, actions that start with "update" will update mappigns
   // (using mergeMaps below).
   setGamesList?: GameInfo[];
-  updateGameSpecs?: GameSpecs; 
+  updateGameSpecs?: GameSpecs;
   setMatchesList?: MatchInfo[];
-  setCurrentMatchIndex?: number; // an index in matchesList   
-  updateMatchIdToMatchState?: MatchIdToMatchState;  
+  setCurrentMatchIndex?: number; // an index in matchesList
+  updateMatchIdToMatchState?: MatchIdToMatchState;
   updatePhoneNumberToContact?: PhoneNumberToContact;
   updateUserIdsAndPhoneNumbers?: UserIdsAndPhoneNumbers;
   setMyUser?: MyUser;
@@ -41,11 +42,27 @@ function isInRange(currentMatchIndex: number, matchesList: MatchInfo[]) {
   return currentMatchIndex >= -1 && currentMatchIndex < matchesList.length;
 }
 
+function getValues(obj: StringIndexer): string[] {
+  let vals: string[] = [];
+  for (let key of Object.keys(obj)) {
+    vals.push(obj[key]);
+  }
+  return vals;
+}
+
+function checkEqual(x: string[], y: string[]) {
+  if (x.length !== y.length) {
+    return false;
+  }
+  for (var i = 0; i < x.length; i++) {
+    if (x[i] !== y[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+
 function checkStoreInvariants(state: StoreState) {
-  // TODO: check invariants, e.g.,
-  // that every Image object in the store (except screenshots) is also present in
-  // store.gameSpecs.imageIdToImage.
-  // Ensure UserIdsAndPhoneNumbers have two mappings that are exactly the reverse of each other.
   checkCondition(
     'currentMatchIndex is in range',
     isInRange(state.currentMatchIndex, state.matchesList)
@@ -60,6 +77,19 @@ function checkStoreInvariants(state: StoreState) {
           1,
       true
     )
+  );
+
+  const userIdsAndPhoneNumbers = state.userIdsAndPhoneNumbers;
+  checkCondition(
+    'UserIdsAndPhoneNumbers have two mappings that are exactly the reverse of each other',
+    checkEqual(
+      Object.keys(userIdsAndPhoneNumbers.phoneNumberToUserId),
+      getValues(userIdsAndPhoneNumbers.userIdToPhoneNumber)
+    ) &&
+      checkEqual(
+        Object.keys(userIdsAndPhoneNumbers.userIdToPhoneNumber),
+        getValues(userIdsAndPhoneNumbers.phoneNumberToUserId)
+      )
   );
 
   const {
@@ -185,7 +215,7 @@ function reduce(state: StoreState, action: Action) {
       ),
       ...rest
     };
-  } else if (action.updateUserIdsAndPhoneNumbers) {                               
+  } else if (action.updateUserIdsAndPhoneNumbers) {
     let { userIdsAndPhoneNumbers, ...rest } = state;
     return {
       userIdsAndPhoneNumbers: {
@@ -196,12 +226,11 @@ function reduce(state: StoreState, action: Action) {
         userIdToPhoneNumber: mergeMaps(
           userIdsAndPhoneNumbers.userIdToPhoneNumber,
           action.updateUserIdsAndPhoneNumbers.userIdToPhoneNumber
-        ),
+        )
       },
       ...rest
     };
-  }
-  else if (action.setCurrentMatchIndex) {
+  } else if (action.setCurrentMatchIndex) {
     return { ...state, currentMatchIndex: action.setCurrentMatchIndex };
   } else if (action.updateMatchIdToMatchState) {
     return {
