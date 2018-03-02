@@ -1,14 +1,21 @@
 // import { Contact } from '../types/index';
 import { store } from '../stores/index';
 import * as firebase from 'firebase';
+import { checkCondition } from '../globals';
+import { BooleanIndexer } from '../types/index';
 
 // All interactions with firebase must be in this module.
-export module ourFirebase {
+export namespace ourFirebase {
   // We're using redux, so all state must be stored in the store.
-  // I.e., we can't have any state/variables/etc.
+  // I.e., we can't have any state/variables/etc that is used externally.
+  let calledFunctions: BooleanIndexer = {};
+  function checkFunctionIsCalledOnce(functionName: string) {
+    checkCondition('checkFunctionIsCalledOnce', !calledFunctions[functionName]);
+    calledFunctions[functionName] = true;
+  }
 
   // Call init exactly once to connect to firebase.
-  export function init() {
+  export function init(testConfig?: Object) {
     // Initialize Firebase
     let config = {
       apiKey: 'AIzaSyDA5tCzxNzykHgaSv1640GanShQze3UK-M',
@@ -18,38 +25,57 @@ export module ourFirebase {
       storageBucket: 'universalgamemaker.appspot.com',
       messagingSenderId: '144595629077'
     };
-    firebase.initializeApp(config);
+    firebase.initializeApp(testConfig ? testConfig : config);
   }
 
   // See https://firebase.google.com/docs/auth/web/phone-auth
   export function signInWithPhoneNumber(
-      phoneNumber: string,
-      applicationVerifier: firebase.auth.ApplicationVerifier): Promise<any> {
+    phoneNumber: string,
+    applicationVerifier: firebase.auth.ApplicationVerifier
+  ): Promise<any> {
+    checkFunctionIsCalledOnce('signInWithPhoneNumber');
     // TODO: create or update /gamePortal/gamePortalUsers/$myUserId
     // TODO: set recaptcha
-    return firebase.auth().signInWithPhoneNumber(phoneNumber, applicationVerifier);
-  }
-
-  // In the real app we'll sign in only using phone numbers.
-  // Only call signInAnonymously for testing/debugging purposes.
-  export function signInAnonymously(): Promise<any> {
-    // TODO: create or update /gamePortal/gamePortalUsers/$myUserId
-    return firebase.auth().signInAnonymously();
+    return firebase
+      .auth()
+      .signInWithPhoneNumber(phoneNumber, applicationVerifier);
   }
 
   // Eventually dispatches the action setGamesList.
   export function setGamesList() {
+    checkFunctionIsCalledOnce('setGamesList');
     assertLoggedIn();
     // TODO: implement.
-    db().ref('TODO').once('value', gotGamesList);
+    db()
+      .ref('TODO')
+      .once('value', gotGamesList);
   }
 
   // Eventually dispatches the action setMatchesList
   // every time this field is updated:
   //  /gamePortal/gamePortalUsers/$myUserId/privateButAddable/matchMemberships
   export function listenToMyMatchesList() {
-    // TODO: implement
+    checkFunctionIsCalledOnce('listenToMyMatchesList');
+    const user = assertLoggedIn();
+    db()
+      .ref(
+        'gamePortal/gamePortalUsers' +
+          user.uid +
+          '/privateButAddable/matchMemberships'
+      )
+      .on('value', snap => getMatchMemberships(snap ? snap.val() : {}));
   }
+
+  function getMatchMemberships(matchMemberships: fbr.MatchMemberships) {
+    const matchIds = Object.keys(matchMemberships);
+    // TODO: get all matches in one call to firebase, then later call dispatch.
+    // Make sure we listen to match changes only once.
+    // 'gamePortal/matches'
+    // store.dispatch(updateMatchList);
+    db().ref('gamePortal/matches' + matchIds); // TODO
+  }
+
+  // TODO: make sure we call certain functions only once (checkFunctionIsCalledOnce).
 
   // TODO: export function updateGameSpec(game: GameInfo) {}
 
@@ -84,11 +110,13 @@ export module ourFirebase {
     // firebase.storage().ref('images/blabla.jpg').getDownloadURL()
     store.dispatch(updateGameListAction);
   }
-  
-  function assertLoggedIn() {
-    if (!currentUser()) {
+
+  function assertLoggedIn(): firebase.User {
+    const user = currentUser();
+    if (!user) {
       throw new Error('You must be logged in');
     }
+    return user;
   }
 
   function currentUser() {
@@ -97,5 +125,5 @@ export module ourFirebase {
 
   function db() {
     return firebase.database();
-  } 
+  }
 }

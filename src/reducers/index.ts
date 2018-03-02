@@ -13,6 +13,7 @@ import {
   CardVisibility
 } from '../types';
 import { storeStateDefault } from '../stores/defaults';
+import { checkCondition } from '../globals';
 
 export interface Action {
   // Actions that start with "set" mean that they replace the matching
@@ -38,10 +39,8 @@ export function mergeMaps<T>(
   return Object.assign(original, updateWithEntries);
 }
 
-function checkCondition(desc: string, cond: boolean) {
-  if (!cond) {
-    throw new Error('Condition check failed for: ' + desc);
-  }
+function isInRange(currentMatchIndex: number, matchesList: MatchInfo[]) {
+  return currentMatchIndex >= -1 && currentMatchIndex < matchesList.length;
 }
 
 function checkStoreInvariants(state: StoreState) {
@@ -51,21 +50,134 @@ function checkStoreInvariants(state: StoreState) {
   // Ensure UserIdsAndPhoneNumbers have two mappings that are exactly the reverse of each other.
   checkCondition(
     'currentMatchIndex is in range',
-    state.currentMatchIndex >= -1 &&
-      state.currentMatchIndex <= state.matchesList.length
+    isInRange(state.currentMatchIndex, state.matchesList)
   );
+
+  checkCondition(
+    'every matchId in matchIdToMatchState is also present in matchesList',
+    Object.keys(state.matchIdToMatchState).reduce(
+      (accum, matchId) =>
+        accum &&
+        state.matchesList.filter(match => match.matchId === matchId).length ===
+          1,
+      true
+    )
+  );
+
+  const {
+    elementIdToElement,
+    imageIdToImage,
+    gameSpecIdToGameSpec
+  } = state.gameSpecs;
+  Object.keys(gameSpecIdToGameSpec).forEach(gameSpecId => {
+    const gameSpec = gameSpecIdToGameSpec[gameSpecId];
+    checkCondition(
+      'board image must be in imageIdToImage',
+      gameSpec.board === imageIdToImage[gameSpec.board.imageId]
+    );
+    checkCondition(
+      'board image must have isBoardImage=true',
+      gameSpec.board.isBoardImage
+    );
+    gameSpec.pieces.forEach(piece => {
+      checkCondition(
+        'Every piece element must be in elementIdToElement',
+        piece.element === elementIdToElement[piece.element.elementId]
+      );
+      if (piece.deckPieceIndex !== -1) {
+        checkCondition(
+          'piece must be a card to have deckPieceIndex',
+          piece.element.elementKind === 'card'
+        );
+        const deck = gameSpec.pieces[piece.deckPieceIndex].element;
+        checkCondition(
+          'deckPieceIndex points to a deck that contains this piece element',
+          deck.elementKind.endsWith('Deck') &&
+            deck.deckElements.indexOf(piece.element) !== -1
+        );
+      }
+    });
+  });
+  Object.keys(elementIdToElement).forEach(elementId => {
+    const element = elementIdToElement[elementId];
+    element.images.forEach(image => {
+      checkCondition(
+        'element image must be in imageIdToImage',
+        image === imageIdToImage[image.imageId]
+      );
+    });
+    element.deckElements.forEach(deckElement => {
+      checkCondition(
+        'deckElement must be in elementIdToElement',
+        deckElement === elementIdToElement[deckElement.elementId]
+      );
+      checkCondition(
+        'deckElement must be a card',
+        deckElement.elementKind === 'card'
+      );
+    });
+    // Some checks based on the element kind
+    switch (element.elementKind) {
+      case 'standard':
+        checkCondition(
+          'standard piece has 1 image',
+          element.images.length === 1
+        );
+        break;
+      case 'toggable':
+      case 'dice':
+        checkCondition(
+          'toggable|diece piece has 1 or more images',
+          element.images.length >= 1
+        );
+        break;
+      case 'card':
+        checkCondition('card piece has 2 images', element.images.length === 2);
+        break;
+      case 'cardsDeck':
+      case 'piecesDeck':
+        checkCondition('deck has 1 image', element.images.length === 1);
+        checkCondition(
+          'deckElements has at least 2 elements',
+          element.deckElements.length >= 2
+        );
+        break;
+      default:
+        checkCondition('Illegal elementKind=' + element.elementKind, false);
+        break;
+    }
+  });
 }
 
 function reduce(state: StoreState, action: Action) {
   if (action.setGamesList) {
     return { ...state, gamesList: action.setGamesList };
   } else if (action.setMatchesList) {
-    return { ...state, matchesList: action.setMatchesList };
+    let {
+      matchesList,
+      matchIdToMatchState,
+      currentMatchIndex,
+      ...rest
+    } = state;
+    let newMatchIdToMatchState: MatchIdToMatchState = {};
+    action.setMatchesList.forEach(e => {
+      if (e.matchId in matchIdToMatchState) {
+        newMatchIdToMatchState[e.matchId] = matchIdToMatchState[e.matchId];
+      }
+    });
+    if (!isInRange(state.currentMatchIndex, action.setMatchesList)) {
+      currentMatchIndex = -1;
+    }
+    return {
+      ...rest,
+      matchesList: action.setMatchesList,
+      matchIdToMatchState: newMatchIdToMatchState,
+      currentMatchIndex: currentMatchIndex
+    };
   } else if (action.setSignals) {
     return { ...state, signals: action.setSignals };
   } else if (action.setMyUser) {
     return { ...state, myUser: action.setMyUser };
-    // TODO: support all other reducers.
   } else if (action.updatePhoneNumberToContact) {
     let { phoneNumberToContact, ...rest } = state;
     return {
@@ -77,6 +189,14 @@ function reduce(state: StoreState, action: Action) {
     };
   } else if (action.setCurrentMatchIndex) {
     return { ...state, currentMatchIndex: action.setCurrentMatchIndex };
+  } else if (action.updateMatchIdToMatchState) {
+    return {
+      matchIdToMatchState: mergeMaps(
+        state.matchIdToMatchState,
+        action.updateMatchIdToMatchState
+      ),
+      ...state
+    };
   } else if (action.updateGameSpecs) {
     let {
       imageIdToImage,

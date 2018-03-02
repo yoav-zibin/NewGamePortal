@@ -12,12 +12,11 @@ const mapStateToProps = (state: StoreState) => ({
 });
 
 // Later this will take dispatch: any as argument
-const mapDispatchToProps = () => ({
-});
+const mapDispatchToProps = () => ({});
 
-const GamesListContainer = connect(
-  mapStateToProps,
-  mapDispatchToProps)(GamesList);
+const GamesListContainer = connect(mapStateToProps, mapDispatchToProps)(
+  GamesList
+);
 
 class App extends React.Component {
   render() {
