@@ -1,9 +1,9 @@
 // import { Contact } from '../types/index';
-import { store, dispatch } from '../stores/index';
+import { store, dispatch } from '../stores';
 import * as firebase from 'firebase';
 import { checkCondition } from '../globals';
 import { Action } from '../reducers';
-import { BooleanIndexer, MatchInfo, GameInfo } from '../types/index';
+import { BooleanIndexer, MatchInfo, GameInfo } from '../types';
 
 function prettyJson(obj: any): string {
   return JSON.stringify(obj, null, '  ');
@@ -36,8 +36,8 @@ export namespace ourFirebase {
   // TODO: delete
   export function exampleDispatch() {
     const action: Action = {
-      setGamesList: [],
-    }
+      setGamesList: []
+    };
     dispatch(action);
   }
 

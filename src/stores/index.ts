@@ -11,5 +11,5 @@ export const store: Store<StoreState> = createStore(
 );
 
 export function dispatch(action: Action) {
-  store.dispatch(<any> action);
+  store.dispatch(<any>action);
 }
