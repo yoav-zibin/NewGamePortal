@@ -118,11 +118,6 @@ export namespace ourFirebase {
 
   // TODO: export function updateGameSpec(game: GameInfo) {}
 
-  // Eventually dispatches updateMatchIdToMatchState, and it will dispatch
-  // it again every time the match is updated
-  // (e.g. a participant was added or the state of pieces changed).
-  // TODO: export function listenForMatchUpdates(match: MatchInfo) {}
-
   export function createMatch(game: GameInfo): MatchInfo {
     const user = assertLoggedIn();
     const ref = db()
@@ -145,7 +140,8 @@ export namespace ourFirebase {
       matchId: ref.key!,
       game: game,
       participantsUserIds: [user.uid],
-      lastUpdatedOn: newFBMatch.lastUpdatedOn
+      lastUpdatedOn: newFBMatch.lastUpdatedOn,
+      matchState: {}
     };
     console.log(prettyJson(newMatch));
     // TODO: dispatch a createMatch action

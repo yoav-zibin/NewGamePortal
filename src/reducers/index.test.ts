@@ -12,8 +12,7 @@ import {
   PhoneNumberToContact,
   UserIdsAndPhoneNumbers,
   Image,
-  StoreState,
-  MatchIdToMatchState
+  StoreState
 } from '../types';
 
 const image: Image = {
@@ -34,7 +33,8 @@ const matchInfo: MatchInfo = {
   matchId: 'someId',
   game: gameInfo,
   participantsUserIds: [], // including myself
-  lastUpdatedOn: 1234 /*firebase.database.ServerValue.TIMESTAMP*/
+  lastUpdatedOn: 1234,
+  matchState: {}
 };
 
 const userInfo: MyUser = {
@@ -44,7 +44,7 @@ const userInfo: MyUser = {
 
 const sigEntry: SignalEntry = {
   addedByUid: 'someId',
-  timestamp: 1234 /*firebase.database.ServerValue.TIMESTAMP*/,
+  timestamp: 1234,
   signalType: 'sdp',
   signalData: 'some String'
 };
@@ -80,7 +80,8 @@ const initialState: StoreState = {
         screenShoot: image
       },
       participantsUserIds: ['7UbETkgeXxe0RId6KxYioSJdARs1'], // including myself
-      lastUpdatedOn: 1234
+      lastUpdatedOn: 1234,
+      matchState: {}
     },
     {
       matchId: '2',
@@ -90,11 +91,11 @@ const initialState: StoreState = {
         screenShoot: image
       },
       participantsUserIds: ['7UbETkgeXxe0RId6KxYioSJdARs1'], // including myself
-      lastUpdatedOn: 1564
+      lastUpdatedOn: 1564,
+      matchState: {}
     }
   ],
   currentMatchIndex: 1,
-  matchIdToMatchState: {},
   phoneNumberToContact: {
     phoneNumber: {
       phoneNumber: '+1234567890',
@@ -117,7 +118,7 @@ const initialState: StoreState = {
   signals: [
     {
       addedByUid: '7UbETkgeXxe0RId6KxYioSJdARs1',
-      timestamp: 1234 /*firebase.database.ServerValue.TIMESTAMP*/,
+      timestamp: 1234,
       signalType: 'sdp',
       signalData: '3 Men Chess'
     }
@@ -184,37 +185,8 @@ it('setCurrentMatchIndex', () => {
   expect(reduce(initialState, action)).toEqual(expectedState);
 });
 
-it('updateMatchIdToMatchState', () => {
-  let { matchIdToMatchState, ...rest } = initialState;
-
-  let newMatchIdToMatchState: MatchIdToMatchState = {};
-  newMatchIdToMatchState['1'] = {
-    somePieceId: {
-      x: 0,
-      y: 0,
-      zDepth: 0,
-      currentImageIndex: 0,
-      cardVisibility: {}
-    }
-  };
-
-  let action: Action = {
-    updateMatchIdToMatchState: newMatchIdToMatchState
-  };
-
-  const expectedState = {
-    matchIdToMatchState: mergeMaps(
-      initialState.matchIdToMatchState,
-      newMatchIdToMatchState
-    ),
-    ...rest
-  };
-
-  expect(reduce(initialState, action)).toEqual(expectedState);
-});
-
 it('set matchesList to empty list (and updates currentMatchIndex accordingly)', () => {
-  let { matchesList, matchIdToMatchState, ...rest } = initialState;
+  let { matchesList, ...rest } = initialState;
 
   let newMatches: MatchInfo[] = [];
   let action: Action = {
@@ -224,7 +196,6 @@ it('set matchesList to empty list (and updates currentMatchIndex accordingly)', 
   const expectedState = {
     ...rest,
     matchesList: newMatches,
-    matchIdToMatchState: {},
     currentMatchIndex: -1
   };
 

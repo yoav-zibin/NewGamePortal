@@ -6,7 +6,6 @@ import {
   MatchInfo,
   PhoneNumberToContact,
   UserIdsAndPhoneNumbers,
-  MatchIdToMatchState,
   SignalEntry,
   IdIndexer,
   MyUser,
@@ -24,7 +23,6 @@ export interface Action {
   updateGameSpecs?: GameSpecs;
   setMatchesList?: MatchInfo[];
   setCurrentMatchIndex?: number; // an index in matchesList
-  updateMatchIdToMatchState?: MatchIdToMatchState;
   updatePhoneNumberToContact?: PhoneNumberToContact;
   updateUserIdsAndPhoneNumbers?: UserIdsAndPhoneNumbers;
   setMyUser?: MyUser;
@@ -66,17 +64,6 @@ function checkStoreInvariants(state: StoreState) {
   checkCondition(
     'currentMatchIndex is in range',
     isInRange(state.currentMatchIndex, state.matchesList)
-  );
-
-  checkCondition(
-    'every matchId in matchIdToMatchState is also present in matchesList',
-    Object.keys(state.matchIdToMatchState).reduce(
-      (accum, matchId) =>
-        accum &&
-        state.matchesList.filter(match => match.matchId === matchId).length ===
-          1,
-      true
-    )
   );
 
   const userIdsAndPhoneNumbers = state.userIdsAndPhoneNumbers;
@@ -181,25 +168,13 @@ function reduce(state: StoreState, action: Action) {
   if (action.setGamesList) {
     return { ...state, gamesList: action.setGamesList };
   } else if (action.setMatchesList) {
-    let {
-      matchesList,
-      matchIdToMatchState,
-      currentMatchIndex,
-      ...rest
-    } = state;
-    let newMatchIdToMatchState: MatchIdToMatchState = {};
-    action.setMatchesList.forEach(e => {
-      if (e.matchId in matchIdToMatchState) {
-        newMatchIdToMatchState[e.matchId] = matchIdToMatchState[e.matchId];
-      }
-    });
+    let { matchesList, currentMatchIndex, ...rest } = state;
     if (!isInRange(state.currentMatchIndex, action.setMatchesList)) {
       currentMatchIndex = -1;
     }
     return {
       ...rest,
       matchesList: action.setMatchesList,
-      matchIdToMatchState: newMatchIdToMatchState,
       currentMatchIndex: currentMatchIndex
     };
   } else if (action.setSignals) {
@@ -232,14 +207,6 @@ function reduce(state: StoreState, action: Action) {
     };
   } else if (action.setCurrentMatchIndex) {
     return { ...state, currentMatchIndex: action.setCurrentMatchIndex };
-  } else if (action.updateMatchIdToMatchState) {
-    return {
-      matchIdToMatchState: mergeMaps(
-        state.matchIdToMatchState,
-        action.updateMatchIdToMatchState
-      ),
-      ...state
-    };
   } else if (action.updateGameSpecs) {
     let {
       imageIdToImage,

@@ -9,7 +9,6 @@ export const storeStateDefault: StoreState = {
   },
   matchesList: [],
   currentMatchIndex: -1,
-  matchIdToMatchState: {},
   phoneNumberToContact: {},
   userIdsAndPhoneNumbers: {
     phoneNumberToUserId: {},
