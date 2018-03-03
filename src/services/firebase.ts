@@ -2,8 +2,12 @@
 import { store, dispatch } from '../stores/index';
 import * as firebase from 'firebase';
 import { checkCondition } from '../globals';
-import { BooleanIndexer } from '../types/index';
 import { Action } from '../reducers';
+import { BooleanIndexer, MatchInfo, GameInfo } from '../types/index';
+
+function prettyJson(obj: any): string {
+  return JSON.stringify(obj, null, '  ');
+}
 
 // All interactions with firebase must be in this module.
 export namespace ourFirebase {
@@ -119,7 +123,35 @@ export namespace ourFirebase {
   // (e.g. a participant was added or the state of pieces changed).
   // TODO: export function listenForMatchUpdates(match: MatchInfo) {}
 
-  // TODO: export function createMatch(game: GameInfo): MatchInfo {}
+  export function createMatch(game: GameInfo): MatchInfo {
+    const user = assertLoggedIn();
+    const ref = db()
+      .ref('gamePortal/matches')
+      .push();
+    const participants: fbr.Participants = {};
+    participants[user.uid] = {
+      participantIndex: 0,
+      pingOpponents: <number>firebase.database.ServerValue.TIMESTAMP
+    };
+    const newFBMatch: fbr.Match = {
+      gameSpecId: game.gameSpecId,
+      participants: participants,
+      createdOn: <number>firebase.database.ServerValue.TIMESTAMP,
+      lastUpdatedOn: <number>firebase.database.ServerValue.TIMESTAMP,
+      pieces: {}
+    };
+    ref.set(newFBMatch);
+    const newMatch: MatchInfo = {
+      matchId: ref.key!,
+      game: game,
+      participantsUserIds: [user.uid],
+      lastUpdatedOn: newFBMatch.lastUpdatedOn
+    };
+    console.log(prettyJson(newMatch));
+    // TODO: dispatch a createMatch action
+    return newMatch;
+  }
+
   // TODO: export function addParticipant(match: MatchInfo, user: User) {}
   // TODO: export function updateMatchState(match: MatchInfo, matchState: MatchState) {}
   // TODO: export function pingOpponentsInMatch(match: MatchInfo) {}
