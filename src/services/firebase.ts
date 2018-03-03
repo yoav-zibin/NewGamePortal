@@ -72,6 +72,7 @@ export namespace ourFirebase {
         phoneNumber: user.phoneNumber ? user.phoneNumber : ''
       }
     };
+    // TODO: also write to /gamePortal/phoneNumberToUserId
     return (
       db()
         .ref(`gamePortal/gamePortalUsers/${user.uid}`)

@@ -150,6 +150,46 @@ declare namespace fbr {
     [phoneNumber: string]: PhoneNumber;
   }
 
+  interface GameInfo {
+    gameSpecId: string;
+    gameName: string;
+    screenShootImageId: string;
+    numberOfMatches: number;
+  }
+
+  interface GameInfos {
+    [gameInfoId: string]: GameInfo;
+  }
+
+  interface GamesReviews {
+    uploaderEmail: string;
+    uploaderUid: string;
+    createdOn: number /*firebase.database.ServerValue.TIMESTAMP*/;
+    gameName: string;
+    gameIcon50x50: string;
+    gameIcon512x512: string;
+    screenShootImageId: string;
+    wikipediaUrl: string;
+    tutorialYoutubeVideo: string;
+    board: Board;
+    pieces: Pieces;
+  }
+
+  interface GameSpecForPortal {
+    images: Images;
+    elements: Elements;
+    gameSpec: GamesReviews;
+  }
+
+  interface GameSpecsForPortal {
+    [gameSpecForPortalId: string]: GameSpecForPortal;
+  }
+
+  interface GamesInfoAndSpec {
+    gameInfos: GameInfos;
+    gameSpecsForPortal: GameSpecsForPortal;
+  }
+
   interface FcmToken {
     lastTimeReceived: number /*firebase.database.ServerValue.TIMESTAMP*/;
     platform: 'ios' | 'android';
@@ -240,6 +280,7 @@ declare namespace fbr {
 
   interface GamePortal {
     phoneNumberToUserId: PhoneNumberToUser;
+    gamesInfoAndSpec: GamesInfoAndSpec;
     gamePortalUsers: GamePortalUsers;
     matches: Matches;
   }
