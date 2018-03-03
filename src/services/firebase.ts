@@ -1,8 +1,9 @@
 // import { Contact } from '../types/index';
-import { store } from '../stores/index';
+import { store, dispatch } from '../stores/index';
 import * as firebase from 'firebase';
 import { checkCondition } from '../globals';
 import { BooleanIndexer } from '../types/index';
+import { Action } from '../reducers';
 
 // All interactions with firebase must be in this module.
 export namespace ourFirebase {
@@ -26,6 +27,14 @@ export namespace ourFirebase {
       messagingSenderId: '144595629077'
     };
     firebase.initializeApp(testConfig ? testConfig : config);
+  }
+
+  // TODO: delete
+  export function exampleDispatch() {
+    const action: Action = {
+      setGamesList: [],
+    }
+    dispatch(action);
   }
 
   // See https://firebase.google.com/docs/auth/web/phone-auth
