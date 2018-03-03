@@ -1,8 +1,13 @@
 // import { Contact } from '../types/index';
-import { store } from '../stores/index';
+import { store, dispatch } from '../stores';
 import * as firebase from 'firebase';
 import { checkCondition } from '../globals';
-import { BooleanIndexer } from '../types/index';
+import { Action } from '../reducers';
+import { BooleanIndexer, MatchInfo, GameInfo } from '../types';
+
+function prettyJson(obj: any): string {
+  return JSON.stringify(obj, null, '  ');
+}
 
 // All interactions with firebase must be in this module.
 export namespace ourFirebase {
@@ -28,6 +33,14 @@ export namespace ourFirebase {
     firebase.initializeApp(testConfig ? testConfig : config);
   }
 
+  // TODO: delete
+  export function exampleDispatch() {
+    const action: Action = {
+      setGamesList: []
+    };
+    dispatch(action);
+  }
+
   // See https://firebase.google.com/docs/auth/web/phone-auth
   export function signInWithPhoneNumber(
     phoneNumber: string,
@@ -39,6 +52,33 @@ export namespace ourFirebase {
     return firebase
       .auth()
       .signInWithPhoneNumber(phoneNumber, applicationVerifier);
+  }
+
+  export function getTimestamp(): number {
+    return <number>firebase.database.ServerValue.TIMESTAMP;
+  }
+
+  export function writeUser() {
+    checkFunctionIsCalledOnce('writeUser');
+    const user = assertLoggedIn();
+    const userFbr: fbr.GamePortalUser = {
+      privateButAddable: {
+        signals: {},
+        matchMemberships: {}
+      },
+      privateFields: {
+        createdOn: getTimestamp(),
+        fcmTokens: {},
+        phoneNumber: user.phoneNumber ? user.phoneNumber : ''
+      }
+    };
+    // TODO: also write to /gamePortal/phoneNumberToUserId
+    return (
+      db()
+        .ref(`gamePortal/gamePortalUsers/${user.uid}`)
+        // TODO: use transact to ensure we don't override an existing user and deleting data.
+        .set(userFbr)
+    );
   }
 
   // Eventually dispatches the action setGamesList.
@@ -59,9 +99,9 @@ export namespace ourFirebase {
     const user = assertLoggedIn();
     db()
       .ref(
-        'gamePortal/gamePortalUsers' +
-          user.uid +
-          '/privateButAddable/matchMemberships'
+        `gamePortal/gamePortalUsers${
+          user.uid
+        }/privateButAddable/matchMemberships`
       )
       .on('value', snap => getMatchMemberships(snap ? snap.val() : {}));
   }
@@ -79,12 +119,36 @@ export namespace ourFirebase {
 
   // TODO: export function updateGameSpec(game: GameInfo) {}
 
-  // Eventually dispatches updateMatchIdToMatchState, and it will dispatch
-  // it again every time the match is updated
-  // (e.g. a participant was added or the state of pieces changed).
-  // TODO: export function listenForMatchUpdates(match: MatchInfo) {}
+  export function createMatch(game: GameInfo): MatchInfo {
+    const user = assertLoggedIn();
+    const ref = db()
+      .ref('gamePortal/matches')
+      .push();
+    const participants: fbr.Participants = {};
+    participants[user.uid] = {
+      participantIndex: 0,
+      pingOpponents: <number>firebase.database.ServerValue.TIMESTAMP
+    };
+    const newFBMatch: fbr.Match = {
+      gameSpecId: game.gameSpecId,
+      participants: participants,
+      createdOn: <number>firebase.database.ServerValue.TIMESTAMP,
+      lastUpdatedOn: <number>firebase.database.ServerValue.TIMESTAMP,
+      pieces: {}
+    };
+    ref.set(newFBMatch);
+    const newMatch: MatchInfo = {
+      matchId: ref.key!,
+      game: game,
+      participantsUserIds: [user.uid],
+      lastUpdatedOn: newFBMatch.lastUpdatedOn,
+      matchState: {}
+    };
+    console.log(prettyJson(newMatch));
+    // TODO: dispatch a createMatch action
+    return newMatch;
+  }
 
-  // TODO: export function createMatch(game: GameInfo): MatchInfo {}
   // TODO: export function addParticipant(match: MatchInfo, user: User) {}
   // TODO: export function updateMatchState(match: MatchInfo, matchState: MatchState) {}
   // TODO: export function pingOpponentsInMatch(match: MatchInfo) {}

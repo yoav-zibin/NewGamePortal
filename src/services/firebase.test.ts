@@ -3,6 +3,7 @@
  */
 import { ourFirebase } from './firebase';
 import * as firebase from 'firebase';
+import { GameInfo } from '../types/index';
 
 const testConfig = {
   apiKey: 'AIzaSyA_UNWBNj7zXrrwMYq49aUaSQqygDg66SI',
@@ -19,8 +20,9 @@ function prettyJson(obj: any): string {
   return JSON.stringify(obj, null, '  ');
 }
 
-beforeAll(async done => {
-  await firebase
+// Must be the first test: signs in anonyously.
+it('signInAnonymously finished successfully', done => {
+  firebase
     .auth()
     .signInAnonymously()
     .then(() => {
@@ -30,15 +32,19 @@ beforeAll(async done => {
       console.error('error in signInAnonymously with err=', err);
       throw new Error('error in signInAnonymously err=' + err);
     });
-  done();
 });
 
-it('signInAnonymously finished successfully', () => {
-  expect(firebase.auth().currentUser).toBeDefined();
-  prettyJson(firebase.auth().currentUser);
+// Must be the second test: writes the user data to gamePortal/gamePortalUsers/<user.uid>
+it('writeUser succeeds', done => {
+  const user = firebase.auth().currentUser;
+  expect(user).toBeDefined();
+  ourFirebase.writeUser().then(() => {
+    done();
+  });
 });
 
 it('TODO: delete eventually. Just checking things work in firebase.', () => {
+  prettyJson(firebase.auth().currentUser);
   firebase
     .database()
     .ref('gameBuilder/gameSpecs')
@@ -46,4 +52,19 @@ it('TODO: delete eventually. Just checking things work in firebase.', () => {
     .once('value', snap => {
       console.log(prettyJson(snap.val()));
     });
+});
+
+it('adds a new match in firebase', () => {
+  const gameInfo: GameInfo = {
+    gameSpecId: '-KxLz3AY3-xB47ZXN9Az',
+    gameName: '3 Man Chess',
+    screenShoot: {
+      imageId: '-KuXdJ2ZJPJ-Ad_k02Tf',
+      downloadURL: 'https://someurl.com/foo.png',
+      height: 1024,
+      width: 700,
+      isBoardImage: true
+    }
+  };
+  ourFirebase.createMatch(gameInfo);
 });
