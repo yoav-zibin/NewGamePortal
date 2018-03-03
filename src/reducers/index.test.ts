@@ -39,7 +39,8 @@ const matchInfo: MatchInfo = {
 
 const userInfo: MyUser = {
   myUserId: 'someId',
-  myPhoneNumber: 'Some phone number'
+  myPhoneNumber: 'Some phone number',
+  myCountryCode: ''
 };
 
 const sigEntry: SignalEntry = {
@@ -113,6 +114,7 @@ const initialState: StoreState = {
   },
   myUser: {
     myPhoneNumber: '111111111',
+    myCountryCode: '',
     myUserId: '7UbETkgeXxe0RId6KxYioSJdARs1'
   },
   signals: [

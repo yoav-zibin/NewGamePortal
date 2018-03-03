@@ -42,11 +42,14 @@ export namespace ourFirebase {
   }
 
   // See https://firebase.google.com/docs/auth/web/phone-auth
+  let myCountryCode = '';
   export function signInWithPhoneNumber(
     phoneNumber: string,
+    countryCode: string,
     applicationVerifier: firebase.auth.ApplicationVerifier
   ): Promise<any> {
     checkFunctionIsCalledOnce('signInWithPhoneNumber');
+    myCountryCode = countryCode;
     // TODO: create or update /gamePortal/gamePortalUsers/$myUserId
     // TODO: set recaptcha
     return firebase
@@ -69,7 +72,8 @@ export namespace ourFirebase {
       privateFields: {
         createdOn: getTimestamp(),
         fcmTokens: {},
-        phoneNumber: user.phoneNumber ? user.phoneNumber : ''
+        phoneNumber: user.phoneNumber ? user.phoneNumber : '',
+        countryCode: myCountryCode
       }
     };
     // TODO: also write to /gamePortal/phoneNumberToUserId
