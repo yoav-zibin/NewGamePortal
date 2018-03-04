@@ -3,7 +3,13 @@ import { store, dispatch } from '../stores';
 import * as firebase from 'firebase';
 import { checkCondition } from '../globals';
 import { Action } from '../reducers';
-import { BooleanIndexer, MatchInfo, GameInfo } from '../types';
+import {
+  BooleanIndexer,
+  MatchInfo,
+  GameInfo,
+  MatchState,
+  PieceState
+} from '../types';
 
 function prettyJson(obj: any): string {
   return JSON.stringify(obj, null, '  ');
@@ -99,7 +105,7 @@ export namespace ourFirebase {
     const user = assertLoggedIn();
     db()
       .ref(
-        `gamePortal/gamePortalUsers${
+        `gamePortal/gamePortalUsers/${
           user.uid
         }/privateButAddable/matchMemberships`
       )
@@ -112,7 +118,54 @@ export namespace ourFirebase {
     // Make sure we listen to match changes only once.
     // 'gamePortal/matches'
     // store.dispatch(updateMatchList);
-    db().ref('gamePortal/matches' + matchIds); // TODO
+    let tempMatchIds: Promise<MatchInfo>[] = [];
+    for (let matchId of matchIds) {
+      tempMatchIds.push(getMatchDetail(matchId));
+    }
+    Promise.all(tempMatchIds).then((matches: MatchInfo[]) => {
+      let action: Action = {
+        setMatchesList: matches
+      };
+      dispatch(action);
+    });
+
+    // db().ref('gamePortal/matches' + matchIds); // TODO
+  }
+
+  function getMatchDetail(matchId: string): Promise<MatchInfo> {
+    // let matchInfo = {};
+    return db()
+      .ref('gamePortal/matches/' + matchId)
+      .once('value')
+      .then((snap: firebase.database.DataSnapshot): MatchInfo => {
+        let matchFb: fbr.Match = snap.val();
+        let gameSpecId = matchFb.gameSpecId;
+        let gameSet = store.getState().gamesList;
+        let game = gameSet[gameSpecId];
+        let newMatchStates: MatchState = {};
+        let tempPieces = matchFb.pieces;
+        for (let tempPieceKey of Object.keys(tempPieces)) {
+          let newMatchState: PieceState;
+          newMatchState = {
+            x: tempPieces[tempPieceKey].currentState.x,
+            y: tempPieces[tempPieceKey].currentState.y,
+            zDepth: tempPieces[tempPieceKey].currentState.zDepth,
+            cardVisibility:
+              tempPieces[tempPieceKey].currentState.cardVisibility,
+            currentImageIndex:
+              tempPieces[tempPieceKey].currentState.currentImageIndex
+          };
+          newMatchStates[tempPieceKey] = newMatchState;
+        }
+        const newMatch: MatchInfo = {
+          matchId: matchId,
+          game: game,
+          participantsUserIds: Object.keys(matchFb.participants).sort(),
+          lastUpdatedOn: matchFb.lastUpdatedOn,
+          matchState: newMatchStates
+        };
+        return newMatch;
+      });
   }
 
   // TODO: make sure we call certain functions only once (checkFunctionIsCalledOnce).
