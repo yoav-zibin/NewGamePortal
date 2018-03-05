@@ -123,9 +123,15 @@ export namespace ourFirebase {
         if (data.status === 'resolved') {
           tempMatchIds.push(getMatchDetail(matchId));
         }
+        console.log(matchId);
       });
     }
-    Promise.all(tempMatchIds).then((matches: MatchInfo[]) => {
+    Promise.all(tempMatchIds).then((datas: any) => {
+      let matches:MatchInfo[] = [];
+      datas.forEach((data:any) => {
+        matches.push(data.newMatch);
+        console.log(data.newMatch);
+      })
       let action: Action = {
         setMatchesList: matches
       };
