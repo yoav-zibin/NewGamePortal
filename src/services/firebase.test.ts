@@ -14,10 +14,15 @@ const testConfig = {
   messagingSenderId: '957323548528'
 };
 ourFirebase.init(testConfig);
+ourFirebase.allPromisesForTests = [];
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 
 function prettyJson(obj: any): string {
   return JSON.stringify(obj, null, '  ');
+}
+
+function getAllPromises(): Promise<any> {
+  return Promise.all(ourFirebase.allPromisesForTests!);
 }
 
 // Must be the first test: signs in anonyously.
@@ -38,12 +43,13 @@ it('signInAnonymously finished successfully', done => {
 it('writeUser succeeds', done => {
   const user = firebase.auth().currentUser;
   expect(user).toBeDefined();
-  ourFirebase.writeUser().then(() => {
+  ourFirebase.writeUser();
+  getAllPromises().then(() => {
     done();
   });
 });
 
-it('TODO: delete eventually. Just checking things work in firebase.', () => {
+xit('TODO: delete eventually. Just checking things work in firebase.', () => {
   prettyJson(firebase.auth().currentUser);
   firebase
     .database()
