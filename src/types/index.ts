@@ -25,6 +25,7 @@ export interface UserIdsAndPhoneNumbers {
 export interface MyUser {
   myUserId: string;
   myPhoneNumber: string;
+  myCountryCode: string; // 2-letter country code
 }
 
 export interface SignalEntry {

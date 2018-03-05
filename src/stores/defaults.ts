@@ -16,6 +16,7 @@ export const storeStateDefault: StoreState = {
   },
   myUser: {
     myPhoneNumber: '',
+    myCountryCode: '',
     myUserId: ''
   },
   signals: []

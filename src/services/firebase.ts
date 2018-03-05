@@ -39,21 +39,16 @@ export namespace ourFirebase {
     firebase.initializeApp(testConfig ? testConfig : config);
   }
 
-  // TODO: delete
-  export function exampleDispatch() {
-    const action: Action = {
-      setGamesList: []
-    };
-    dispatch(action);
-  }
-
   // See https://firebase.google.com/docs/auth/web/phone-auth
+  let myCountryCode = '';
   export function signInWithPhoneNumber(
     phoneNumber: string,
+    countryCode: string,
     applicationVerifier: firebase.auth.ApplicationVerifier
   ): Promise<any> {
     checkFunctionIsCalledOnce('signInWithPhoneNumber');
-    // TODO: create or update /gamePortal/gamePortalUsers/$myUserId
+    myCountryCode = countryCode;
+    // Eventually call writeUser.
     // TODO: set recaptcha
     return firebase
       .auth()
@@ -67,51 +62,53 @@ export namespace ourFirebase {
   export function writeUser() {
     checkFunctionIsCalledOnce('writeUser');
     const user = assertLoggedIn();
-    const userFbr: fbr.GamePortalUser = {
-      privateButAddable: {
-        signals: {},
-        matchMemberships: {}
-      },
-      privateFields: {
-        createdOn: getTimestamp(),
-        fcmTokens: {},
-        phoneNumber: user.phoneNumber ? user.phoneNumber : ''
-      }
+    const userFbr: fbr.PrivateFields = {
+      createdOn: getTimestamp(),
+      fcmTokens: {},
+      phoneNumber: user.phoneNumber ? user.phoneNumber : '',
+      countryCode: myCountryCode
     };
-    // TODO: also write to /gamePortal/phoneNumberToUserId
-    return (
-      db()
-        .ref(`gamePortal/gamePortalUsers/${user.uid}`)
-        // TODO: use transact to ensure we don't override an existing user and deleting data.
-        .set(userFbr)
+    delete userFbr.fcmTokens; // I don't want to update these.
+    refUpdate(
+      getRef(`/gamePortal/gamePortalUsers/${user.uid}/privateFields`),
+      userFbr
     );
+
+    const phoneNumberFbr: fbr.PhoneNumber = {
+      userId: user.uid,
+      timestamp: getTimestamp()
+    };
+    if (user.phoneNumber) {
+      refSet(
+        getRef(`/gamePortal/phoneNumberToUserId${user.phoneNumber}`),
+        phoneNumberFbr
+      );
+    }
   }
 
   // Eventually dispatches the action setGamesList.
-  export function setGamesList() {
+  export function fetchGamesList() {
     checkFunctionIsCalledOnce('setGamesList');
     assertLoggedIn();
     // TODO: implement.
-    db()
-      .ref('TODO')
-      .once('value', gotGamesList);
+    getRef('TODO').once('value', gotGamesList);
   }
 
   // Eventually dispatches the action setMatchesList
   // every time this field is updated:
   //  /gamePortal/gamePortalUsers/$myUserId/privateButAddable/matchMemberships
-  export function listenToMyMatchesList() {
+  export function listenToMyMatchesList(callback: any) {
     checkFunctionIsCalledOnce('listenToMyMatchesList');
-    const user = assertLoggedIn();
-    db()
-      .ref(
-        `gamePortal/gamePortalUsers/${
-          user.uid
-        }/privateButAddable/matchMemberships`
-      )
-      .on('value', snap => getMatchMemberships(snap ? snap.val() : {}));
+    getMatchMembershipsRef().on('value', snap =>
+      getMatchMemberships(snap ? snap.val() : {})
+    );
   }
 
+  function getMatchMembershipsRef() {
+    return getRef(
+      `/gamePortal/gamePortalUsers/${getUserId()}/privateButAddable/matchMemberships`
+    );
+  }
   function getMatchMemberships(matchMemberships: fbr.MatchMemberships) {
     const matchIds = Object.keys(matchMemberships);
     // TODO: get all matches in one call to firebase, then later call dispatch.
@@ -120,7 +117,13 @@ export namespace ourFirebase {
     // store.dispatch(updateMatchList);
     let tempMatchIds: Promise<MatchInfo>[] = [];
     for (let matchId of matchIds) {
-      tempMatchIds.push(getMatchDetail(matchId));
+      // getMatchDetail(matchId).then(() => {tempMatchIds.push(getMatchDetail(matchId))});
+      const match = getMatchDetail(matchId);
+      match.then(data => {
+        if (data.status === 'resolved') {
+          tempMatchIds.push(getMatchDetail(matchId));
+        }
+      });
     }
     Promise.all(tempMatchIds).then((matches: MatchInfo[]) => {
       let action: Action = {
@@ -132,19 +135,30 @@ export namespace ourFirebase {
     // db().ref('gamePortal/matches' + matchIds); // TODO
   }
 
-  function getMatchDetail(matchId: string): Promise<MatchInfo> {
+  function getMatchDetail(matchId: string): Promise<any> {
     // let matchInfo = {};
-    return db()
-      .ref('gamePortal/matches/' + matchId)
+    return getRef('gamePortal/matches/' + matchId)
       .once('value')
-      .then((snap: firebase.database.DataSnapshot): MatchInfo => {
-        let matchFb: fbr.Match = snap.val();
-        let gameSpecId = matchFb.gameSpecId;
-        let gameSet = store.getState().gamesList;
-        let game = gameSet[gameSpecId];
-        let newMatchStates: MatchState = {};
-        let tempPieces = matchFb.pieces;
-        for (let tempPieceKey of Object.keys(tempPieces)) {
+      .then((snap: firebase.database.DataSnapshot): any => {
+        const matchFb: fbr.Match = snap.val();
+        if (!matchFb) {
+          return {
+            status: 'failed',
+            newMatch: null
+          };
+        }
+        const gameSpecId = matchFb.gameSpecId;
+        if (!gameSpecId) {
+          return {
+            status: 'failed',
+            newMatch: null
+          };
+        }
+        const gameSet = store.getState().gamesList;
+        const game = gameSet[gameSpecId];
+        const newMatchStates: MatchState = {};
+        const tempPieces = matchFb.pieces;
+        Object.keys(tempPieces).forEach(tempPieceKey => {
           let newMatchState: PieceState;
           newMatchState = {
             x: tempPieces[tempPieceKey].currentState.x,
@@ -156,7 +170,7 @@ export namespace ourFirebase {
               tempPieces[tempPieceKey].currentState.currentImageIndex
           };
           newMatchStates[tempPieceKey] = newMatchState;
-        }
+        });
         const newMatch: MatchInfo = {
           matchId: matchId,
           game: game,
@@ -164,7 +178,10 @@ export namespace ourFirebase {
           lastUpdatedOn: matchFb.lastUpdatedOn,
           matchState: newMatchStates
         };
-        return newMatch;
+        return {
+          status: 'resolved',
+          newMatch: newMatch
+        };
       });
   }
 
@@ -173,32 +190,39 @@ export namespace ourFirebase {
   // TODO: export function updateGameSpec(game: GameInfo) {}
 
   export function createMatch(game: GameInfo): MatchInfo {
-    const user = assertLoggedIn();
-    const ref = db()
-      .ref('gamePortal/matches')
-      .push();
+    const uid = getUserId();
+    const matchRef = getRef('/gamePortal/matches').push();
+    const matchId = matchRef.key!;
     const participants: fbr.Participants = {};
-    participants[user.uid] = {
+    participants[uid] = {
       participantIndex: 0,
-      pingOpponents: <number>firebase.database.ServerValue.TIMESTAMP
+      pingOpponents: getTimestamp()
     };
     const newFBMatch: fbr.Match = {
       gameSpecId: game.gameSpecId,
       participants: participants,
-      createdOn: <number>firebase.database.ServerValue.TIMESTAMP,
-      lastUpdatedOn: <number>firebase.database.ServerValue.TIMESTAMP,
-      pieces: {}
+      createdOn: getTimestamp(),
+      lastUpdatedOn: getTimestamp(),
+      pieces: {} // TODO: set initial state correctly based on gameSpec
     };
-    ref.set(newFBMatch);
+    refSet(matchRef, newFBMatch);
+
+    const matchMembership: fbr.MatchMembership = {
+      addedByUid: uid,
+      timestamp: getTimestamp()
+    };
+    const matchMemberships: fbr.MatchMemberships = {
+      [matchId]: matchMembership
+    };
+    refUpdate(getMatchMembershipsRef(), matchMemberships);
+
     const newMatch: MatchInfo = {
-      matchId: ref.key!,
+      matchId: matchId,
       game: game,
-      participantsUserIds: [user.uid],
+      participantsUserIds: [uid],
       lastUpdatedOn: newFBMatch.lastUpdatedOn,
       matchState: {}
     };
-    console.log(prettyJson(newMatch));
-    // TODO: dispatch a createMatch action
     return newMatch;
   }
 
@@ -216,16 +240,47 @@ export namespace ourFirebase {
 
   // TODO: export function sendSignal(toUserId: string, signalType: 'sdp'|'candidate', signalData: string;) {}
 
+  export let allPromisesForTests: Promise<any>[] | null = null;
+
   /////////////////////////////////////////////////////////////////////////////
   // All the non-exported functions (i.e., private functions).
   /////////////////////////////////////////////////////////////////////////////
+  function addPromiseForTests(promise: Promise<any>) {
+    if (allPromisesForTests) {
+      allPromisesForTests.push(promise);
+    }
+  }
+
+  function refSet(ref: firebase.database.Reference, val: any) {
+    addPromiseForTests(ref.set(val, getOnComplete(ref, val)));
+  }
+
+  function refUpdate(ref: firebase.database.Reference, val: any) {
+    // console.log('refUpdate', ref.toString(), " val=", prettyJson(val));
+    addPromiseForTests(ref.update(val, getOnComplete(ref, val)));
+  }
+
+  function getOnComplete(ref: firebase.database.Reference, val: any) {
+    return (err: Error | null) => {
+      // on complete
+      if (err) {
+        let msg =
+          'Failed writing to ref=' +
+          ref.toString() +
+          ` value=` +
+          prettyJson(val);
+        console.error(msg);
+        throw new Error(msg);
+      }
+    };
+  }
 
   function gotGamesList(snap: firebase.database.DataSnapshot) {
     // TODO: create updateGameListAction + reducers etc.
-    let updateGameListAction: any = snap.val(); // TODO: change this.
+    let updateGameListAction: Action = snap.val(); // TODO: change this.
     // TODO2 (after other TODOs are done): handle screenshotImageId
     // firebase.storage().ref('images/blabla.jpg').getDownloadURL()
-    store.dispatch(updateGameListAction);
+    dispatch(updateGameListAction);
   }
 
   function assertLoggedIn(): firebase.User {
@@ -236,11 +291,15 @@ export namespace ourFirebase {
     return user;
   }
 
+  function getUserId() {
+    return assertLoggedIn().uid;
+  }
+
   function currentUser() {
     return firebase.auth().currentUser;
   }
 
-  function db() {
-    return firebase.database();
+  function getRef(path: string) {
+    return firebase.database().ref(path);
   }
 }

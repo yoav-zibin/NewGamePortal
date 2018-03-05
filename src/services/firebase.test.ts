@@ -14,11 +14,16 @@ const testConfig = {
   messagingSenderId: '957323548528'
 };
 ourFirebase.init(testConfig);
+ourFirebase.allPromisesForTests = [];
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 
 function prettyJson(obj: any): string {
   return JSON.stringify(obj, null, '  ');
 }
+
+afterEach(done => {
+  Promise.all(ourFirebase.allPromisesForTests!).then(done);
+});
 
 // Must be the first test: signs in anonyously.
 it('signInAnonymously finished successfully', done => {
@@ -35,15 +40,14 @@ it('signInAnonymously finished successfully', done => {
 });
 
 // Must be the second test: writes the user data to gamePortal/gamePortalUsers/<user.uid>
-it('writeUser succeeds', done => {
+it('writeUser succeeds', () => {
   const user = firebase.auth().currentUser;
   expect(user).toBeDefined();
-  ourFirebase.writeUser().then(() => {
-    done();
-  });
+  ourFirebase.writeUser();
 });
 
-it('TODO: delete eventually. Just checking things work in firebase.', () => {
+// xit means the test is eXcluded (i.e., disabled).
+xit('TODO: delete eventually. Just checking things work in firebase.', () => {
   prettyJson(firebase.auth().currentUser);
   firebase
     .database()
@@ -67,4 +71,45 @@ it('adds a new match in firebase', () => {
     }
   };
   ourFirebase.createMatch(gameInfo);
+});
+
+it('fetch match list from firebase', done => {
+  const matchInfo: fbr.Match = {
+    participants: {},
+    createdOn: 123456,
+    lastUpdatedOn: 123456,
+    gameSpecId: 'Test Game Spec',
+    pieces: {}
+  };
+
+  firebase
+    .database()
+    .ref('/gamePortal/matches')
+    .child('Test Match Id')
+    .set(matchInfo);
+
+  ourFirebase.listenToMyMatchesList(addMatch);
+
+  function addMatch() {
+    const currentUser = firebase.auth().currentUser;
+    if (!currentUser) {
+      throw new Error('You must be logged in');
+    }
+    const userId = currentUser.uid;
+    firebase
+      .database()
+      .ref(
+        '/gamePortal/gamePortalUsers/' +
+          userId +
+          '/privateButAddable/matchMemberships'
+      )
+      .set({
+        'Test Match Id': {
+          addedByUid: userId,
+          timestamp: 123456
+        }
+      });
+    console.log(userId + 'In Test');
+    done();
+  }
 });

@@ -141,15 +141,6 @@ declare namespace fbr {
     gameBuilderUsers: GameBuilderUsers;
   }
 
-  interface PhoneNumber {
-    userId: string;
-    timestamp: number /*firebase.database.ServerValue.TIMESTAMP*/;
-  }
-
-  interface PhoneNumberToUser {
-    [phoneNumber: string]: PhoneNumber;
-  }
-
   interface GameInfo {
     gameSpecId: string;
     gameName: string;
@@ -161,28 +152,14 @@ declare namespace fbr {
     [gameInfoId: string]: GameInfo;
   }
 
-  interface GamesReviews {
-    uploaderEmail: string;
-    uploaderUid: string;
-    createdOn: number /*firebase.database.ServerValue.TIMESTAMP*/;
-    gameName: string;
-    gameIcon50x50: string;
-    gameIcon512x512: string;
-    screenShootImageId: string;
-    wikipediaUrl: string;
-    tutorialYoutubeVideo: string;
-    board: Board;
-    pieces: Pieces;
-  }
-
   interface GameSpecForPortal {
     images: Images;
     elements: Elements;
-    gameSpec: GamesReviews;
+    gameSpec: GameSpec;
   }
 
   interface GameSpecsForPortal {
-    [gameSpecForPortalId: string]: GameSpecForPortal;
+    [gameSpecId: string]: GameSpecForPortal;
   }
 
   interface GamesInfoAndSpec {
@@ -190,9 +167,18 @@ declare namespace fbr {
     gameSpecsForPortal: GameSpecsForPortal;
   }
 
+  interface PhoneNumber {
+    userId: string;
+    timestamp: number /*firebase.database.ServerValue.TIMESTAMP*/;
+  }
+
+  interface PhoneNumberToUser {
+    [phoneNumber: string]: PhoneNumber;
+  }
+
   interface FcmToken {
     lastTimeReceived: number /*firebase.database.ServerValue.TIMESTAMP*/;
-    platform: 'ios' | 'android';
+    platform: 'web' | 'ios' | 'android';
   }
 
   interface FcmTokens {
@@ -201,6 +187,7 @@ declare namespace fbr {
 
   interface PrivateFields {
     createdOn: number /*firebase.database.ServerValue.TIMESTAMP*/;
+    countryCode: string;
     phoneNumber: string;
     fcmTokens: FcmTokens;
   }
@@ -279,14 +266,15 @@ declare namespace fbr {
   }
 
   interface GamePortal {
-    phoneNumberToUserId: PhoneNumberToUser;
     gamesInfoAndSpec: GamesInfoAndSpec;
+    phoneNumberToUserId: PhoneNumberToUser;
     gamePortalUsers: GamePortalUsers;
     matches: Matches;
   }
 
   interface FirebaseDb {
     gameBuilder: GameBuilder;
+    testPushNotification: string;
     gamePortal: GamePortal;
   }
 }
