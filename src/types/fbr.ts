@@ -152,28 +152,14 @@ declare namespace fbr {
     [gameInfoId: string]: GameInfo;
   }
 
-  interface GamesReviews {
-    uploaderEmail: string;
-    uploaderUid: string;
-    createdOn: number /*firebase.database.ServerValue.TIMESTAMP*/;
-    gameName: string;
-    gameIcon50x50: string;
-    gameIcon512x512: string;
-    screenShootImageId: string;
-    wikipediaUrl: string;
-    tutorialYoutubeVideo: string;
-    board: Board;
-    pieces: Pieces;
-  }
-
   interface GameSpecForPortal {
     images: Images;
     elements: Elements;
-    gameSpec: GamesReviews;
+    gameSpec: GameSpec;
   }
 
   interface GameSpecsForPortal {
-    [gameSpecForPortalId: string]: GameSpecForPortal;
+    [gameSpecId: string]: GameSpecForPortal;
   }
 
   interface GamesInfoAndSpec {
