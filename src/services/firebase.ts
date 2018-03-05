@@ -33,14 +33,6 @@ export namespace ourFirebase {
     firebase.initializeApp(testConfig ? testConfig : config);
   }
 
-  // TODO: delete
-  export function exampleDispatch() {
-    const action: Action = {
-      setGamesList: []
-    };
-    dispatch(action);
-  }
-
   // See https://firebase.google.com/docs/auth/web/phone-auth
   let myCountryCode = '';
   export function signInWithPhoneNumber(
@@ -101,14 +93,16 @@ export namespace ourFirebase {
   //  /gamePortal/gamePortalUsers/$myUserId/privateButAddable/matchMemberships
   export function listenToMyMatchesList() {
     checkFunctionIsCalledOnce('listenToMyMatchesList');
-    const user = assertLoggedIn();
-    getRef(
-      `/gamePortal/gamePortalUsers${
-        user.uid
-      }/privateButAddable/matchMemberships`
-    ).on('value', snap => getMatchMemberships(snap ? snap.val() : {}));
+    getMatchMembershipsRef().on('value', snap =>
+      getMatchMemberships(snap ? snap.val() : {})
+    );
   }
 
+  function getMatchMembershipsRef() {
+    return getRef(
+      `/gamePortal/gamePortalUsers/${getUserId()}/privateButAddable/matchMemberships`
+    );
+  }
   function getMatchMemberships(matchMemberships: fbr.MatchMemberships) {
     const matchIds = Object.keys(matchMemberships);
     // TODO: get all matches in one call to firebase, then later call dispatch.
@@ -123,10 +117,11 @@ export namespace ourFirebase {
   // TODO: export function updateGameSpec(game: GameInfo) {}
 
   export function createMatch(game: GameInfo): MatchInfo {
-    const user = assertLoggedIn();
+    const uid = getUserId();
     const matchRef = getRef('/gamePortal/matches').push();
+    const matchId = matchRef.key!;
     const participants: fbr.Participants = {};
-    participants[user.uid] = {
+    participants[uid] = {
       participantIndex: 0,
       pingOpponents: getTimestamp()
     };
@@ -137,12 +132,21 @@ export namespace ourFirebase {
       lastUpdatedOn: getTimestamp(),
       pieces: {} // TODO: set initial state correctly based on gameSpec
     };
-    // TODO: set matchMemberships
     refSet(matchRef, newFBMatch);
+
+    const matchMembership: fbr.MatchMembership = {
+      addedByUid: uid,
+      timestamp: getTimestamp()
+    };
+    const matchMemberships: fbr.MatchMemberships = {
+      [matchId]: matchMembership
+    };
+    refUpdate(getMatchMembershipsRef(), matchMemberships);
+
     const newMatch: MatchInfo = {
-      matchId: matchRef.key!,
+      matchId: matchId,
       game: game,
-      participantsUserIds: [user.uid],
+      participantsUserIds: [uid],
       lastUpdatedOn: newFBMatch.lastUpdatedOn,
       matchState: {}
     };
@@ -179,6 +183,7 @@ export namespace ourFirebase {
   }
 
   function refUpdate(ref: firebase.database.Reference, val: any) {
+    // console.log('refUpdate', ref.toString(), " val=", prettyJson(val));
     addPromiseForTests(ref.update(val, getOnComplete(ref, val)));
   }
 
@@ -186,19 +191,20 @@ export namespace ourFirebase {
     return (err: Error | null) => {
       // on complete
       if (err) {
-        console.error(
-          'Failed writing to ref=',
-          ref.toString(),
-          ` value=`,
-          prettyJson(val)
-        );
+        let msg =
+          'Failed writing to ref=' +
+          ref.toString() +
+          ` value=` +
+          prettyJson(val);
+        console.error(msg);
+        throw new Error(msg);
       }
     };
   }
 
   function gotGamesList(snap: firebase.database.DataSnapshot) {
     // TODO: create updateGameListAction + reducers etc.
-    let updateGameListAction: any = snap.val(); // TODO: change this.
+    let updateGameListAction: Action = snap.val(); // TODO: change this.
     // TODO2 (after other TODOs are done): handle screenshotImageId
     // firebase.storage().ref('images/blabla.jpg').getDownloadURL()
     dispatch(updateGameListAction);
@@ -210,6 +216,10 @@ export namespace ourFirebase {
       throw new Error('You must be logged in');
     }
     return user;
+  }
+
+  function getUserId() {
+    return assertLoggedIn().uid;
   }
 
   function currentUser() {

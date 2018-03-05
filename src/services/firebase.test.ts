@@ -21,9 +21,9 @@ function prettyJson(obj: any): string {
   return JSON.stringify(obj, null, '  ');
 }
 
-function getAllPromises(): Promise<any> {
-  return Promise.all(ourFirebase.allPromisesForTests!);
-}
+afterEach(done => {
+  Promise.all(ourFirebase.allPromisesForTests!).then(done);
+});
 
 // Must be the first test: signs in anonyously.
 it('signInAnonymously finished successfully', done => {
@@ -40,15 +40,13 @@ it('signInAnonymously finished successfully', done => {
 });
 
 // Must be the second test: writes the user data to gamePortal/gamePortalUsers/<user.uid>
-it('writeUser succeeds', done => {
+it('writeUser succeeds', () => {
   const user = firebase.auth().currentUser;
   expect(user).toBeDefined();
   ourFirebase.writeUser();
-  getAllPromises().then(() => {
-    done();
-  });
 });
 
+// xit means the test is eXcluded (i.e., disabled).
 xit('TODO: delete eventually. Just checking things work in firebase.', () => {
   prettyJson(firebase.auth().currentUser);
   firebase
