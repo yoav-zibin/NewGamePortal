@@ -72,3 +72,7 @@ it('adds a new match in firebase', () => {
   };
   ourFirebase.createMatch(gameInfo);
 });
+
+it('addFcmTokens', () => {
+  ourFirebase.addFcmToken('1'.repeat(140), 'android');
+});

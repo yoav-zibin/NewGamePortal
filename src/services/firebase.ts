@@ -160,7 +160,19 @@ export namespace ourFirebase {
   // Dispatches updateUserIdsAndPhoneNumbers (reading from /gamePortal/phoneNumberToUserId)
   // TODO: export function updateUserIdsAndPhoneNumbers(phoneNumbers: string[]) {}
 
-  // TODO: export function addFcmToken(fcmToken: string, platform: 'ios'|'android') {}
+  export function addFcmToken(fcmToken: string, platform: 'ios' | 'android') {
+    // Can be called multiple times if the token is updated.  checkFunctionIsCalledOnce('addFcmToken');
+    const fcmTokenObj: fbr.FcmToken = {
+      lastTimeReceived: <any>firebase.database.ServerValue.TIMESTAMP,
+      platform: platform
+    };
+    return refSet(
+      getRef(
+        `gamePortal/gamePortalUsers/${getUserId()}/privateFields/fcmTokens/${fcmToken}`
+      ),
+      fcmTokenObj
+    );
+  }
 
   // Dispatches setSignals.
   // TODO: export function listenToSignals() {}
