@@ -72,26 +72,36 @@ xit('TODO: delete eventually. Just checking things work in firebase.', () => {
 });
 
 it('adds a new match in firebase', () => {
-  // ourFirebase.createMatch(gameInfo);
+  ourFirebase.createMatch(gameInfo);
 });
 
-// it('Should update the match state', () => {
-//   // take match state and matchinfo
-//   const state: MatchState = {
-//     '0': {
-//       x: 100,
-//       y: 100,
-//       zDepth: 1,
-//       currentImageIndex: 0,
-//       cardVisibility: { '0': true }
-//     }
-//   };
-//   const info: MatchInfo = ourFirebase.createMatch(gameInfo);
-//   ourFirebase.updateMatchState(info, state);
-// });
+it('Should update the match state', () => {
+  // take match state and matchinfo
+  const state: MatchState = {
+    '0': {
+      x: 100,
+      y: 100,
+      zDepth: 1,
+      currentImageIndex: 0,
+      cardVisibility: { '0': true }
+    }
+  };
+  const info: MatchInfo = ourFirebase.createMatch(gameInfo);
+  ourFirebase.updateMatchState(info, state);
+});
 
 it('addFcmTokens', () => {
   ourFirebase.addFcmToken('1'.repeat(140), 'android');
+});
+
+it('addParticipants', () => {
+  const info: MatchInfo = ourFirebase.createMatch(gameInfo);
+  const currentUser = firebase.auth().currentUser;
+  if (!currentUser) {
+    throw new Error('You must be logged in');
+  }
+  const userId = currentUser.uid;
+  ourFirebase.addParticipant(info, userId);
 });
 
 it('fetch match list from firebase', () => {
