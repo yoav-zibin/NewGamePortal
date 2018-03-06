@@ -41,6 +41,10 @@ const gameInfo: GameInfo = {
 dispatch({ setGamesList: [gameInfo] });
 const existingUserId = '0E25lvSVm5bTHrQT517kPafiAia2';
 
+function createMatch() {
+  return ourFirebase.createMatch(gameInfo, {});
+}
+
 // Must be the first test: signs in anonyously, writeUser,
 // and other methods that can be called just once.
 it('signInAnonymously finished successfully', done => {
@@ -71,7 +75,7 @@ xit('TODO: delete eventually. Just checking things work in firebase.', () => {
 });
 
 it('adds a new match in firebase', () => {
-  ourFirebase.createMatch(gameInfo);
+  createMatch();
 });
 
 it('Should update the match state', () => {
@@ -85,7 +89,7 @@ it('Should update the match state', () => {
       cardVisibility: { '0': true }
     }
   };
-  const match: MatchInfo = ourFirebase.createMatch(gameInfo);
+  const match: MatchInfo = createMatch();
   ourFirebase.updateMatchState(match, state);
 });
 
@@ -94,7 +98,7 @@ it('addFcmTokens', () => {
 });
 
 it('addParticipants', done => {
-  const match: MatchInfo = ourFirebase.createMatch(gameInfo);
+  const match: MatchInfo = createMatch();
   const currentUser = firebase.auth().currentUser;
   if (!currentUser) {
     throw new Error('You must be logged in');
@@ -115,7 +119,7 @@ it('addParticipants', done => {
 });
 
 it('fetch match list from firebase', done => {
-  const matchId = ourFirebase.createMatch(gameInfo).matchId;
+  const matchId = createMatch().matchId;
   store.subscribe(() => {
     const matchesList = store.getState().matchesList;
     if (matchesList.find(match => match.matchId === matchId)) {

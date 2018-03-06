@@ -95,6 +95,8 @@ export namespace ourFirebase {
     getRef('TODO').once('value', gotGamesList);
   }
 
+  // TODO: export function updateGameSpec(game: GameInfo) {}
+
   // Eventually dispatches the action setMatchesList
   // every time this field is updated:
   //  /gamePortal/gamePortalUsers/$myUserId/privateButAddable/matchMemberships
@@ -148,20 +150,7 @@ export namespace ourFirebase {
         .getState()
         .gamesList.find(gameInList => gameInList.gameSpecId === gameSpecId);
       checkCondition('missing gameSpecId for match', game);
-      const newMatchStates: MatchState = {};
-      const tempPieces = matchFb.pieces ? matchFb.pieces : {};
-      Object.keys(tempPieces).forEach(tempPieceKey => {
-        let newMatchState: PieceState;
-        newMatchState = {
-          x: tempPieces[tempPieceKey].currentState.x,
-          y: tempPieces[tempPieceKey].currentState.y,
-          zDepth: tempPieces[tempPieceKey].currentState.zDepth,
-          cardVisibility: tempPieces[tempPieceKey].currentState.cardVisibility,
-          currentImageIndex:
-            tempPieces[tempPieceKey].currentState.currentImageIndex
-        };
-        newMatchStates[tempPieceKey] = newMatchState;
-      });
+      const newMatchStates = convertPiecesStateToMatchState(matchFb.pieces);
       const participants = matchFb.participants;
       // Sort by participant's index (ascending participantIndex order)
       const participantsUserIds = Object.keys(participants).sort(
@@ -188,11 +177,10 @@ export namespace ourFirebase {
     });
   }
 
-  // TODO: make sure we call certain functions only once (checkFunctionIsCalledOnce).
-
-  // TODO: export function updateGameSpec(game: GameInfo) {}
-
-  export function createMatch(game: GameInfo): MatchInfo {
+  export function createMatch(
+    game: GameInfo,
+    initialState: MatchState
+  ): MatchInfo {
     const uid = getUserId();
     const matchRef = getRef('/gamePortal/matches').push();
     const matchId = matchRef.key!;
@@ -206,7 +194,7 @@ export namespace ourFirebase {
       participants: participants,
       createdOn: getTimestamp(),
       lastUpdatedOn: getTimestamp(),
-      pieces: {} // TODO: set initial state correctly based on gameSpec
+      pieces: convertMatchStateToPiecesState(initialState)
     };
     refSet(matchRef, newFBMatch);
     addMatchMembership(uid, matchId);
@@ -216,7 +204,7 @@ export namespace ourFirebase {
       game: game,
       participantsUserIds: [uid],
       lastUpdatedOn: newFBMatch.lastUpdatedOn,
-      matchState: {}
+      matchState: initialState
     };
     return newMatch;
   }
@@ -231,8 +219,6 @@ export namespace ourFirebase {
     };
     refUpdate(getMatchMembershipsRef(toUserId), matchMemberships);
   }
-
-  // TODO: export function addParticipant(match: MatchInfo, user: User) {}
 
   export function addParticipant(match: MatchInfo, userId: string) {
     checkCondition(
@@ -253,6 +239,35 @@ export namespace ourFirebase {
   }
 
   export function updateMatchState(match: MatchInfo, matchState: MatchState) {
+    refUpdate(
+      getRef(`/gamePortal/matches/${match.matchId}/pieces`),
+      convertMatchStateToPiecesState(matchState)
+    );
+  }
+
+  function convertPiecesStateToMatchState(
+    piecesState: fbr.PiecesState
+  ): MatchState {
+    const newMatchStates: MatchState = {};
+    const tempPieces = piecesState ? piecesState : {};
+    Object.keys(tempPieces).forEach(tempPieceKey => {
+      let newMatchState: PieceState;
+      newMatchState = {
+        x: tempPieces[tempPieceKey].currentState.x,
+        y: tempPieces[tempPieceKey].currentState.y,
+        zDepth: tempPieces[tempPieceKey].currentState.zDepth,
+        cardVisibility: tempPieces[tempPieceKey].currentState.cardVisibility,
+        currentImageIndex:
+          tempPieces[tempPieceKey].currentState.currentImageIndex
+      };
+      newMatchStates[tempPieceKey] = newMatchState;
+    });
+    return newMatchStates;
+  }
+
+  function convertMatchStateToPiecesState(
+    matchState: MatchState
+  ): fbr.PiecesState {
     const piecesState: fbr.PiecesState = {};
     for (let pieceIndex of Object.keys(matchState)) {
       const pieceState = matchState[pieceIndex];
@@ -268,17 +283,18 @@ export namespace ourFirebase {
         }
       };
     }
-
-    refUpdate(
-      getRef(`/gamePortal/matches/${match.matchId}/pieces`),
-      piecesState
-    );
+    return piecesState;
   }
 
   // TODO: export function pingOpponentsInMatch(match: MatchInfo) {}
 
   // Dispatches updateUserIdsAndPhoneNumbers (reading from /gamePortal/phoneNumberToUserId)
   // TODO: export function updateUserIdsAndPhoneNumbers(phoneNumbers: string[]) {}
+
+  // Dispatches setSignals.
+  // TODO: export function listenToSignals() {}
+
+  // TODO: export function sendSignal(toUserId: string, signalType: 'sdp'|'candidate', signalData: string;) {}
 
   export function addFcmToken(fcmToken: string, platform: 'ios' | 'android') {
     // Can be called multiple times if the token is updated.  checkFunctionIsCalledOnce('addFcmToken');
@@ -293,11 +309,6 @@ export namespace ourFirebase {
       fcmTokenObj
     );
   }
-
-  // Dispatches setSignals.
-  // TODO: export function listenToSignals() {}
-
-  // TODO: export function sendSignal(toUserId: string, signalType: 'sdp'|'candidate', signalData: string;) {}
 
   export let allPromisesForTests: Promise<any>[] | null = null;
 
