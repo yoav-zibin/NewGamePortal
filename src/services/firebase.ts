@@ -3,7 +3,7 @@ import { dispatch } from '../stores';
 import * as firebase from 'firebase';
 import { checkCondition } from '../globals';
 import { Action } from '../reducers';
-import { BooleanIndexer, MatchInfo, GameInfo } from '../types';
+import { BooleanIndexer, MatchInfo, GameInfo, MatchState } from '../types';
 
 function prettyJson(obj: any): string {
   return JSON.stringify(obj, null, '  ');
@@ -154,7 +154,29 @@ export namespace ourFirebase {
   }
 
   // TODO: export function addParticipant(match: MatchInfo, user: User) {}
-  // TODO: export function updateMatchState(match: MatchInfo, matchState: MatchState) {}
+  export function updateMatchState(match: MatchInfo, matchState: MatchState) {
+    const newState: fbr.CurrentState = {};
+    for (let item in matchState) {
+      console.log(item);
+      newState[item] = {
+        y: matchState[item].y,
+        zDepth: matchState[item].zDepth,
+        currentImageIndex: matchState[item].currentImageIndex,
+        cardVisibility: matchState[item].cardVisibility,
+        rotationDegrees: 360,
+        drawing: {}
+      };
+    }
+
+    const updates: any = {};
+    updates[
+      `gamePortal/gamePortalUsers/matches/${match.matchId}/pieces`
+    ] = newState;
+
+    return db()
+      .ref()
+      .update(updates);
+  }
   // TODO: export function pingOpponentsInMatch(match: MatchInfo) {}
 
   // Dispatches updateUserIdsAndPhoneNumbers (reading from /gamePortal/phoneNumberToUserId)
