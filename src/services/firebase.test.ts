@@ -38,26 +38,24 @@ const gameInfo: GameInfo = {
     isBoardImage: true
   }
 };
+dispatch({ setGamesList: [gameInfo] });
+const existingUserId = '0E25lvSVm5bTHrQT517kPafiAia2';
 
-// Must be the first test: signs in anonyously.
+// Must be the first test: signs in anonyously, writeUser,
+// and other methods that can be called just once.
 it('signInAnonymously finished successfully', done => {
   firebase
     .auth()
     .signInAnonymously()
     .then(() => {
+      ourFirebase.writeUser();
+      ourFirebase.listenToMyMatchesList();
       done();
     })
     .catch(err => {
       console.error('error in signInAnonymously with err=', err);
       throw new Error('error in signInAnonymously err=' + err);
     });
-});
-
-// Must be the second test: writes the user data to gamePortal/gamePortalUsers/<user.uid>
-it('writeUser succeeds', () => {
-  const user = firebase.auth().currentUser;
-  expect(user).toBeDefined();
-  ourFirebase.writeUser();
 });
 
 // xit means the test is eXcluded (i.e., disabled).
@@ -95,20 +93,29 @@ it('addFcmTokens', () => {
   ourFirebase.addFcmToken('1'.repeat(140), 'android');
 });
 
-it('addParticipants', () => {
-  const info: MatchInfo = ourFirebase.createMatch(gameInfo);
+it('addParticipants', done => {
+  const match: MatchInfo = ourFirebase.createMatch(gameInfo);
   const currentUser = firebase.auth().currentUser;
   if (!currentUser) {
     throw new Error('You must be logged in');
   }
-  const userId = currentUser.uid;
-  ourFirebase.addParticipant(info, userId);
+  ourFirebase.addParticipant(match, existingUserId);
+  store.subscribe(() => {
+    const matchesList = store.getState().matchesList;
+    const thisMatch = matchesList.find(
+      matchInList => matchInList.matchId === match.matchId
+    );
+    if (
+      thisMatch &&
+      thisMatch.participantsUserIds.indexOf(existingUserId) !== -1
+    ) {
+      done();
+    }
+  });
 });
 
 it('fetch match list from firebase', done => {
   const matchId = ourFirebase.createMatch(gameInfo).matchId;
-  dispatch({ setGamesList: [gameInfo] });
-  ourFirebase.listenToMyMatchesList();
   store.subscribe(() => {
     const matchesList = store.getState().matchesList;
     if (matchesList.find(match => match.matchId === matchId)) {

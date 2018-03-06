@@ -105,9 +105,10 @@ export namespace ourFirebase {
     });
   }
 
-  function getMatchMembershipsRef() {
+  function getMatchMembershipsRef(userId?: string) {
+    const uid = userId ? userId : getUserId();
     return getRef(
-      `/gamePortal/gamePortalUsers/${getUserId()}/privateButAddable/matchMemberships`
+      `/gamePortal/gamePortalUsers/${uid}/privateButAddable/matchMemberships`
     );
   }
 
@@ -115,6 +116,9 @@ export namespace ourFirebase {
   const receivedMatches: IdIndexer<MatchInfo> = {};
 
   function getMatchMemberships(matchMemberships: fbr.MatchMemberships) {
+    if (!matchMemberships) {
+      return;
+    }
     const matchIds = Object.keys(matchMemberships);
     const newMatchIds: string[] = matchIds.filter(
       matchId => listeningToMatchIds.indexOf(matchId) === -1
@@ -205,15 +209,7 @@ export namespace ourFirebase {
       pieces: {} // TODO: set initial state correctly based on gameSpec
     };
     refSet(matchRef, newFBMatch);
-
-    const matchMembership: fbr.MatchMembership = {
-      addedByUid: uid,
-      timestamp: getTimestamp()
-    };
-    const matchMemberships: fbr.MatchMemberships = {
-      [matchId]: matchMembership
-    };
-    refUpdate(getMatchMembershipsRef(), matchMemberships);
+    addMatchMembership(uid, matchId);
 
     const newMatch: MatchInfo = {
       matchId: matchId,
@@ -225,18 +221,35 @@ export namespace ourFirebase {
     return newMatch;
   }
 
+  function addMatchMembership(toUserId: string, matchId: string) {
+    const matchMembership: fbr.MatchMembership = {
+      addedByUid: getUserId(),
+      timestamp: getTimestamp()
+    };
+    const matchMemberships: fbr.MatchMemberships = {
+      [matchId]: matchMembership
+    };
+    refUpdate(getMatchMembershipsRef(toUserId), matchMemberships);
+  }
+
   // TODO: export function addParticipant(match: MatchInfo, user: User) {}
 
-  export function addParticipant(match: MatchInfo, user: String) {
+  export function addParticipant(match: MatchInfo, userId: string) {
+    checkCondition(
+      'addParticipant',
+      match.participantsUserIds.indexOf(userId) === -1
+    );
+    const matchId = match.matchId;
     const participantNumber = match.participantsUserIds.length;
     const participantUserObj: fbr.ParticipantUser = {
       participantIndex: participantNumber,
       pingOpponents: getTimestamp()
     };
-    return refSet(
-      getRef(`/gamePortal/matches/${match.matchId}/participants/${user}`),
+    refSet(
+      getRef(`/gamePortal/matches/${matchId}/participants/${userId}`),
       participantUserObj
     );
+    addMatchMembership(userId, matchId);
   }
 
   export function updateMatchState(match: MatchInfo, matchState: MatchState) {
