@@ -8,11 +8,10 @@ import {
   UserIdsAndPhoneNumbers,
   SignalEntry,
   IdIndexer,
-  MyUser,
-  StringIndexer
+  MyUser
 } from '../types';
 import { storeStateDefault } from '../stores/defaults';
-import { checkCondition } from '../globals';
+import { checkCondition, getValues } from '../globals';
 
 export interface Action {
   // Actions that start with "set" mean that they replace the matching
@@ -38,14 +37,6 @@ export function mergeMaps<T>(
 
 function isInRange(currentMatchIndex: number, matchesList: MatchInfo[]) {
   return currentMatchIndex >= -1 && currentMatchIndex < matchesList.length;
-}
-
-function getValues(obj: StringIndexer): string[] {
-  let vals: string[] = [];
-  for (let key of Object.keys(obj)) {
-    vals.push(obj[key]);
-  }
-  return vals;
 }
 
 function checkEqual(x: string[], y: string[]) {
