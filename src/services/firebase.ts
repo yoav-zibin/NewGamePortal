@@ -97,11 +97,13 @@ export namespace ourFirebase {
   // Eventually dispatches the action setMatchesList
   // every time this field is updated:
   //  /gamePortal/gamePortalUsers/$myUserId/privateButAddable/matchMemberships
-  export function listenToMyMatchesList(callback: any) {
+  export function listenToMyMatchesList() {
+    console.log('In real function:' + getUserId());
     checkFunctionIsCalledOnce('listenToMyMatchesList');
-    getMatchMembershipsRef().on('value', snap =>
-      getMatchMemberships(snap ? snap.val() : {})
-    );
+    getMatchMembershipsRef().on('value', snap => {
+      console.log('First Listen:' + (snap ? prettyJson(snap.val()) : {}));
+      getMatchMemberships(snap ? snap.val() : {});
+    });
   }
 
   function getMatchMembershipsRef() {
@@ -115,45 +117,54 @@ export namespace ourFirebase {
     // Make sure we listen to match changes only once.
     // 'gamePortal/matches'
     // store.dispatch(updateMatchList);
-    let tempMatchIds: Promise<MatchInfo>[] = [];
+    let tempMatchIds: Promise<any>[] = [];
     for (let matchId of matchIds) {
       // getMatchDetail(matchId).then(() => {tempMatchIds.push(getMatchDetail(matchId))});
       const match = getMatchDetail(matchId);
+
       match.then(data => {
         if (data.status === 'resolved') {
-          tempMatchIds.push(getMatchDetail(matchId));
+          // tempMatchIds.push(getMatchDetail(matchId));
+          tempMatchIds.push(match);
         }
-        console.log(matchId);
       });
     }
-    Promise.all(tempMatchIds).then((datas: any) => {
-      let matches:MatchInfo[] = [];
-      datas.forEach((data:any) => {
-        matches.push(data.newMatch);
-        console.log(data.newMatch);
+    Promise.all(tempMatchIds)
+      .then((datas: any) => {
+        let matches: MatchInfo[] = [];
+        console.log('In the pormises' + datas);
+        datas.forEach((data: any) => {
+          matches.push(data.newMatch);
+          console.log('Show me the match:' + data.newMatch);
+        });
+        let action: Action = {
+          setMatchesList: matches
+        };
+        dispatch(action);
       })
-      let action: Action = {
-        setMatchesList: matches
-      };
-      dispatch(action);
-    });
+      .catch(() => {
+        console.log('Wrong when fetch matches');
+      });
 
     // db().ref('gamePortal/matches' + matchIds); // TODO
   }
 
   function getMatchDetail(matchId: string): Promise<any> {
     // let matchInfo = {};
-    return getRef('gamePortal/matches/' + matchId)
+    return getRef('/gamePortal/matches/' + matchId)
       .once('value')
       .then((snap: firebase.database.DataSnapshot): any => {
         const matchFb: fbr.Match = snap.val();
+        console.log('matchFbContent:' + prettyJson(matchFb));
         if (!matchFb) {
           return {
             status: 'failed',
             newMatch: null
           };
         }
+
         const gameSpecId = matchFb.gameSpecId;
+        console.log('gameSpecId:' + gameSpecId);
         if (!gameSpecId) {
           return {
             status: 'failed',
@@ -184,10 +195,14 @@ export namespace ourFirebase {
           lastUpdatedOn: matchFb.lastUpdatedOn,
           matchState: newMatchStates
         };
+        console.log('newMatch:' + prettyJson(newMatch));
         return {
           status: 'resolved',
           newMatch: newMatch
         };
+      })
+      .catch(() => {
+        console.log('wrong when get getMatchDetail');
       });
   }
 
@@ -257,7 +272,7 @@ export namespace ourFirebase {
     }
   }
 
-  function refSet(ref: firebase.database.Reference, val: any) {
+  export function refSet(ref: firebase.database.Reference, val: any) {
     addPromiseForTests(ref.set(val, getOnComplete(ref, val)));
   }
 

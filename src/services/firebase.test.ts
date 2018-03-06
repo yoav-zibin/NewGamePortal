@@ -70,46 +70,68 @@ it('adds a new match in firebase', () => {
       isBoardImage: true
     }
   };
-  ourFirebase.createMatch(gameInfo);
+  // ourFirebase.createMatch(gameInfo);
 });
 
-it('fetch match list from firebase', done => {
+it('fetch match list from firebase', () => {
+  console.log('Testing fetch match list....');
+  // Create a new match
+  const currentUser = firebase.auth().currentUser;
+  if (!currentUser) {
+    throw new Error('You must be logged in');
+  }
+  const userId = currentUser.uid;
+  console.log('UserId is:' + userId);
+  const participants: fbr.Participants = {};
+  participants[userId] = {
+    participantIndex: 0,
+    pingOpponents: ourFirebase.getTimestamp()
+  };
   const matchInfo: fbr.Match = {
-    participants: {},
-    createdOn: 123456,
-    lastUpdatedOn: 123456,
-    gameSpecId: 'Test Game Spec',
-    pieces: {}
+    participants,
+    createdOn: ourFirebase.getTimestamp(),
+    lastUpdatedOn: ourFirebase.getTimestamp(),
+    gameSpecId: '-L-E8g38ZSbq5jhGT8rS',
+    pieces: {
+      0: {
+        currentState: {
+          x: 1,
+          y: 1,
+          zDepth: 1,
+          currentImageIndex: 1,
+          cardVisibility: {
+            0: true
+          },
+          rotationDegrees: 90,
+          drawing: {}
+        }
+      }
+    }
   };
 
-  firebase
+  const matchRef = firebase
     .database()
     .ref('/gamePortal/matches')
-    .child('Test Match Id')
-    .set(matchInfo);
+    .push();
+  const matchId = matchRef.key!;
+  console.log('The match id is:' + matchId);
+  const matchValue = matchInfo;
+  ourFirebase.refSet(matchRef, matchValue);
 
-  ourFirebase.listenToMyMatchesList(addMatch);
+  const ref = firebase
+    .database()
+    .ref(
+      '/gamePortal/gamePortalUsers/' +
+        userId +
+        '/privateButAddable/matchMemberships'
+    )
+    .child(matchId);
+  const value = {
+    addedByUid: userId,
+    timestamp: ourFirebase.getTimestamp()
+  };
+  ourFirebase.refSet(ref, value);
 
-  function addMatch() {
-    const currentUser = firebase.auth().currentUser;
-    if (!currentUser) {
-      throw new Error('You must be logged in');
-    }
-    const userId = currentUser.uid;
-    firebase
-      .database()
-      .ref(
-        '/gamePortal/gamePortalUsers/' +
-          userId +
-          '/privateButAddable/matchMemberships'
-      )
-      .set({
-        'Test Match Id': {
-          addedByUid: userId,
-          timestamp: 123456
-        }
-      });
-    console.log(userId + 'In Test');
-    done();
-  }
+  ourFirebase.listenToMyMatchesList();
+  // console.log(userId + 'In Test');
 });
