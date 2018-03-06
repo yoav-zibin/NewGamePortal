@@ -227,6 +227,18 @@ export namespace ourFirebase {
 
   // TODO: export function addParticipant(match: MatchInfo, user: User) {}
 
+  export function addParticipant(match: MatchInfo, user: String) {
+    const participantNumber = match.participantsUserIds.length;
+    const participantUserObj: fbr.ParticipantUser = {
+      participantIndex: participantNumber,
+      pingOpponents: getTimestamp()
+    };
+    return refSet(
+      getRef(`/gamePortal/matches/${match.matchId}/participants/${user}`),
+      participantUserObj
+    );
+  }
+
   export function updateMatchState(match: MatchInfo, matchState: MatchState) {
     const piecesState: fbr.PiecesState = {};
     for (let pieceIndex of Object.keys(matchState)) {

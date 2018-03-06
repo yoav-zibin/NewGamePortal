@@ -95,6 +95,16 @@ it('addFcmTokens', () => {
   ourFirebase.addFcmToken('1'.repeat(140), 'android');
 });
 
+it('addParticipants', () => {
+  const info: MatchInfo = ourFirebase.createMatch(gameInfo);
+  const currentUser = firebase.auth().currentUser;
+  if (!currentUser) {
+    throw new Error('You must be logged in');
+  }
+  const userId = currentUser.uid;
+  ourFirebase.addParticipant(info, userId);
+});
+
 it('fetch match list from firebase', done => {
   const matchId = ourFirebase.createMatch(gameInfo).matchId;
   dispatch({ setGamesList: [gameInfo] });
