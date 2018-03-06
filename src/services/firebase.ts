@@ -117,25 +117,29 @@ export namespace ourFirebase {
     // Make sure we listen to match changes only once.
     // 'gamePortal/matches'
     // store.dispatch(updateMatchList);
-    let tempMatchIds: Promise<any>[] = [];
+    let tempMatchesPromises: Promise<any>[] = [];
     for (let matchId of matchIds) {
       // getMatchDetail(matchId).then(() => {tempMatchIds.push(getMatchDetail(matchId))});
       const match = getMatchDetail(matchId);
+      tempMatchesPromises.push(match);
 
-      match.then(data => {
-        if (data.status === 'resolved') {
-          // tempMatchIds.push(getMatchDetail(matchId));
-          tempMatchIds.push(match);
-        }
-      });
+      // match.then(data => {
+      //   if (data.status === 'resolved') {
+      //     // tempMatches.push(getMatchDetail(matchId));
+      //     tempMatches.push(match);
+      //   }
+      // });
     }
-    Promise.all(tempMatchIds)
+    Promise.all(tempMatchesPromises)
       .then((datas: any) => {
+        const succeededPromises = datas.filter(
+          (data: any) => data.status === 'resolved'
+        );
         let matches: MatchInfo[] = [];
-        console.log('In the pormises' + datas);
-        datas.forEach((data: any) => {
+        console.log('In the promises' + succeededPromises);
+        succeededPromises.forEach((data: any) => {
           matches.push(data.newMatch);
-          console.log('Show me the match:' + data.newMatch);
+          console.log('Show me the match:' + prettyJson(data.newMatch));
         });
         let action: Action = {
           setMatchesList: matches
@@ -164,7 +168,7 @@ export namespace ourFirebase {
         }
 
         const gameSpecId = matchFb.gameSpecId;
-        console.log('gameSpecId:' + gameSpecId);
+        console.log('gameSpecId in getMatchDetail:' + gameSpecId);
         if (!gameSpecId) {
           return {
             status: 'failed',
@@ -174,7 +178,7 @@ export namespace ourFirebase {
         const gameSet = store.getState().gamesList;
         const game = gameSet[gameSpecId];
         const newMatchStates: MatchState = {};
-        const tempPieces = matchFb.pieces;
+        const tempPieces = matchFb.pieces ? matchFb.pieces : {};
         Object.keys(tempPieces).forEach(tempPieceKey => {
           let newMatchState: PieceState;
           newMatchState = {
@@ -248,13 +252,48 @@ export namespace ourFirebase {
   }
 
   // TODO: export function addParticipant(match: MatchInfo, user: User) {}
-  // TODO: export function updateMatchState(match: MatchInfo, matchState: MatchState) {}
+
+  export function updateMatchState(match: MatchInfo, matchState: MatchState) {
+    const piecesState: fbr.PiecesState = {};
+    for (let pieceIndex of Object.keys(matchState)) {
+      const pieceState = matchState[pieceIndex];
+      piecesState[pieceIndex] = {
+        currentState: {
+          x: pieceState.x,
+          y: pieceState.y,
+          zDepth: pieceState.zDepth,
+          currentImageIndex: pieceState.currentImageIndex,
+          cardVisibility: pieceState.cardVisibility,
+          rotationDegrees: 360,
+          drawing: {}
+        }
+      };
+    }
+
+    refUpdate(
+      getRef(`/gamePortal/matches/${match.matchId}/pieces`),
+      piecesState
+    );
+  }
+
   // TODO: export function pingOpponentsInMatch(match: MatchInfo) {}
 
   // Dispatches updateUserIdsAndPhoneNumbers (reading from /gamePortal/phoneNumberToUserId)
   // TODO: export function updateUserIdsAndPhoneNumbers(phoneNumbers: string[]) {}
 
-  // TODO: export function addFcmToken(fcmToken: string, platform: 'ios'|'android') {}
+  export function addFcmToken(fcmToken: string, platform: 'ios' | 'android') {
+    // Can be called multiple times if the token is updated.  checkFunctionIsCalledOnce('addFcmToken');
+    const fcmTokenObj: fbr.FcmToken = {
+      lastTimeReceived: <any>firebase.database.ServerValue.TIMESTAMP,
+      platform: platform
+    };
+    return refSet(
+      getRef(
+        `/gamePortal/gamePortalUsers/${getUserId()}/privateFields/fcmTokens/${fcmToken}`
+      ),
+      fcmTokenObj
+    );
+  }
 
   // Dispatches setSignals.
   // TODO: export function listenToSignals() {}

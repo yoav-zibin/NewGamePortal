@@ -3,7 +3,7 @@
  */
 import { ourFirebase } from './firebase';
 import * as firebase from 'firebase';
-import { GameInfo } from '../types/index';
+import { MatchState, MatchInfo, GameInfo } from '../types/index';
 
 const testConfig = {
   apiKey: 'AIzaSyA_UNWBNj7zXrrwMYq49aUaSQqygDg66SI',
@@ -24,6 +24,19 @@ function prettyJson(obj: any): string {
 afterEach(done => {
   Promise.all(ourFirebase.allPromisesForTests!).then(done);
 });
+
+// Using real gameSpecId (so no need to insert game spec into db).
+const gameInfo: GameInfo = {
+  gameSpecId: '-KxLz3AY3-xB47ZXN9Az',
+  gameName: '3 Man Chess',
+  screenShoot: {
+    imageId: '-KuXdJ2ZJPJ-Ad_k02Tf',
+    downloadURL: 'https://someurl.com/foo.png',
+    height: 1024,
+    width: 700,
+    isBoardImage: true
+  }
+};
 
 // Must be the first test: signs in anonyously.
 it('signInAnonymously finished successfully', done => {
@@ -59,18 +72,26 @@ xit('TODO: delete eventually. Just checking things work in firebase.', () => {
 });
 
 it('adds a new match in firebase', () => {
-  const gameInfo: GameInfo = {
-    gameSpecId: '-KxLz3AY3-xB47ZXN9Az',
-    gameName: '3 Man Chess',
-    screenShoot: {
-      imageId: '-KuXdJ2ZJPJ-Ad_k02Tf',
-      downloadURL: 'https://someurl.com/foo.png',
-      height: 1024,
-      width: 700,
-      isBoardImage: true
-    }
-  };
   // ourFirebase.createMatch(gameInfo);
+});
+
+// it('Should update the match state', () => {
+//   // take match state and matchinfo
+//   const state: MatchState = {
+//     '0': {
+//       x: 100,
+//       y: 100,
+//       zDepth: 1,
+//       currentImageIndex: 0,
+//       cardVisibility: { '0': true }
+//     }
+//   };
+//   const info: MatchInfo = ourFirebase.createMatch(gameInfo);
+//   ourFirebase.updateMatchState(info, state);
+// });
+
+it('addFcmTokens', () => {
+  ourFirebase.addFcmToken('1'.repeat(140), 'android');
 });
 
 it('fetch match list from firebase', () => {
