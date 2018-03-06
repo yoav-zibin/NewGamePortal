@@ -72,24 +72,87 @@ xit('TODO: delete eventually. Just checking things work in firebase.', () => {
 });
 
 it('adds a new match in firebase', () => {
-  ourFirebase.createMatch(gameInfo);
+  // ourFirebase.createMatch(gameInfo);
 });
 
-it('Should update the match state', () => {
-  // take match state and matchinfo
-  const state: MatchState = {
-    '0': {
-      x: 100,
-      y: 100,
-      zDepth: 1,
-      currentImageIndex: 0,
-      cardVisibility: { '0': true }
-    }
-  };
-  const info: MatchInfo = ourFirebase.createMatch(gameInfo);
-  ourFirebase.updateMatchState(info, state);
-});
+// it('Should update the match state', () => {
+//   // take match state and matchinfo
+//   const state: MatchState = {
+//     '0': {
+//       x: 100,
+//       y: 100,
+//       zDepth: 1,
+//       currentImageIndex: 0,
+//       cardVisibility: { '0': true }
+//     }
+//   };
+//   const info: MatchInfo = ourFirebase.createMatch(gameInfo);
+//   ourFirebase.updateMatchState(info, state);
+// });
 
 it('addFcmTokens', () => {
   ourFirebase.addFcmToken('1'.repeat(140), 'android');
+});
+
+it('fetch match list from firebase', () => {
+  console.log('Testing fetch match list....');
+  // Create a new match
+  const currentUser = firebase.auth().currentUser;
+  if (!currentUser) {
+    throw new Error('You must be logged in');
+  }
+  const userId = currentUser.uid;
+  console.log('UserId is:' + userId);
+  const participants: fbr.Participants = {};
+  participants[userId] = {
+    participantIndex: 0,
+    pingOpponents: ourFirebase.getTimestamp()
+  };
+  const matchInfo: fbr.Match = {
+    participants,
+    createdOn: ourFirebase.getTimestamp(),
+    lastUpdatedOn: ourFirebase.getTimestamp(),
+    gameSpecId: '-L-E8g38ZSbq5jhGT8rS',
+    pieces: {
+      0: {
+        currentState: {
+          x: 1,
+          y: 1,
+          zDepth: 1,
+          currentImageIndex: 1,
+          cardVisibility: {
+            0: true
+          },
+          rotationDegrees: 90,
+          drawing: {}
+        }
+      }
+    }
+  };
+
+  const matchRef = firebase
+    .database()
+    .ref('/gamePortal/matches')
+    .push();
+  const matchId = matchRef.key!;
+  console.log('The match id is:' + matchId);
+  const matchValue = matchInfo;
+  ourFirebase.refSet(matchRef, matchValue);
+
+  const ref = firebase
+    .database()
+    .ref(
+      '/gamePortal/gamePortalUsers/' +
+        userId +
+        '/privateButAddable/matchMemberships'
+    )
+    .child(matchId);
+  const value = {
+    addedByUid: userId,
+    timestamp: ourFirebase.getTimestamp()
+  };
+  ourFirebase.refSet(ref, value);
+
+  ourFirebase.listenToMyMatchesList();
+  // console.log(userId + 'In Test');
 });

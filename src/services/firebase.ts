@@ -1,9 +1,15 @@
 // import { Contact } from '../types/index';
-import { dispatch } from '../stores';
+import { store, dispatch } from '../stores';
 import * as firebase from 'firebase';
 import { checkCondition } from '../globals';
 import { Action } from '../reducers';
-import { BooleanIndexer, MatchInfo, GameInfo, MatchState } from '../types';
+import {
+  BooleanIndexer,
+  MatchInfo,
+  GameInfo,
+  MatchState,
+  PieceState
+} from '../types';
 
 function prettyJson(obj: any): string {
   return JSON.stringify(obj, null, '  ');
@@ -92,10 +98,12 @@ export namespace ourFirebase {
   // every time this field is updated:
   //  /gamePortal/gamePortalUsers/$myUserId/privateButAddable/matchMemberships
   export function listenToMyMatchesList() {
+    console.log('In real function:' + getUserId());
     checkFunctionIsCalledOnce('listenToMyMatchesList');
-    getMatchMembershipsRef().on('value', snap =>
-      getMatchMemberships(snap ? snap.val() : {})
-    );
+    getMatchMembershipsRef().on('value', snap => {
+      console.log('First Listen:' + (snap ? prettyJson(snap.val()) : {}));
+      getMatchMemberships(snap ? snap.val() : {});
+    });
   }
 
   function getMatchMembershipsRef() {
@@ -107,9 +115,99 @@ export namespace ourFirebase {
     const matchIds = Object.keys(matchMemberships);
     // TODO: get all matches in one call to firebase, then later call dispatch.
     // Make sure we listen to match changes only once.
-    // '/gamePortal/matches'
-    // dispatch(updateMatchList);
-    getRef('/gamePortal/matches' + matchIds); // TODO
+    // 'gamePortal/matches'
+    // store.dispatch(updateMatchList);
+    let tempMatchesPromises: Promise<any>[] = [];
+    for (let matchId of matchIds) {
+      // getMatchDetail(matchId).then(() => {tempMatchIds.push(getMatchDetail(matchId))});
+      const match = getMatchDetail(matchId);
+      tempMatchesPromises.push(match);
+
+      // match.then(data => {
+      //   if (data.status === 'resolved') {
+      //     // tempMatches.push(getMatchDetail(matchId));
+      //     tempMatches.push(match);
+      //   }
+      // });
+    }
+    Promise.all(tempMatchesPromises)
+      .then((datas: any) => {
+        const succeededPromises = datas.filter(
+          (data: any) => data.status === 'resolved'
+        );
+        let matches: MatchInfo[] = [];
+        console.log('In the promises' + succeededPromises);
+        succeededPromises.forEach((data: any) => {
+          matches.push(data.newMatch);
+          console.log('Show me the match:' + prettyJson(data.newMatch));
+        });
+        let action: Action = {
+          setMatchesList: matches
+        };
+        dispatch(action);
+      })
+      .catch(() => {
+        console.log('Wrong when fetch matches');
+      });
+
+    // db().ref('gamePortal/matches' + matchIds); // TODO
+  }
+
+  function getMatchDetail(matchId: string): Promise<any> {
+    // let matchInfo = {};
+    return getRef('/gamePortal/matches/' + matchId)
+      .once('value')
+      .then((snap: firebase.database.DataSnapshot): any => {
+        const matchFb: fbr.Match = snap.val();
+        console.log('matchFbContent:' + prettyJson(matchFb));
+        if (!matchFb) {
+          return {
+            status: 'failed',
+            newMatch: null
+          };
+        }
+
+        const gameSpecId = matchFb.gameSpecId;
+        console.log('gameSpecId in getMatchDetail:' + gameSpecId);
+        if (!gameSpecId) {
+          return {
+            status: 'failed',
+            newMatch: null
+          };
+        }
+        const gameSet = store.getState().gamesList;
+        const game = gameSet[gameSpecId];
+        const newMatchStates: MatchState = {};
+        const tempPieces = matchFb.pieces ? matchFb.pieces : {};
+        Object.keys(tempPieces).forEach(tempPieceKey => {
+          let newMatchState: PieceState;
+          newMatchState = {
+            x: tempPieces[tempPieceKey].currentState.x,
+            y: tempPieces[tempPieceKey].currentState.y,
+            zDepth: tempPieces[tempPieceKey].currentState.zDepth,
+            cardVisibility:
+              tempPieces[tempPieceKey].currentState.cardVisibility,
+            currentImageIndex:
+              tempPieces[tempPieceKey].currentState.currentImageIndex
+          };
+          newMatchStates[tempPieceKey] = newMatchState;
+        });
+        const newMatch: MatchInfo = {
+          matchId: matchId,
+          game: game,
+          participantsUserIds: Object.keys(matchFb.participants).sort(),
+          lastUpdatedOn: matchFb.lastUpdatedOn,
+          matchState: newMatchStates
+        };
+        console.log('newMatch:' + prettyJson(newMatch));
+        return {
+          status: 'resolved',
+          newMatch: newMatch
+        };
+      })
+      .catch(() => {
+        console.log('wrong when get getMatchDetail');
+      });
   }
 
   // TODO: make sure we call certain functions only once (checkFunctionIsCalledOnce).
@@ -213,7 +311,7 @@ export namespace ourFirebase {
     }
   }
 
-  function refSet(ref: firebase.database.Reference, val: any) {
+  export function refSet(ref: firebase.database.Reference, val: any) {
     addPromiseForTests(ref.set(val, getOnComplete(ref, val)));
   }
 
