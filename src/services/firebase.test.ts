@@ -25,6 +25,19 @@ afterEach(done => {
   Promise.all(ourFirebase.allPromisesForTests!).then(done);
 });
 
+// Using real gameSpecId (so no need to insert game spec into db).
+const gameInfo: GameInfo = {
+  gameSpecId: '-KxLz3AY3-xB47ZXN9Az',
+  gameName: '3 Man Chess',
+  screenShoot: {
+    imageId: '-KuXdJ2ZJPJ-Ad_k02Tf',
+    downloadURL: 'https://someurl.com/foo.png',
+    height: 1024,
+    width: 700,
+    isBoardImage: true
+  }
+};
+
 // Must be the first test: signs in anonyously.
 it('signInAnonymously finished successfully', done => {
   firebase
@@ -45,7 +58,24 @@ it('writeUser succeeds', () => {
   expect(user).toBeDefined();
   ourFirebase.writeUser();
 });
-it('Should update the match state', done => {
+
+// xit means the test is eXcluded (i.e., disabled).
+xit('TODO: delete eventually. Just checking things work in firebase.', () => {
+  prettyJson(firebase.auth().currentUser);
+  firebase
+    .database()
+    .ref('gameBuilder/gameSpecs')
+    .limitToFirst(1)
+    .once('value', snap => {
+      console.log(prettyJson(snap.val()));
+    });
+});
+
+it('adds a new match in firebase', () => {
+  ourFirebase.createMatch(gameInfo);
+});
+
+it('Should update the match state', () => {
   // take match state and matchinfo
   const state: MatchState = {
     '0': {
@@ -56,64 +86,8 @@ it('Should update the match state', done => {
       cardVisibility: { '0': true }
     }
   };
-
-  const info: MatchInfo = {
-    matchId: 'matchId3470079098562955xxxx',
-    game: {
-      gameSpecId: 'something',
-      gameName: 'someGameName',
-      screenShoot: {
-        imageId: '',
-        width: 100,
-        height: 100,
-        isBoardImage: false,
-        downloadURL: 'blabla.png'
-      }
-    },
-    participantsUserIds: [],
-    lastUpdatedOn: 0
-  };
-  ourFirebase.updateMatchState(info, state).then(() => {
-    firebase
-      .database()
-      .ref(
-        `gamePortal/matches/${info.matchId}/pieces/${
-          state.currentImageIndex
-        }/currentState`
-      )
-      .once('value')
-      .then((snapshot: DeltaSnapshot) => {
-        expect(snapshot.val()).toEqual(state);
-        done();
-      });
-  });
-});
-
-// xit means the test is eXcluded (i.e., disabled).
-xit('TODO: delete eventually. Just checking things work in firebase.', () => {
-  prettyJson(firebase.auth().currentUser);
-  firebase
-    .database()
-    .ref('gameBuilder/gameSpecs')
-    .limitToFirst(1)
-    .once('value', snap => {
-      // console.log(prettyJson(snap.val()));
-    });
-});
-
-it('adds a new match in firebase', () => {
-  const gameInfo: GameInfo = {
-    gameSpecId: '-KxLz3AY3-xB47ZXN9Az',
-    gameName: '3 Man Chess',
-    screenShoot: {
-      imageId: '-KuXdJ2ZJPJ-Ad_k02Tf',
-      downloadURL: 'https://someurl.com/foo.png',
-      height: 1024,
-      width: 700,
-      isBoardImage: true
-    }
-  };
-  ourFirebase.createMatch(gameInfo);
+  const info: MatchInfo = ourFirebase.createMatch(gameInfo);
+  ourFirebase.updateMatchState(info, state);
 });
 
 it('addFcmTokens', () => {

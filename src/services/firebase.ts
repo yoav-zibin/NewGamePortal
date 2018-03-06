@@ -154,29 +154,30 @@ export namespace ourFirebase {
   }
 
   // TODO: export function addParticipant(match: MatchInfo, user: User) {}
+
   export function updateMatchState(match: MatchInfo, matchState: MatchState) {
-    const newState: fbr.CurrentState = {};
-    for (let item in matchState) {
-      console.log(item);
-      newState[item] = {
-        y: matchState[item].y,
-        zDepth: matchState[item].zDepth,
-        currentImageIndex: matchState[item].currentImageIndex,
-        cardVisibility: matchState[item].cardVisibility,
-        rotationDegrees: 360,
-        drawing: {}
+    const piecesState: fbr.PiecesState = {};
+    for (let pieceIndex of Object.keys(matchState)) {
+      const pieceState = matchState[pieceIndex];
+      piecesState[pieceIndex] = {
+        currentState: {
+          x: pieceState.x,
+          y: pieceState.y,
+          zDepth: pieceState.zDepth,
+          currentImageIndex: pieceState.currentImageIndex,
+          cardVisibility: pieceState.cardVisibility,
+          rotationDegrees: 360,
+          drawing: {}
+        }
       };
     }
 
-    const updates: any = {};
-    updates[
-      `gamePortal/gamePortalUsers/matches/${match.matchId}/pieces`
-    ] = newState;
-
-    return db()
-      .ref()
-      .update(updates);
+    refUpdate(
+      getRef(`/gamePortal/matches/${match.matchId}/pieces`),
+      piecesState
+    );
   }
+
   // TODO: export function pingOpponentsInMatch(match: MatchInfo) {}
 
   // Dispatches updateUserIdsAndPhoneNumbers (reading from /gamePortal/phoneNumberToUserId)
@@ -190,7 +191,7 @@ export namespace ourFirebase {
     };
     return refSet(
       getRef(
-        `gamePortal/gamePortalUsers/${getUserId()}/privateFields/fcmTokens/${fcmToken}`
+        `/gamePortal/gamePortalUsers/${getUserId()}/privateFields/fcmTokens/${fcmToken}`
       ),
       fcmTokenObj
     );
