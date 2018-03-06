@@ -141,6 +141,32 @@ declare namespace fbr {
     gameBuilderUsers: GameBuilderUsers;
   }
 
+  interface GameInfo {
+    gameSpecId: string;
+    gameName: string;
+    screenShootImageId: string;
+    numberOfMatches: number;
+  }
+
+  interface GameInfos {
+    [gameInfoId: string]: GameInfo;
+  }
+
+  interface GameSpecForPortal {
+    images: Images;
+    elements: Elements;
+    gameSpec: GameSpec;
+  }
+
+  interface GameSpecsForPortal {
+    [gameSpecId: string]: GameSpecForPortal;
+  }
+
+  interface GamesInfoAndSpec {
+    gameInfos: GameInfos;
+    gameSpecsForPortal: GameSpecsForPortal;
+  }
+
   interface PhoneNumber {
     userId: string;
     timestamp: number /*firebase.database.ServerValue.TIMESTAMP*/;
@@ -152,7 +178,7 @@ declare namespace fbr {
 
   interface FcmToken {
     lastTimeReceived: number /*firebase.database.ServerValue.TIMESTAMP*/;
-    platform: 'ios' | 'android';
+    platform: 'web' | 'ios' | 'android';
   }
 
   interface FcmTokens {
@@ -161,6 +187,7 @@ declare namespace fbr {
 
   interface PrivateFields {
     createdOn: number /*firebase.database.ServerValue.TIMESTAMP*/;
+    countryCode: string;
     phoneNumber: string;
     fcmTokens: FcmTokens;
   }
@@ -239,6 +266,7 @@ declare namespace fbr {
   }
 
   interface GamePortal {
+    gamesInfoAndSpec: GamesInfoAndSpec;
     phoneNumberToUserId: PhoneNumberToUser;
     gamePortalUsers: GamePortalUsers;
     matches: Matches;
@@ -246,6 +274,7 @@ declare namespace fbr {
 
   interface FirebaseDb {
     gameBuilder: GameBuilder;
+    testPushNotification: string;
     gamePortal: GamePortal;
   }
 }

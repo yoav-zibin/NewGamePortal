@@ -1,8 +1,13 @@
 // import { Contact } from '../types/index';
-import { store } from '../stores/index';
+import { dispatch } from '../stores';
 import * as firebase from 'firebase';
 import { checkCondition } from '../globals';
-import { BooleanIndexer, MatchInfo, MatchState } from '../types/index';
+import { Action } from '../reducers';
+import { BooleanIndexer, MatchInfo, GameInfo, MatchState } from '../types';
+
+function prettyJson(obj: any): string {
+  return JSON.stringify(obj, null, '  ');
+}
 
 // All interactions with firebase must be in this module.
 export namespace ourFirebase {
@@ -29,12 +34,15 @@ export namespace ourFirebase {
   }
 
   // See https://firebase.google.com/docs/auth/web/phone-auth
+  let myCountryCode = '';
   export function signInWithPhoneNumber(
     phoneNumber: string,
+    countryCode: string,
     applicationVerifier: firebase.auth.ApplicationVerifier
   ): Promise<any> {
     checkFunctionIsCalledOnce('signInWithPhoneNumber');
-    // TODO: create or update /gamePortal/gamePortalUsers/$myUserId
+    myCountryCode = countryCode;
+    // Eventually call writeUser.
     // TODO: set recaptcha
     return firebase
       .auth()
@@ -48,33 +56,36 @@ export namespace ourFirebase {
   export function writeUser() {
     checkFunctionIsCalledOnce('writeUser');
     const user = assertLoggedIn();
-    const userFbr: fbr.GamePortalUser = {
-      privateButAddable: {
-        signals: {},
-        matchMemberships: {}
-      },
-      privateFields: {
-        createdOn: getTimestamp(),
-        fcmTokens: {},
-        phoneNumber: user.phoneNumber ? user.phoneNumber : ''
-      }
+    const userFbr: fbr.PrivateFields = {
+      createdOn: getTimestamp(),
+      fcmTokens: {},
+      phoneNumber: user.phoneNumber ? user.phoneNumber : '',
+      countryCode: myCountryCode
     };
-    return (
-      db()
-        .ref(`gamePortal/gamePortalUsers/${user.uid}`)
-        // TODO: use transact to ensure we don't override an existing user and deleting data.
-        .set(userFbr)
+    delete userFbr.fcmTokens; // I don't want to update these.
+    refUpdate(
+      getRef(`/gamePortal/gamePortalUsers/${user.uid}/privateFields`),
+      userFbr
     );
+
+    const phoneNumberFbr: fbr.PhoneNumber = {
+      userId: user.uid,
+      timestamp: getTimestamp()
+    };
+    if (user.phoneNumber) {
+      refSet(
+        getRef(`/gamePortal/phoneNumberToUserId${user.phoneNumber}`),
+        phoneNumberFbr
+      );
+    }
   }
 
   // Eventually dispatches the action setGamesList.
-  export function setGamesList() {
+  export function fetchGamesList() {
     checkFunctionIsCalledOnce('setGamesList');
     assertLoggedIn();
     // TODO: implement.
-    db()
-      .ref('TODO')
-      .once('value', gotGamesList);
+    getRef('TODO').once('value', gotGamesList);
   }
 
   // Eventually dispatches the action setMatchesList
@@ -82,35 +93,66 @@ export namespace ourFirebase {
   //  /gamePortal/gamePortalUsers/$myUserId/privateButAddable/matchMemberships
   export function listenToMyMatchesList() {
     checkFunctionIsCalledOnce('listenToMyMatchesList');
-    const user = assertLoggedIn();
-    db()
-      .ref(
-        `gamePortal/gamePortalUsers${
-          user.uid
-        }/privateButAddable/matchMemberships`
-      )
-      .on('value', snap => getMatchMemberships(snap ? snap.val() : {}));
+    getMatchMembershipsRef().on('value', snap =>
+      getMatchMemberships(snap ? snap.val() : {})
+    );
   }
 
+  function getMatchMembershipsRef() {
+    return getRef(
+      `/gamePortal/gamePortalUsers/${getUserId()}/privateButAddable/matchMemberships`
+    );
+  }
   function getMatchMemberships(matchMemberships: fbr.MatchMemberships) {
     const matchIds = Object.keys(matchMemberships);
     // TODO: get all matches in one call to firebase, then later call dispatch.
     // Make sure we listen to match changes only once.
-    // 'gamePortal/matches'
-    // store.dispatch(updateMatchList);
-    db().ref('gamePortal/matches' + matchIds); // TODO
+    // '/gamePortal/matches'
+    // dispatch(updateMatchList);
+    getRef('/gamePortal/matches' + matchIds); // TODO
   }
 
   // TODO: make sure we call certain functions only once (checkFunctionIsCalledOnce).
 
   // TODO: export function updateGameSpec(game: GameInfo) {}
 
-  // Eventually dispatches updateMatchIdToMatchState, and it will dispatch
-  // it again every time the match is updated
-  // (e.g. a participant was added or the state of pieces changed).
-  // TODO: export function listenForMatchUpdates(match: MatchInfo) {}
+  export function createMatch(game: GameInfo): MatchInfo {
+    const uid = getUserId();
+    const matchRef = getRef('/gamePortal/matches').push();
+    const matchId = matchRef.key!;
+    const participants: fbr.Participants = {};
+    participants[uid] = {
+      participantIndex: 0,
+      pingOpponents: getTimestamp()
+    };
+    const newFBMatch: fbr.Match = {
+      gameSpecId: game.gameSpecId,
+      participants: participants,
+      createdOn: getTimestamp(),
+      lastUpdatedOn: getTimestamp(),
+      pieces: {} // TODO: set initial state correctly based on gameSpec
+    };
+    refSet(matchRef, newFBMatch);
 
-  // TODO: export function createMatch(game: GameInfo): MatchInfo {}
+    const matchMembership: fbr.MatchMembership = {
+      addedByUid: uid,
+      timestamp: getTimestamp()
+    };
+    const matchMemberships: fbr.MatchMemberships = {
+      [matchId]: matchMembership
+    };
+    refUpdate(getMatchMembershipsRef(), matchMemberships);
+
+    const newMatch: MatchInfo = {
+      matchId: matchId,
+      game: game,
+      participantsUserIds: [uid],
+      lastUpdatedOn: newFBMatch.lastUpdatedOn,
+      matchState: {}
+    };
+    return newMatch;
+  }
+
   // TODO: export function addParticipant(match: MatchInfo, user: User) {}
   export function updateMatchState(match: MatchInfo, matchState: MatchState) {
     const newState: fbr.CurrentState = {};
@@ -140,23 +182,66 @@ export namespace ourFirebase {
   // Dispatches updateUserIdsAndPhoneNumbers (reading from /gamePortal/phoneNumberToUserId)
   // TODO: export function updateUserIdsAndPhoneNumbers(phoneNumbers: string[]) {}
 
-  // TODO: export function addFcmToken(fcmToken: string, platform: 'ios'|'android') {}
+  export function addFcmToken(fcmToken: string, platform: 'ios' | 'android') {
+    // Can be called multiple times if the token is updated.  checkFunctionIsCalledOnce('addFcmToken');
+    const fcmTokenObj: fbr.FcmToken = {
+      lastTimeReceived: <any>firebase.database.ServerValue.TIMESTAMP,
+      platform: platform
+    };
+    return refSet(
+      getRef(
+        `gamePortal/gamePortalUsers/${getUserId()}/privateFields/fcmTokens/${fcmToken}`
+      ),
+      fcmTokenObj
+    );
+  }
 
   // Dispatches setSignals.
   // TODO: export function listenToSignals() {}
 
   // TODO: export function sendSignal(toUserId: string, signalType: 'sdp'|'candidate', signalData: string;) {}
 
+  export let allPromisesForTests: Promise<any>[] | null = null;
+
   /////////////////////////////////////////////////////////////////////////////
   // All the non-exported functions (i.e., private functions).
   /////////////////////////////////////////////////////////////////////////////
+  function addPromiseForTests(promise: Promise<any>) {
+    if (allPromisesForTests) {
+      allPromisesForTests.push(promise);
+    }
+  }
+
+  function refSet(ref: firebase.database.Reference, val: any) {
+    addPromiseForTests(ref.set(val, getOnComplete(ref, val)));
+  }
+
+  function refUpdate(ref: firebase.database.Reference, val: any) {
+    // console.log('refUpdate', ref.toString(), " val=", prettyJson(val));
+    addPromiseForTests(ref.update(val, getOnComplete(ref, val)));
+  }
+
+  function getOnComplete(ref: firebase.database.Reference, val: any) {
+    return (err: Error | null) => {
+      // on complete
+      if (err) {
+        let msg =
+          'Failed writing to ref=' +
+          ref.toString() +
+          ` value=` +
+          prettyJson(val);
+        console.error(msg);
+        throw new Error(msg);
+      }
+    };
+  }
 
   function gotGamesList(snap: firebase.database.DataSnapshot) {
     // TODO: create updateGameListAction + reducers etc.
-    let updateGameListAction: any = snap.val(); // TODO: change this.
+    let updateGameListAction: Action = snap.val(); // TODO: change this.
     // TODO2 (after other TODOs are done): handle screenshotImageId
     // firebase.storage().ref('images/blabla.jpg').getDownloadURL()
-    store.dispatch(updateGameListAction);
+    dispatch(updateGameListAction);
   }
 
   function assertLoggedIn(): firebase.User {
@@ -167,11 +252,15 @@ export namespace ourFirebase {
     return user;
   }
 
+  function getUserId() {
+    return assertLoggedIn().uid;
+  }
+
   function currentUser() {
     return firebase.auth().currentUser;
   }
 
-  function db() {
-    return firebase.database();
+  function getRef(path: string) {
+    return firebase.database().ref(path);
   }
 }

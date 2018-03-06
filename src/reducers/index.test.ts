@@ -12,8 +12,7 @@ import {
   PhoneNumberToContact,
   UserIdsAndPhoneNumbers,
   Image,
-  StoreState,
-  MatchIdToMatchState
+  StoreState
 } from '../types';
 
 const image: Image = {
@@ -34,22 +33,99 @@ const matchInfo: MatchInfo = {
   matchId: 'someId',
   game: gameInfo,
   participantsUserIds: [], // including myself
-  lastUpdatedOn: 1234 /*firebase.database.ServerValue.TIMESTAMP*/
+  lastUpdatedOn: 1234,
+  matchState: {}
 };
 
 const userInfo: MyUser = {
   myUserId: 'someId',
-  myPhoneNumber: 'Some phone number'
+  myPhoneNumber: 'Some phone number',
+  myCountryCode: ''
 };
 
 const sigEntry: SignalEntry = {
   addedByUid: 'someId',
-  timestamp: 1234 /*firebase.database.ServerValue.TIMESTAMP*/,
+  timestamp: 1234,
   signalType: 'sdp',
   signalData: 'some String'
 };
 
 const currentMatchIndex: number = 1;
+
+const initialState: StoreState = {
+  // This initial gamesList is just for debugging the components.
+  // TODO: change to [] once firebase is finished.
+  gamesList: [
+    {
+      gameSpecId: '123',
+      gameName: '3 Men Chess',
+      screenShoot: image
+    },
+    {
+      gameSpecId: '456',
+      gameName: 'Checkers',
+      screenShoot: image
+    }
+  ],
+  gameSpecs: {
+    imageIdToImage: {},
+    elementIdToElement: {},
+    gameSpecIdToGameSpec: {}
+  },
+  matchesList: [
+    {
+      matchId: '1',
+      game: {
+        gameSpecId: '123',
+        gameName: '3 Men Chess',
+        screenShoot: image
+      },
+      participantsUserIds: ['7UbETkgeXxe0RId6KxYioSJdARs1'], // including myself
+      lastUpdatedOn: 1234,
+      matchState: {}
+    },
+    {
+      matchId: '2',
+      game: {
+        gameSpecId: '456',
+        gameName: 'Checkers',
+        screenShoot: image
+      },
+      participantsUserIds: ['7UbETkgeXxe0RId6KxYioSJdARs1'], // including myself
+      lastUpdatedOn: 1564,
+      matchState: {}
+    }
+  ],
+  currentMatchIndex: 1,
+  phoneNumberToContact: {
+    phoneNumber: {
+      phoneNumber: '+1234567890',
+      name: 'someName',
+      avatarImage: 'someImage'
+    }
+  },
+  userIdsAndPhoneNumbers: {
+    phoneNumberToUserId: {
+      '+1234': '999'
+    },
+    userIdToPhoneNumber: {
+      '999': '+1234'
+    }
+  },
+  myUser: {
+    myPhoneNumber: '111111111',
+    myCountryCode: '',
+    myUserId: '7UbETkgeXxe0RId6KxYioSJdARs1'
+  },
+  signals: [
+    {
+      addedByUid: '7UbETkgeXxe0RId6KxYioSJdARs1',
+      timestamp: 1234,
+      signalType: 'sdp',
+      signalData: '3 Men Chess'
+    }
+  ]
+};
 
 function reduce(state: StoreState, action: Action): StoreState {
   return reducer(state, <any>action);
@@ -64,8 +140,7 @@ it('setGamesList', () => {
   let action: Action = {
     setGamesList: gamesList
   };
-  let initialState = storeStateDefault;
-  const expectedState = { ...storeStateDefault, gamesList: gamesList };
+  const expectedState = { ...initialState, gamesList: gamesList };
   expect(reduce(initialState, action)).toEqual(expectedState);
 });
 
@@ -74,9 +149,8 @@ it('setMatchesList (and updates currentMatchIndex accordingly)', () => {
   let action: Action = {
     setMatchesList: matchesList
   };
-  let initialState = storeStateDefault;
   const expectedState = {
-    ...storeStateDefault,
+    ...initialState,
     matchesList: matchesList,
     currentMatchIndex: -1
   };
@@ -88,8 +162,7 @@ it('setSignals', () => {
   let action: Action = {
     setSignals: signalsList
   };
-  let initialState = storeStateDefault;
-  const expectedState = { ...storeStateDefault, signals: signalsList };
+  const expectedState = { ...initialState, signals: signalsList };
   expect(reduce(initialState, action)).toEqual(expectedState);
 });
 
@@ -98,8 +171,7 @@ it('setMyUser', () => {
   let action: Action = {
     setMyUser: userDetails
   };
-  let initialState = storeStateDefault;
-  const expectedState = { ...storeStateDefault, myUser: userDetails };
+  const expectedState = { ...initialState, myUser: userDetails };
   expect(reduce(initialState, action)).toEqual(expectedState);
 });
 
@@ -108,47 +180,15 @@ it('setCurrentMatchIndex', () => {
   let action: Action = {
     setCurrentMatchIndex: currentIndex
   };
-  const initialState = storeStateDefault;
   const expectedState = {
-    ...storeStateDefault,
+    ...initialState,
     currentMatchIndex: currentIndex
   };
   expect(reduce(initialState, action)).toEqual(expectedState);
 });
 
-it('updateMatchIdToMatchState', () => {
-  let initialState = storeStateDefault;
-  let { matchIdToMatchState, ...rest } = initialState;
-
-  let newMatchIdToMatchState: MatchIdToMatchState = {};
-  newMatchIdToMatchState['1'] = {
-    somePieceId: {
-      x: 0,
-      y: 0,
-      zDepth: 0,
-      currentImageIndex: 0,
-      cardVisibility: {}
-    }
-  };
-
-  let action: Action = {
-    updateMatchIdToMatchState: newMatchIdToMatchState
-  };
-
-  const expectedState = {
-    matchIdToMatchState: mergeMaps(
-      storeStateDefault.matchIdToMatchState,
-      newMatchIdToMatchState
-    ),
-    ...rest
-  };
-
-  expect(reduce(initialState, action)).toEqual(expectedState);
-});
-
 it('set matchesList to empty list (and updates currentMatchIndex accordingly)', () => {
-  const initialState = storeStateDefault;
-  let { matchesList, matchIdToMatchState, ...rest } = initialState;
+  let { matchesList, ...rest } = initialState;
 
   let newMatches: MatchInfo[] = [];
   let action: Action = {
@@ -158,7 +198,6 @@ it('set matchesList to empty list (and updates currentMatchIndex accordingly)', 
   const expectedState = {
     ...rest,
     matchesList: newMatches,
-    matchIdToMatchState: {},
     currentMatchIndex: -1
   };
 
@@ -166,7 +205,6 @@ it('set matchesList to empty list (and updates currentMatchIndex accordingly)', 
 });
 
 it('updatePhoneNumberToContact', () => {
-  const initialState = storeStateDefault;
   let { phoneNumberToContact, ...rest } = initialState;
 
   let someContact: Contact = {
@@ -184,7 +222,7 @@ it('updatePhoneNumberToContact', () => {
 
   const expectedState = {
     phoneNumberToContact: mergeMaps(
-      storeStateDefault.phoneNumberToContact,
+      initialState.phoneNumberToContact,
       newPhoneNumberToContact
     ),
     ...rest
@@ -194,22 +232,12 @@ it('updatePhoneNumberToContact', () => {
 });
 
 it('updateUserIdsAndPhoneNumbers', () => {
-  const initialState = storeStateDefault;
   let { userIdsAndPhoneNumbers, ...rest } = initialState;
 
   let newUserIdsAndPhoneNumbers: UserIdsAndPhoneNumbers = {
-    phoneNumberToUserId: {},
-    userIdToPhoneNumber: {}
+    phoneNumberToUserId: { x: 'y', z: 'u' },
+    userIdToPhoneNumber: { y: 'x', u: 'z' }
   };
-  newUserIdsAndPhoneNumbers['phoneNumberToUserId'] = {
-    x: 'y',
-    z: 'u'
-  };
-  newUserIdsAndPhoneNumbers['userIdToPhoneNumber'] = {
-    y: 'x',
-    u: 'z'
-  };
-  // newUserIdsAndPhoneNumbers['+1234567890'] = someContact;
 
   let action: Action = {
     updateUserIdsAndPhoneNumbers: newUserIdsAndPhoneNumbers
@@ -218,17 +246,15 @@ it('updateUserIdsAndPhoneNumbers', () => {
   const expectedState = {
     userIdsAndPhoneNumbers: {
       phoneNumberToUserId: mergeMaps(
-        storeStateDefault.userIdsAndPhoneNumbers.phoneNumberToUserId,
+        initialState.userIdsAndPhoneNumbers.phoneNumberToUserId,
         newUserIdsAndPhoneNumbers.phoneNumberToUserId
       ),
       userIdToPhoneNumber: mergeMaps(
-        storeStateDefault.userIdsAndPhoneNumbers.userIdToPhoneNumber,
+        initialState.userIdsAndPhoneNumbers.userIdToPhoneNumber,
         newUserIdsAndPhoneNumbers.userIdToPhoneNumber
-      ),
+      )
     },
     ...rest
   };
   expect(reduce(initialState, action)).toEqual(expectedState);
 });
-
-// TODO: add tests for all other reducers.

@@ -9,10 +9,6 @@ export interface StoreState {
   matchesList: MatchInfo[];
   currentMatchIndex: number; // an index in matchesList
 
-  // Match state will be loaded lazily, i.e.,
-  // not every match in matchesList will have an entry in matchIdToMatchState.
-  matchIdToMatchState: MatchIdToMatchState;
-
   phoneNumberToContact: PhoneNumberToContact; // Coming from the phone contacts
   userIdsAndPhoneNumbers: UserIdsAndPhoneNumbers; // Coming from firebase.
 
@@ -29,6 +25,7 @@ export interface UserIdsAndPhoneNumbers {
 export interface MyUser {
   myUserId: string;
   myPhoneNumber: string;
+  myCountryCode: string; // 2-letter country code
 }
 
 export interface SignalEntry {
@@ -56,10 +53,6 @@ export interface PhoneNumberToContact extends IdIndexer<Contact> {
 
 export interface GameSpecIdToGameSpec extends IdIndexer<GameSpec> {
   [gameSpecId: string]: GameSpec;
-}
-
-export interface MatchIdToMatchState extends IdIndexer<MatchState> {
-  [matchId: string]: MatchState;
 }
 
 export interface ImageIdToImage extends IdIndexer<Image> {
@@ -125,6 +118,7 @@ export interface MatchInfo {
   game: GameInfo;
   participantsUserIds: string[]; // including myself
   lastUpdatedOn: number /*firebase.database.ServerValue.TIMESTAMP*/;
+  matchState: MatchState;
 }
 
 export interface Piece {
