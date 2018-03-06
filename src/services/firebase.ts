@@ -1,14 +1,15 @@
 // import { Contact } from '../types/index';
 import { store, dispatch } from '../stores';
 import * as firebase from 'firebase';
-import { checkCondition } from '../globals';
+import { checkCondition, getValues } from '../globals';
 import { Action } from '../reducers';
 import {
   BooleanIndexer,
   MatchInfo,
   GameInfo,
   MatchState,
-  PieceState
+  PieceState,
+  IdIndexer
 } from '../types';
 
 function prettyJson(obj: any): string {
@@ -98,10 +99,8 @@ export namespace ourFirebase {
   // every time this field is updated:
   //  /gamePortal/gamePortalUsers/$myUserId/privateButAddable/matchMemberships
   export function listenToMyMatchesList() {
-    console.log('In real function:' + getUserId());
     checkFunctionIsCalledOnce('listenToMyMatchesList');
     getMatchMembershipsRef().on('value', snap => {
-      console.log('First Listen:' + (snap ? prettyJson(snap.val()) : {}));
       getMatchMemberships(snap ? snap.val() : {});
     });
   }
@@ -111,103 +110,78 @@ export namespace ourFirebase {
       `/gamePortal/gamePortalUsers/${getUserId()}/privateButAddable/matchMemberships`
     );
   }
+
+  const listeningToMatchIds: string[] = [];
+  const receivedMatches: IdIndexer<MatchInfo> = {};
+
   function getMatchMemberships(matchMemberships: fbr.MatchMemberships) {
     const matchIds = Object.keys(matchMemberships);
-    // TODO: get all matches in one call to firebase, then later call dispatch.
-    // Make sure we listen to match changes only once.
-    // 'gamePortal/matches'
-    // store.dispatch(updateMatchList);
-    let tempMatchesPromises: Promise<any>[] = [];
-    for (let matchId of matchIds) {
-      // getMatchDetail(matchId).then(() => {tempMatchIds.push(getMatchDetail(matchId))});
-      const match = getMatchDetail(matchId);
-      tempMatchesPromises.push(match);
-
-      // match.then(data => {
-      //   if (data.status === 'resolved') {
-      //     // tempMatches.push(getMatchDetail(matchId));
-      //     tempMatches.push(match);
-      //   }
-      // });
+    const newMatchIds: string[] = matchIds.filter(
+      matchId => listeningToMatchIds.indexOf(matchId) === -1
+    );
+    for (let matchId of newMatchIds) {
+      listenToMatch(matchId);
     }
-    Promise.all(tempMatchesPromises)
-      .then((datas: any) => {
-        const succeededPromises = datas.filter(
-          (data: any) => data.status === 'resolved'
-        );
-        let matches: MatchInfo[] = [];
-        console.log('In the promises' + succeededPromises);
-        succeededPromises.forEach((data: any) => {
-          matches.push(data.newMatch);
-          console.log('Show me the match:' + prettyJson(data.newMatch));
-        });
-        let action: Action = {
-          setMatchesList: matches
-        };
-        dispatch(action);
-      })
-      .catch(() => {
-        console.log('Wrong when fetch matches');
-      });
-
-    // db().ref('gamePortal/matches' + matchIds); // TODO
   }
 
-  function getMatchDetail(matchId: string): Promise<any> {
+  function listenToMatch(matchId: string) {
+    checkCondition(
+      'listeningToMatchIds',
+      listeningToMatchIds.indexOf(matchId) === -1
+    );
+    listeningToMatchIds.push(matchId);
     // let matchInfo = {};
-    return getRef('/gamePortal/matches/' + matchId)
-      .once('value')
-      .then((snap: firebase.database.DataSnapshot): any => {
-        const matchFb: fbr.Match = snap.val();
-        console.log('matchFbContent:' + prettyJson(matchFb));
-        if (!matchFb) {
-          return {
-            status: 'failed',
-            newMatch: null
-          };
-        }
-
-        const gameSpecId = matchFb.gameSpecId;
-        console.log('gameSpecId in getMatchDetail:' + gameSpecId);
-        if (!gameSpecId) {
-          return {
-            status: 'failed',
-            newMatch: null
-          };
-        }
-        const gameSet = store.getState().gamesList;
-        const game = gameSet[gameSpecId];
-        const newMatchStates: MatchState = {};
-        const tempPieces = matchFb.pieces ? matchFb.pieces : {};
-        Object.keys(tempPieces).forEach(tempPieceKey => {
-          let newMatchState: PieceState;
-          newMatchState = {
-            x: tempPieces[tempPieceKey].currentState.x,
-            y: tempPieces[tempPieceKey].currentState.y,
-            zDepth: tempPieces[tempPieceKey].currentState.zDepth,
-            cardVisibility:
-              tempPieces[tempPieceKey].currentState.cardVisibility,
-            currentImageIndex:
-              tempPieces[tempPieceKey].currentState.currentImageIndex
-          };
-          newMatchStates[tempPieceKey] = newMatchState;
-        });
-        const newMatch: MatchInfo = {
-          matchId: matchId,
-          game: game,
-          participantsUserIds: Object.keys(matchFb.participants).sort(),
-          lastUpdatedOn: matchFb.lastUpdatedOn,
-          matchState: newMatchStates
+    return getRef('/gamePortal/matches/' + matchId).on('value', snap => {
+      if (!snap) {
+        return;
+      }
+      const matchFb: fbr.Match = snap.val();
+      if (!matchFb) {
+        return;
+      }
+      const gameSpecId = matchFb.gameSpecId;
+      const game: GameInfo | undefined = store
+        .getState()
+        .gamesList.find(gameInList => gameInList.gameSpecId === gameSpecId);
+      checkCondition('missing gameSpecId for match', game);
+      const newMatchStates: MatchState = {};
+      const tempPieces = matchFb.pieces ? matchFb.pieces : {};
+      Object.keys(tempPieces).forEach(tempPieceKey => {
+        let newMatchState: PieceState;
+        newMatchState = {
+          x: tempPieces[tempPieceKey].currentState.x,
+          y: tempPieces[tempPieceKey].currentState.y,
+          zDepth: tempPieces[tempPieceKey].currentState.zDepth,
+          cardVisibility: tempPieces[tempPieceKey].currentState.cardVisibility,
+          currentImageIndex:
+            tempPieces[tempPieceKey].currentState.currentImageIndex
         };
-        console.log('newMatch:' + prettyJson(newMatch));
-        return {
-          status: 'resolved',
-          newMatch: newMatch
-        };
-      })
-      .catch(() => {
-        console.log('wrong when get getMatchDetail');
+        newMatchStates[tempPieceKey] = newMatchState;
       });
+      const participants = matchFb.participants;
+      // Sort by participant's index (ascending participantIndex order)
+      const participantsUserIds = Object.keys(participants).sort(
+        (uid1, uid2) =>
+          participants[uid1].participantIndex -
+          participants[uid2].participantIndex
+      );
+
+      const match: MatchInfo = {
+        matchId: matchId,
+        game: game!,
+        participantsUserIds: participantsUserIds,
+        lastUpdatedOn: matchFb.lastUpdatedOn,
+        matchState: newMatchStates
+      };
+      receivedMatches[matchId] = match;
+      const matches = getValues(receivedMatches);
+      if (matches.length === listeningToMatchIds.length) {
+        // We got all the matches.
+        // Sort by lastUpdatedOn (descending lastUpdatedOn order).
+        matches.sort((a, b) => b.lastUpdatedOn - a.lastUpdatedOn);
+        dispatch({ setMatchesList: matches });
+      }
+    });
   }
 
   // TODO: make sure we call certain functions only once (checkFunctionIsCalledOnce).
