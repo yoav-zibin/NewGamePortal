@@ -18,10 +18,6 @@ ourFirebase.init(testConfig);
 ourFirebase.allPromisesForTests = [];
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 
-function prettyJson(obj: any): string {
-  return JSON.stringify(obj, null, '  ');
-}
-
 afterEach(done => {
   Promise.all(ourFirebase.allPromisesForTests!).then(done);
 });
@@ -59,18 +55,6 @@ it('signInAnonymously finished successfully', done => {
     .catch(err => {
       console.error('error in signInAnonymously with err=', err);
       throw new Error('error in signInAnonymously err=' + err);
-    });
-});
-
-// xit means the test is eXcluded (i.e., disabled).
-xit('TODO: delete eventually. Just checking things work in firebase.', () => {
-  prettyJson(firebase.auth().currentUser);
-  firebase
-    .database()
-    .ref('gameBuilder/gameSpecs')
-    .limitToFirst(1)
-    .once('value', snap => {
-      console.log(prettyJson(snap.val()));
     });
 });
 

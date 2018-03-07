@@ -1,7 +1,7 @@
 // import { Contact } from '../types/index';
 import { store, dispatch } from '../stores';
 import * as firebase from 'firebase';
-import { checkCondition, getValues } from '../globals';
+import { checkCondition, getValues, prettyJson } from '../globals';
 import { Action } from '../reducers';
 import {
   BooleanIndexer,
@@ -11,10 +11,6 @@ import {
   PieceState,
   IdIndexer
 } from '../types';
-
-function prettyJson(obj: any): string {
-  return JSON.stringify(obj, null, '  ');
-}
 
 // All interactions with firebase must be in this module.
 export namespace ourFirebase {
