@@ -283,6 +283,16 @@ export namespace ourFirebase {
   }
 
   // TODO: export function pingOpponentsInMatch(match: MatchInfo) {}
+  export function pingOpponentsInMatch(match: MatchInfo) {
+    const userId = getUserId();
+    const matchId = match.matchId;
+    refSet(
+      getRef(
+        `/gamePortal/matches/${matchId}/participants/${userId}/pingOpponents`
+      ),
+      getTimestamp()
+    );
+  }
 
   // Dispatches updateUserIdsAndPhoneNumbers (reading from /gamePortal/phoneNumberToUserId)
   // TODO: export function updateUserIdsAndPhoneNumbers(phoneNumbers: string[]) {}

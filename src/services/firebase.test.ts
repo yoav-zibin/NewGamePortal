@@ -111,3 +111,18 @@ it('fetch match list from firebase', done => {
     }
   });
 });
+
+it('pingOpponentsInMatch', done => {
+  const match: MatchInfo = createMatch();
+
+  ourFirebase.pingOpponentsInMatch(match);
+  store.subscribe(() => {
+    const matchesList = store.getState().matchesList;
+    const thisMatch = matchesList.find(
+      matchInList => matchInList.matchId === match.matchId
+    );
+    if (thisMatch) {
+      done();
+    }
+  });
+});
