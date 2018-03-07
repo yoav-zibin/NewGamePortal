@@ -3,8 +3,9 @@
  */
 import { ourFirebase } from './firebase';
 import * as firebase from 'firebase';
-import { MatchState, MatchInfo, GameInfo } from '../types/index';
+import { MatchState, MatchInfo, GameInfo, Contact } from '../types/index';
 import { store, dispatch } from '../stores';
+import { getValues } from '../globals';
 
 const testConfig = {
   apiKey: 'AIzaSyA_UNWBNj7zXrrwMYq49aUaSQqygDg66SI',

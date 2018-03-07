@@ -9,7 +9,10 @@ import {
   GameInfo,
   MatchState,
   PieceState,
-  IdIndexer
+  IdIndexer,
+  PhoneNumberToContact,
+  Contact,
+  UserIdsAndPhoneNumbers
 } from '../types';
 
 function prettyJson(obj: any): string {
@@ -289,7 +292,31 @@ export namespace ourFirebase {
   // TODO: export function pingOpponentsInMatch(match: MatchInfo) {}
 
   // Dispatches updateUserIdsAndPhoneNumbers (reading from /gamePortal/phoneNumberToUserId)
-  // TODO: export function updateUserIdsAndPhoneNumbers(phoneNumbers: string[]) {}
+  export function updateUserIdsAndPhoneNumbers(phoneNumbers: string[]) {
+    const userIdsAndPhoneNumbers: UserIdsAndPhoneNumbers = {
+      phoneNumberToUserId: {},
+      userIdToPhoneNumber: {}
+    };
+    phoneNumbers.forEach((phoneNumber: string) => {
+      let phoneNumberFbrObj: fbr.PhoneNumber;
+      getRef(`/gamePortal/phoneNumberToUserId/` + phoneNumber)
+        .once('value')
+        .then(snap => {
+          if (!snap) {
+            return;
+          }
+          phoneNumberFbrObj = snap.val();
+          if (!phoneNumberFbrObj) {
+            return;
+          }
+          const userId = phoneNumberFbrObj.userId;
+          userIdsAndPhoneNumbers['phoneNumberToUserId'][phoneNumber] = userId;
+          userIdsAndPhoneNumbers['userIdToPhoneNumber'][userId] = phoneNumber;
+        });
+    });
+
+    dispatch({ updateUserIdsAndPhoneNumbers: userIdsAndPhoneNumbers });
+  }
 
   // Dispatches setSignals.
   // TODO: export function listenToSignals() {}
@@ -369,7 +396,7 @@ export namespace ourFirebase {
     return firebase.auth().currentUser;
   }
 
-  function getRef(path: string) {
+  export function getRef(path: string) {
     return firebase.database().ref(path);
   }
 }
