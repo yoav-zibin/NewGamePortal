@@ -9,7 +9,8 @@ import {
   GameInfo,
   MatchState,
   PieceState,
-  IdIndexer
+  IdIndexer,
+  UserIdsAndPhoneNumbers
 } from '../types';
 
 // All interactions with firebase must be in this module.
@@ -56,13 +57,16 @@ export namespace ourFirebase {
     return <number>firebase.database.ServerValue.TIMESTAMP;
   }
 
-  export function writeUser() {
+  export function writeUser(overridePhoneNumberForTest: string = '') {
     checkFunctionIsCalledOnce('writeUser');
     const user = assertLoggedIn();
+    const phoneNumber = user.phoneNumber
+      ? user.phoneNumber
+      : overridePhoneNumberForTest;
     const userFbr: fbr.PrivateFields = {
       createdOn: getTimestamp(),
       fcmTokens: {},
-      phoneNumber: user.phoneNumber ? user.phoneNumber : '',
+      phoneNumber: phoneNumber,
       countryCode: myCountryCode
     };
     delete userFbr.fcmTokens; // I don't want to update these.
@@ -75,9 +79,9 @@ export namespace ourFirebase {
       userId: user.uid,
       timestamp: getTimestamp()
     };
-    if (user.phoneNumber) {
+    if (phoneNumber) {
       refSet(
-        getRef(`/gamePortal/phoneNumberToUserId${user.phoneNumber}`),
+        getRef(`/gamePortal/phoneNumberToUserId/${phoneNumber}`),
         phoneNumberFbr
       );
     }
@@ -91,7 +95,8 @@ export namespace ourFirebase {
     getRef('TODO').once('value', gotGamesList);
   }
 
-  // TODO: export function updateGameSpec(game: GameInfo) {}
+  // Eventually dispatches the action updateGameSpecs.
+  // TODO: export function fetchGameSpec(game: GameInfo) {}
 
   // Eventually dispatches the action setMatchesList
   // every time this field is updated:
@@ -295,7 +300,39 @@ export namespace ourFirebase {
   }
 
   // Dispatches updateUserIdsAndPhoneNumbers (reading from /gamePortal/phoneNumberToUserId)
-  // TODO: export function updateUserIdsAndPhoneNumbers(phoneNumbers: string[]) {}
+  export function updateUserIdsAndPhoneNumbers(phoneNumbers: string[]) {
+    const userIdsAndPhoneNumbers: UserIdsAndPhoneNumbers = {
+      phoneNumberToUserId: {},
+      userIdToPhoneNumber: {}
+    };
+    const promises: Promise<void>[] = [];
+    phoneNumbers.forEach((phoneNumber: string) => {
+      promises.push(getPhoneNumberDetail(userIdsAndPhoneNumbers, phoneNumber));
+    });
+    Promise.all(promises).then(() => {
+      dispatch({ updateUserIdsAndPhoneNumbers: userIdsAndPhoneNumbers });
+    });
+  }
+
+  export function getPhoneNumberDetail(
+    userIdsAndPhoneNumbers: UserIdsAndPhoneNumbers,
+    phoneNumber: string
+  ): Promise<void> {
+    return getRef(`/gamePortal/phoneNumberToUserId/` + phoneNumber)
+      .once('value')
+      .then(snap => {
+        if (!snap) {
+          return;
+        }
+        const phoneNumberFbrObj: fbr.PhoneNumber = snap.val();
+        if (!phoneNumberFbrObj) {
+          return;
+        }
+        const userId = phoneNumberFbrObj.userId;
+        userIdsAndPhoneNumbers.userIdToPhoneNumber[userId] = phoneNumber;
+        userIdsAndPhoneNumbers.phoneNumberToUserId[phoneNumber] = userId;
+      });
+  }
 
   // Dispatches setSignals.
   // TODO: export function listenToSignals() {}
@@ -367,7 +404,7 @@ export namespace ourFirebase {
     return user;
   }
 
-  function getUserId() {
+  export function getUserId() {
     return assertLoggedIn().uid;
   }
 
@@ -375,7 +412,7 @@ export namespace ourFirebase {
     return firebase.auth().currentUser;
   }
 
-  function getRef(path: string) {
+  export function getRef(path: string) {
     return firebase.database().ref(path);
   }
 }

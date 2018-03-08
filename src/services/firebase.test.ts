@@ -3,7 +3,12 @@
  */
 import { ourFirebase } from './firebase';
 import * as firebase from 'firebase';
-import { MatchState, MatchInfo, GameInfo } from '../types/index';
+import {
+  MatchState,
+  MatchInfo,
+  GameInfo,
+  UserIdsAndPhoneNumbers
+} from '../types/index';
 import { store, dispatch } from '../stores';
 
 const testConfig = {
@@ -36,6 +41,11 @@ const gameInfo: GameInfo = {
 };
 dispatch({ setGamesList: [gameInfo] });
 const existingUserId = '0E25lvSVm5bTHrQT517kPafiAia2';
+// Since our test use anonymous login
+// and the rules only allow you to write there if you have auth.token.phone_number
+// we can not add in gamePortal/PhoneNumberToUserId/${phoneNumber}
+// So firebase rules add "123456789" for test
+const magicPhoneNumberForTest = '123456789';
 
 function createMatch() {
   return ourFirebase.createMatch(gameInfo, {});
@@ -48,7 +58,7 @@ it('signInAnonymously finished successfully', done => {
     .auth()
     .signInAnonymously()
     .then(() => {
-      ourFirebase.writeUser();
+      ourFirebase.writeUser(magicPhoneNumberForTest);
       ourFirebase.listenToMyMatchesList();
       done();
     })
@@ -83,10 +93,6 @@ it('addFcmTokens', () => {
 
 it('addParticipants', done => {
   const match: MatchInfo = createMatch();
-  const currentUser = firebase.auth().currentUser;
-  if (!currentUser) {
-    throw new Error('You must be logged in');
-  }
   ourFirebase.addParticipant(match, existingUserId);
   store.subscribe(() => {
     const matchesList = store.getState().matchesList;
@@ -112,17 +118,33 @@ it('fetch match list from firebase', done => {
   });
 });
 
-it('pingOpponentsInMatch', done => {
-  const match: MatchInfo = createMatch();
-
-  ourFirebase.pingOpponentsInMatch(match);
+it('Should update the phone numbers', done => {
+  // write something to gameportal/phoneNumberToUserId
+  // get string from contact and convert them to string
+  const phoneNumbers: string[] = [
+    '+2346523475',
+    'nonExistingNumber1',
+    magicPhoneNumberForTest,
+    'nonExistingNumber2'
+  ];
+  phoneNumbers.push(magicPhoneNumberForTest);
+  ourFirebase.updateUserIdsAndPhoneNumbers(phoneNumbers);
+  // check if store has been updated
   store.subscribe(() => {
-    const matchesList = store.getState().matchesList;
-    const thisMatch = matchesList.find(
-      matchInList => matchInList.matchId === match.matchId
-    );
-    if (thisMatch) {
+    const userIdsAndPhoneNumbers = store.getState().userIdsAndPhoneNumbers;
+    const uid = ourFirebase.getUserId();
+    const expectedUserIdsAndPhoneNumbers: UserIdsAndPhoneNumbers = {
+      phoneNumberToUserId: { [magicPhoneNumberForTest]: uid },
+      userIdToPhoneNumber: { [uid]: magicPhoneNumberForTest }
+    };
+    if (userIdsAndPhoneNumbers.phoneNumberToUserId[magicPhoneNumberForTest]) {
+      expect(userIdsAndPhoneNumbers).toEqual(expectedUserIdsAndPhoneNumbers);
       done();
     }
   });
+});
+
+it('pingOpponentsInMatch', () => {
+  const match: MatchInfo = createMatch();
+  ourFirebase.pingOpponentsInMatch(match);
 });
