@@ -351,12 +351,7 @@ export namespace ourFirebase {
         const signals: SignalEntry[] = [];
         Object.keys(signalsFbr).forEach(entryId => {
           const signalFbr: fbr.SignalEntry = signalsFbr[entryId];
-          const signal: SignalEntry = {
-            addedByUid: signalFbr['addedByUid'],
-            timestamp: signalFbr['timestamp'],
-            signalType: signalFbr['signalType'],
-            signalData: signalFbr['signalData']
-          };
+          const signal: SignalEntry = signalFbr;
           signals.push(signal);
         });
         dispatch({ setSignals: signals });
