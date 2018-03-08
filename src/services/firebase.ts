@@ -297,25 +297,47 @@ export namespace ourFirebase {
       phoneNumberToUserId: {},
       userIdToPhoneNumber: {}
     };
+    const promises: Promise<fbr.PhoneNumber>[] = [];
     phoneNumbers.forEach((phoneNumber: string) => {
-      let phoneNumberFbrObj: fbr.PhoneNumber;
-      getRef(`/gamePortal/phoneNumberToUserId/` + phoneNumber)
-        .once('value')
-        .then(snap => {
-          if (!snap) {
-            return;
-          }
-          phoneNumberFbrObj = snap.val();
-          if (!phoneNumberFbrObj) {
-            return;
-          }
-          const userId = phoneNumberFbrObj.userId;
-          userIdsAndPhoneNumbers['phoneNumberToUserId'][phoneNumber] = userId;
-          userIdsAndPhoneNumbers['userIdToPhoneNumber'][userId] = phoneNumber;
-        });
+      let phoneNumberPromise = getPhoneNumberDetail(phoneNumber);
+      promises.push(phoneNumberPromise);
     });
+    Promise.all(promises).then(datas => {
+      datas.forEach(data => {
+        if (data['fbrObj']) {
+          let fbrObj = data['fbrObj'];
+          let userId = fbrObj['userId'];
+          let phoneNumber = fbrObj['phoneNumber'];
+          userIdsAndPhoneNumbers['phoneNumberToUserId']['PhoneNumber'] = userId;
+          userIdsAndPhoneNumbers['userIdToPhoneNumber'][userId] = phoneNumber;
+        }
+      });
+      dispatch({ updateUserIdsAndPhoneNumbers: userIdsAndPhoneNumbers });
+    });
+  }
 
-    dispatch({ updateUserIdsAndPhoneNumbers: userIdsAndPhoneNumbers });
+  export function getPhoneNumberDetail(phoneNumber: string): Promise<any> {
+    return getRef(`/gamePortal/phoneNumberToUserId/` + phoneNumber)
+      .once('value')
+      .then(snap => {
+        if (!snap) {
+          return {
+            phoneNumber: phoneNumber,
+            fbrObj: null
+          };
+        }
+        const phoneNumberFbrObj: fbr.PhoneNumber = snap.val();
+        if (!phoneNumberFbrObj) {
+          return {
+            phoneNumber: phoneNumber,
+            fbrObj: null
+          };
+        }
+        return {
+          phoneNumber: phoneNumber,
+          fbrObj: phoneNumberFbrObj
+        };
+      });
   }
 
   // Dispatches setSignals.
