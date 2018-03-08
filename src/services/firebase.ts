@@ -9,7 +9,8 @@ import {
   GameInfo,
   MatchState,
   PieceState,
-  IdIndexer
+  IdIndexer,
+  UserIdsAndPhoneNumbers
 } from '../types';
 
 // All interactions with firebase must be in this module.
@@ -296,7 +297,47 @@ export namespace ourFirebase {
   }
 
   // Dispatches updateUserIdsAndPhoneNumbers (reading from /gamePortal/phoneNumberToUserId)
-  // TODO: export function updateUserIdsAndPhoneNumbers(phoneNumbers: string[]) {}
+  export function updateUserIdsAndPhoneNumbers(phoneNumbers: string[]) {
+    const userIdsAndPhoneNumbers: UserIdsAndPhoneNumbers = {
+      phoneNumberToUserId: {},
+      userIdToPhoneNumber: {}
+    };
+    const promises: Promise<fbr.PhoneNumber>[] = [];
+    phoneNumbers.forEach((phoneNumber: string) => {
+      let phoneNumberPromise = getPhoneNumberDetail(phoneNumber);
+      promises.push(phoneNumberPromise);
+    });
+    Promise.all(promises).then(datas => {
+      datas.forEach(data => {
+        if (data) {
+          let userId = data['userId'];
+          let phoneNumber = data['phoneNumber'];
+          userIdsAndPhoneNumbers['phoneNumberToUserId'][phoneNumber] = userId;
+          userIdsAndPhoneNumbers['userIdToPhoneNumber'][userId] = phoneNumber;
+        }
+      });
+      console.log('userIdsAndPhoneNumbers:' + userIdsAndPhoneNumbers);
+      dispatch({ updateUserIdsAndPhoneNumbers: userIdsAndPhoneNumbers });
+    });
+  }
+
+  export function getPhoneNumberDetail(phoneNumber: string): Promise<any> {
+    return getRef(`/gamePortal/phoneNumberToUserId/` + phoneNumber)
+      .once('value')
+      .then(snap => {
+        if (!snap) {
+          return null;
+        }
+        const phoneNumberFbrObj: fbr.PhoneNumber = snap.val();
+        if (!phoneNumberFbrObj) {
+          return null;
+        }
+        return {
+          phoneNumber: phoneNumber,
+          userId: phoneNumberFbrObj.userId
+        };
+      });
+  }
 
   // Dispatches setSignals.
   // TODO: export function listenToSignals() {}
@@ -368,7 +409,7 @@ export namespace ourFirebase {
     return user;
   }
 
-  function getUserId() {
+  export function getUserId() {
     return assertLoggedIn().uid;
   }
 
@@ -376,7 +417,7 @@ export namespace ourFirebase {
     return firebase.auth().currentUser;
   }
 
-  function getRef(path: string) {
+  export function getRef(path: string) {
     return firebase.database().ref(path);
   }
 }
