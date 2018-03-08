@@ -54,7 +54,6 @@ const currentMatchIndex: number = 1;
 
 const initialState: StoreState = {
   // This initial gamesList is just for debugging the components.
-  // TODO: change to [] once firebase is finished.
   gamesList: [
     {
       gameSpecId: '123',

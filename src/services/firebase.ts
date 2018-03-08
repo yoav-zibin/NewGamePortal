@@ -1,7 +1,7 @@
 // import { Contact } from '../types/index';
 import { store, dispatch } from '../stores';
 import * as firebase from 'firebase';
-import { checkCondition, getValues } from '../globals';
+import { checkCondition, getValues, prettyJson } from '../globals';
 import { Action } from '../reducers';
 import {
   BooleanIndexer,
@@ -12,10 +12,6 @@ import {
   IdIndexer,
   UserIdsAndPhoneNumbers
 } from '../types';
-
-function prettyJson(obj: any): string {
-  return JSON.stringify(obj, null, '  ');
-}
 
 // All interactions with firebase must be in this module.
 export namespace ourFirebase {
@@ -96,7 +92,8 @@ export namespace ourFirebase {
     getRef('TODO').once('value', gotGamesList);
   }
 
-  // TODO: export function updateGameSpec(game: GameInfo) {}
+  // Eventually dispatches the action updateGameSpecs.
+  // TODO: export function fetchGameSpec(game: GameInfo) {}
 
   // Eventually dispatches the action setMatchesList
   // every time this field is updated:
@@ -288,6 +285,16 @@ export namespace ourFirebase {
   }
 
   // TODO: export function pingOpponentsInMatch(match: MatchInfo) {}
+  export function pingOpponentsInMatch(match: MatchInfo) {
+    const userId = getUserId();
+    const matchId = match.matchId;
+    refSet(
+      getRef(
+        `/gamePortal/matches/${matchId}/participants/${userId}/pingOpponents`
+      ),
+      getTimestamp()
+    );
+  }
 
   // Dispatches updateUserIdsAndPhoneNumbers (reading from /gamePortal/phoneNumberToUserId)
   export function updateUserIdsAndPhoneNumbers(phoneNumbers: string[]) {
