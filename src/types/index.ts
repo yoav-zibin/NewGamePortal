@@ -1,4 +1,3 @@
-// TODO: Add more information to the state
 export interface StoreState {
   gamesList: GameInfo[];
 

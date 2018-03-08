@@ -13,3 +13,7 @@ export function getValues<T>(obj: IdIndexer<T>): T[] {
   }
   return vals;
 }
+
+export function prettyJson(obj: any): string {
+  return JSON.stringify(obj, null, '  ');
+}
