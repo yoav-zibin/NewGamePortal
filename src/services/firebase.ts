@@ -10,7 +10,8 @@ import {
   MatchState,
   PieceState,
   IdIndexer,
-  UserIdsAndPhoneNumbers
+  UserIdsAndPhoneNumbers,
+  SignalEntry
 } from '../types';
 
 // All interactions with firebase must be in this module.
@@ -332,6 +333,35 @@ export namespace ourFirebase {
         userIdsAndPhoneNumbers.userIdToPhoneNumber[userId] = phoneNumber;
         userIdsAndPhoneNumbers.phoneNumberToUserId[phoneNumber] = userId;
       });
+  }
+
+  // Dispatches setSignals.
+  export function listenToSignals() {
+    checkFunctionIsCalledOnce('listenToSignals');
+    getRef(`/gamePortal/gamePortalUserId/privateButAddable/signals`).on(
+      'value',
+      snap => {
+        if (!snap) {
+          return;
+        }
+        const signalsFbr: fbr.Signals = snap.val();
+        if (!signalsFbr) {
+          return;
+        }
+        const signals: SignalEntry[] = [];
+        Object.keys(signalsFbr).forEach(entryId => {
+          const signalFbr: fbr.SignalEntry = signalsFbr[entryId];
+          const signal: SignalEntry = {
+            addedByUid: signalFbr['addedByUid'],
+            timestamp: signalFbr['timestamp'],
+            signalType: signalFbr['signalType'],
+            signalData: signalFbr['signalData']
+          };
+          signals.push(signal);
+        });
+        dispatch({ setSignals: signals });
+      }
+    );
   }
 
   // TODO: export function sendSignal(toUserId: string, signalType: 'sdp'|'candidate', signalData: string;) {}
