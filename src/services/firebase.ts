@@ -57,13 +57,16 @@ export namespace ourFirebase {
     return <number>firebase.database.ServerValue.TIMESTAMP;
   }
 
-  export function writeUser() {
+  export function writeUser(overridePhoneNumberForTest: string = '') {
     checkFunctionIsCalledOnce('writeUser');
     const user = assertLoggedIn();
+    const phoneNumber = user.phoneNumber
+      ? user.phoneNumber
+      : overridePhoneNumberForTest;
     const userFbr: fbr.PrivateFields = {
       createdOn: getTimestamp(),
       fcmTokens: {},
-      phoneNumber: user.phoneNumber ? user.phoneNumber : '',
+      phoneNumber: phoneNumber,
       countryCode: myCountryCode
     };
     delete userFbr.fcmTokens; // I don't want to update these.
@@ -76,9 +79,9 @@ export namespace ourFirebase {
       userId: user.uid,
       timestamp: getTimestamp()
     };
-    if (user.phoneNumber) {
+    if (phoneNumber) {
       refSet(
-        getRef(`/gamePortal/phoneNumberToUserId${user.phoneNumber}`),
+        getRef(`/gamePortal/phoneNumberToUserId/${phoneNumber}`),
         phoneNumberFbr
       );
     }
@@ -302,40 +305,32 @@ export namespace ourFirebase {
       phoneNumberToUserId: {},
       userIdToPhoneNumber: {}
     };
-    const promises: Promise<fbr.PhoneNumber>[] = [];
+    const promises: Promise<void>[] = [];
     phoneNumbers.forEach((phoneNumber: string) => {
-      let phoneNumberPromise = getPhoneNumberDetail(phoneNumber);
-      promises.push(phoneNumberPromise);
+      promises.push(getPhoneNumberDetail(userIdsAndPhoneNumbers, phoneNumber));
     });
-    Promise.all(promises).then(datas => {
-      datas.forEach(data => {
-        if (data) {
-          let userId = data['userId'];
-          let phoneNumber = data['phoneNumber'];
-          userIdsAndPhoneNumbers['phoneNumberToUserId'][phoneNumber] = userId;
-          userIdsAndPhoneNumbers['userIdToPhoneNumber'][userId] = phoneNumber;
-        }
-      });
-      console.log('userIdsAndPhoneNumbers:' + userIdsAndPhoneNumbers);
+    Promise.all(promises).then(() => {
       dispatch({ updateUserIdsAndPhoneNumbers: userIdsAndPhoneNumbers });
     });
   }
 
-  export function getPhoneNumberDetail(phoneNumber: string): Promise<any> {
+  export function getPhoneNumberDetail(
+    userIdsAndPhoneNumbers: UserIdsAndPhoneNumbers,
+    phoneNumber: string
+  ): Promise<void> {
     return getRef(`/gamePortal/phoneNumberToUserId/` + phoneNumber)
       .once('value')
       .then(snap => {
         if (!snap) {
-          return null;
+          return;
         }
         const phoneNumberFbrObj: fbr.PhoneNumber = snap.val();
         if (!phoneNumberFbrObj) {
-          return null;
+          return;
         }
-        return {
-          phoneNumber: phoneNumber,
-          userId: phoneNumberFbrObj.userId
-        };
+        const userId = phoneNumberFbrObj.userId;
+        userIdsAndPhoneNumbers.userIdToPhoneNumber[userId] = phoneNumber;
+        userIdsAndPhoneNumbers.phoneNumberToUserId[phoneNumber] = userId;
       });
   }
 
