@@ -18,6 +18,8 @@ const GamesListContainer = connect(mapStateToProps, mapDispatchToProps)(
   GamesList
 );
 
+// TODO: Use private route component to display games list only when you
+// logged in
 class App extends React.Component {
   render() {
     return (
