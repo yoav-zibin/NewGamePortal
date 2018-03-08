@@ -10,7 +10,8 @@ import {
   MatchState,
   PieceState,
   IdIndexer,
-  UserIdsAndPhoneNumbers
+  UserIdsAndPhoneNumbers,
+  SignalEntry
 } from '../types';
 
 // All interactions with firebase must be in this module.
@@ -335,9 +336,46 @@ export namespace ourFirebase {
   }
 
   // Dispatches setSignals.
-  // TODO: export function listenToSignals() {}
+  export function listenToSignals() {
+    checkFunctionIsCalledOnce('listenToSignals');
+    const userId = getUserId();
+    getRef(
+      `/gamePortal/gamePortalUsers/${userId}/privateButAddable/signals`
+    ).on('value', snap => {
+      if (!snap) {
+        return;
+      }
+      const signalsFbr: fbr.Signals = snap.val();
+      if (!signalsFbr) {
+        return;
+      }
+      const signals: SignalEntry[] = [];
+      Object.keys(signalsFbr).forEach(entryId => {
+        const signalFbr: fbr.SignalEntry = signalsFbr[entryId];
+        const signal: SignalEntry = signalFbr;
+        signals.push(signal);
+      });
+      dispatch({ setSignals: signals });
+    });
+  }
 
-  // TODO: export function sendSignal(toUserId: string, signalType: 'sdp'|'candidate', signalData: string;) {}
+  export function sendSignal(
+    toUserId: string,
+    signalType: 'sdp' | 'candidate',
+    signalData: string
+  ) {
+    const userId = getUserId();
+    const signalFbr: fbr.SignalEntry = {
+      addedByUid: userId,
+      timestamp: getTimestamp(),
+      signalType: signalType,
+      signalData: signalData
+    };
+    const signalFbrRef = getRef(
+      `/gamePortal/gamePortalUsers/${toUserId}/privateButAddable/signals`
+    ).push();
+    refSet(signalFbrRef, signalFbr);
+  }
 
   export function addFcmToken(fcmToken: string, platform: 'ios' | 'android') {
     // Can be called multiple times if the token is updated.  checkFunctionIsCalledOnce('addFcmToken');

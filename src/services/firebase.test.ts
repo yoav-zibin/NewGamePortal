@@ -10,6 +10,7 @@ import {
   UserIdsAndPhoneNumbers
 } from '../types/index';
 import { store, dispatch } from '../stores';
+import { prettyJson } from '../globals';
 
 const testConfig = {
   apiKey: 'AIzaSyA_UNWBNj7zXrrwMYq49aUaSQqygDg66SI',
@@ -60,6 +61,7 @@ it('signInAnonymously finished successfully', done => {
     .then(() => {
       ourFirebase.writeUser(magicPhoneNumberForTest);
       ourFirebase.listenToMyMatchesList();
+      ourFirebase.listenToSignals();
       done();
     })
     .catch(err => {
@@ -147,4 +149,29 @@ it('Should update the phone numbers', done => {
 it('pingOpponentsInMatch', () => {
   const match: MatchInfo = createMatch();
   ourFirebase.pingOpponentsInMatch(match);
+});
+
+it('send signal', () => {
+  ourFirebase.sendSignal(existingUserId, 'candidate', 'first signal');
+});
+
+it('fetch signal list from firebase', done => {
+  // send a signal
+  const userId = firebase.auth().currentUser!.uid;
+  ourFirebase.sendSignal(userId, 'candidate', 'hello');
+  // check if store has been updated
+  store.subscribe(() => {
+    const signals = store.getState().signals;
+    // if we can find signals in store, done
+    console.log('store:' + prettyJson(signals));
+    signals.forEach(signal => {
+      if (
+        signal['addedByUid'] === userId &&
+        signal['signalType'] === 'candidate' &&
+        signal['signalData'] === 'hello'
+      ) {
+        done();
+      }
+    });
+  });
 });
