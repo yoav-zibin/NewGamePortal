@@ -10,8 +10,6 @@ import {
   MatchState,
   PieceState,
   IdIndexer,
-  PhoneNumberToContact,
-  Contact,
   UserIdsAndPhoneNumbers
 } from '../types';
 
@@ -304,14 +302,14 @@ export namespace ourFirebase {
     });
     Promise.all(promises).then(datas => {
       datas.forEach(data => {
-        if (data['fbrObj']) {
-          let fbrObj = data['fbrObj'];
-          let userId = fbrObj['userId'];
-          let phoneNumber = fbrObj['phoneNumber'];
-          userIdsAndPhoneNumbers['phoneNumberToUserId']['PhoneNumber'] = userId;
+        if (data) {
+          let userId = data['userId'];
+          let phoneNumber = data['phoneNumber'];
+          userIdsAndPhoneNumbers['phoneNumberToUserId'][phoneNumber] = userId;
           userIdsAndPhoneNumbers['userIdToPhoneNumber'][userId] = phoneNumber;
         }
       });
+      console.log('userIdsAndPhoneNumbers:' + userIdsAndPhoneNumbers);
       dispatch({ updateUserIdsAndPhoneNumbers: userIdsAndPhoneNumbers });
     });
   }
@@ -321,21 +319,15 @@ export namespace ourFirebase {
       .once('value')
       .then(snap => {
         if (!snap) {
-          return {
-            phoneNumber: phoneNumber,
-            fbrObj: null
-          };
+          return null;
         }
         const phoneNumberFbrObj: fbr.PhoneNumber = snap.val();
         if (!phoneNumberFbrObj) {
-          return {
-            phoneNumber: phoneNumber,
-            fbrObj: null
-          };
+          return null;
         }
         return {
           phoneNumber: phoneNumber,
-          fbrObj: phoneNumberFbrObj
+          userId: phoneNumberFbrObj.userId
         };
       });
   }
@@ -410,7 +402,7 @@ export namespace ourFirebase {
     return user;
   }
 
-  function getUserId() {
+  export function getUserId() {
     return assertLoggedIn().uid;
   }
 

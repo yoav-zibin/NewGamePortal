@@ -3,9 +3,8 @@
  */
 import { ourFirebase } from './firebase';
 import * as firebase from 'firebase';
-import { MatchState, MatchInfo, GameInfo, Contact } from '../types/index';
+import { MatchState, MatchInfo, GameInfo } from '../types/index';
 import { store, dispatch } from '../stores';
-import { getValues } from '../globals';
 
 const testConfig = {
   apiKey: 'AIzaSyA_UNWBNj7zXrrwMYq49aUaSQqygDg66SI',
@@ -124,6 +123,36 @@ it('fetch match list from firebase', done => {
   store.subscribe(() => {
     const matchesList = store.getState().matchesList;
     if (matchesList.find(match => match.matchId === matchId)) {
+      done();
+    }
+  });
+});
+
+it('Should update the phone numbers', done => {
+  // write something to gameportal/phoneNumberToUserId
+  const testPhoneNumber: string = '123456789';
+  // Since our test use anonymous login
+  // and the rules only allow you to write there if you have auth.token.phone_number
+  // we can not add in gamePortal/PhoneNumberToUserId/${phoneNumber}
+  // So firebase rules add "123456789" for test
+  const phoneNumberFbr: fbr.PhoneNumber = {
+    userId: ourFirebase.getUserId(),
+    timestamp: ourFirebase.getTimestamp()
+  };
+  ourFirebase.refSet(
+    ourFirebase.getRef(`/gamePortal/phoneNumberToUserId/${testPhoneNumber}`),
+    phoneNumberFbr
+  );
+  // get string from contact and convert them to string
+  const phoneNumbers: string[] = [];
+  phoneNumbers.push(testPhoneNumber);
+  ourFirebase.updateUserIdsAndPhoneNumbers(phoneNumbers);
+  // check if store has been updated
+  store.subscribe(() => {
+    const newMap = store.getState().userIdsAndPhoneNumbers;
+    console.log('store:' + store.getState().userIdsAndPhoneNumbers);
+    const phoneNumberToUserId = newMap['phoneNumberToUserId'];
+    if (phoneNumberToUserId[testPhoneNumber]) {
       done();
     }
   });
