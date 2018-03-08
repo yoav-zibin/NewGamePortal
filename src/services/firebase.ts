@@ -91,7 +91,8 @@ export namespace ourFirebase {
     getRef('TODO').once('value', gotGamesList);
   }
 
-  // TODO: export function updateGameSpec(game: GameInfo) {}
+  // Eventually dispatches the action updateGameSpecs.
+  // TODO: export function fetchGameSpec(game: GameInfo) {}
 
   // Eventually dispatches the action setMatchesList
   // every time this field is updated:
