@@ -27,12 +27,7 @@ export interface MyUser {
   myCountryCode: string; // 2-letter country code
 }
 
-export interface SignalEntry {
-  addedByUid: string;
-  timestamp: number /*firebase.database.ServerValue.TIMESTAMP*/;
-  signalType: 'sdp' | 'candidate';
-  signalData: string;
-}
+export type SignalEntry = fbr.SignalEntry;
 
 export interface GameSpecs {
   imageIdToImage: ImageIdToImage;

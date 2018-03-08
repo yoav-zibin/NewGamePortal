@@ -288,7 +288,6 @@ export namespace ourFirebase {
     return piecesState;
   }
 
-  // TODO: export function pingOpponentsInMatch(match: MatchInfo) {}
   export function pingOpponentsInMatch(match: MatchInfo) {
     const userId = getUserId();
     const matchId = match.matchId;
@@ -339,9 +338,10 @@ export namespace ourFirebase {
   export function listenToSignals() {
     checkFunctionIsCalledOnce('listenToSignals');
     const userId = getUserId();
-    getRef(
+    const ref = getRef(
       `/gamePortal/gamePortalUsers/${userId}/privateButAddable/signals`
-    ).on('value', snap => {
+    );
+    ref.on('value', snap => {
       if (!snap) {
         return;
       }
@@ -349,12 +349,27 @@ export namespace ourFirebase {
       if (!signalsFbr) {
         return;
       }
-      const signals: SignalEntry[] = [];
+      // We start with the old signals and add to them.
+      let signals: SignalEntry[] = store.getState().signals;
+      let updates: any = {};
       Object.keys(signalsFbr).forEach(entryId => {
+        updates[entryId] = null;
         const signalFbr: fbr.SignalEntry = signalsFbr[entryId];
         const signal: SignalEntry = signalFbr;
         signals.push(signal);
       });
+
+      // Deleting the signals we got from firebase.
+      refUpdate(ref, updates);
+
+      // filtering old signals.
+      const now = new Date().getTime();
+      const fiveMinAgo = now - 5 * 60 * 1000;
+      signals = signals.filter(signal => fiveMinAgo <= signal.timestamp);
+
+      // Sorting: oldest entries are at the beginning
+      signals.sort((signal1, signal2) => signal1.timestamp - signal2.timestamp);
+
       dispatch({ setSignals: signals });
     });
   }
