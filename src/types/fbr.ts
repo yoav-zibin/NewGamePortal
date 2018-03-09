@@ -141,10 +141,24 @@ declare namespace fbr {
     gameBuilderUsers: GameBuilderUsers;
   }
 
+  interface ScreenShootImage {
+    uploaderEmail: string;
+    uploaderUid: string;
+    createdOn: number /*firebase.database.ServerValue.TIMESTAMP*/;
+    width: number;
+    height: number;
+    isBoardImage: boolean;
+    downloadURL: string;
+    sizeInBytes: number;
+    cloudStoragePath: string;
+    name: string;
+  }
+
   interface GameInfo {
     gameSpecId: string;
     gameName: string;
     screenShootImageId: string;
+    screenShootImage: ScreenShootImage;
     numberOfMatches: number;
   }
 

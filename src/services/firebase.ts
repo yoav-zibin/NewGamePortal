@@ -109,16 +109,16 @@ export namespace ourFirebase {
       const gameInfosKeys = Object.keys(gameInfos);
       const gameList: GameInfo[] = gameInfosKeys.map(gameInfosKey => {
         const gameInfoFbr = gameInfos[gameInfosKey];
+        const screenShootImage = gameInfoFbr.screenShootImage;
         const gameInfo: GameInfo = {
           gameSpecId: gameInfoFbr.gameSpecId,
           gameName: gameInfoFbr.gameName,
-          // TODO: handle screenshotImageId
           screenShoot: {
             imageId: gameInfoFbr.screenShootImageId,
-            height: 0,
-            width: 0,
-            isBoardImage: false,
-            downloadURL: ''
+            height: screenShootImage.height,
+            width: screenShootImage.width,
+            isBoardImage: screenShootImage.isBoardImage,
+            downloadURL: screenShootImage.downloadURL
           }
         };
         return gameInfo;
