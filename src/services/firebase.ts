@@ -91,9 +91,19 @@ export namespace ourFirebase {
   // Eventually dispatches the action setGamesList.
   export function fetchGamesList() {
     checkFunctionIsCalledOnce('setGamesList');
-    assertLoggedIn();
     // TODO: implement.
     getRef('TODO').once('value', gotGamesList);
+    // const user = assertLoggedIn();
+    const gameList: GameInfo[] = [];
+    // TODO: implement.
+    getRef('/gamePortal/gamesInfoAndSpec/gameInfo').once('value', snapshot => {
+      snapshot.forEach(snap => {
+        gameList.push(snap.child('gameName').val());
+        return false;
+      });
+    });
+    console.log(gameList);
+    dispatch({ setGamesList: gameList });
   }
 
   // Eventually dispatches the action updateGameSpecs.
