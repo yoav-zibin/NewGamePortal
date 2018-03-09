@@ -7,7 +7,8 @@ import {
   MatchState,
   MatchInfo,
   GameInfo,
-  UserIdsAndPhoneNumbers
+  UserIdsAndPhoneNumbers,
+  PhoneNumberToContact
 } from '../types/index';
 import { store, dispatch } from '../stores';
 
@@ -59,8 +60,6 @@ it('signInAnonymously finished successfully', done => {
     .signInAnonymously()
     .then(() => {
       ourFirebase.writeUser(magicPhoneNumberForTest);
-      ourFirebase.listenToMyMatchesList();
-      ourFirebase.listenToSignals();
       done();
     })
     .catch(err => {
@@ -122,14 +121,17 @@ it('fetch match list from firebase', done => {
 it('Should update the phone numbers', done => {
   // write something to gameportal/phoneNumberToUserId
   // get string from contact and convert them to string
-  const phoneNumbers: string[] = [
-    '+2346523475',
-    'nonExistingNumber1',
-    magicPhoneNumberForTest,
-    'nonExistingNumber2'
-  ];
-  phoneNumbers.push(magicPhoneNumberForTest);
-  ourFirebase.updateUserIdsAndPhoneNumbers(phoneNumbers);
+  const phoneNumbers: PhoneNumberToContact = {
+    [magicPhoneNumberForTest]: {
+      phoneNumber: magicPhoneNumberForTest,
+      name: 'name'
+    },
+    '+666666': {
+      phoneNumber: '+666666',
+      name: 'name666666'
+    }
+  };
+  ourFirebase.storeContacts(phoneNumbers);
   // check if store has been updated
   store.subscribe(() => {
     const userIdsAndPhoneNumbers = store.getState().userIdsAndPhoneNumbers;

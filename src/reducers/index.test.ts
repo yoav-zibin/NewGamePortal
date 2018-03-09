@@ -99,8 +99,7 @@ const initialState: StoreState = {
   phoneNumberToContact: {
     phoneNumber: {
       phoneNumber: '+1234567890',
-      name: 'someName',
-      avatarImage: 'someImage'
+      name: 'someName'
     }
   },
   userIdsAndPhoneNumbers: {
@@ -208,8 +207,7 @@ it('updatePhoneNumberToContact', () => {
 
   let someContact: Contact = {
     phoneNumber: '+1234567890',
-    name: 'someName',
-    avatarImage: 'someImage'
+    name: 'someName'
   };
 
   let newPhoneNumberToContact: PhoneNumberToContact = {};

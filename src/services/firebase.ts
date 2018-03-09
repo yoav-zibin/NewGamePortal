@@ -11,7 +11,8 @@ import {
   PieceState,
   IdIndexer,
   UserIdsAndPhoneNumbers,
-  SignalEntry
+  SignalEntry,
+  PhoneNumberToContact
 } from '../types';
 
 // All interactions with firebase must be in this module.
@@ -26,6 +27,7 @@ export namespace ourFirebase {
 
   // Call init exactly once to connect to firebase.
   export function init(testConfig?: Object) {
+    checkFunctionIsCalledOnce('init');
     // Initialize Firebase
     let config = {
       apiKey: 'AIzaSyDA5tCzxNzykHgaSv1640GanShQze3UK-M',
@@ -54,7 +56,7 @@ export namespace ourFirebase {
       .signInWithPhoneNumber(phoneNumber, applicationVerifier);
   }
 
-  export function getTimestamp(): number {
+  function getTimestamp(): number {
     return <number>firebase.database.ServerValue.TIMESTAMP;
   }
 
@@ -65,12 +67,15 @@ export namespace ourFirebase {
       ? user.phoneNumber
       : overridePhoneNumberForTest;
     const userFbr: fbr.PrivateFields = {
-      createdOn: getTimestamp(),
+      createdOn: getTimestamp(), // It's actually "last logged in on timestamp"
       fcmTokens: {},
+      contacts: {},
       phoneNumber: phoneNumber,
       countryCode: myCountryCode
     };
-    delete userFbr.fcmTokens; // I don't want to update these.
+    // I don't want to update these.
+    delete userFbr.fcmTokens;
+    delete userFbr.contacts;
     refUpdate(
       getRef(`/gamePortal/gamePortalUsers/${user.uid}/privateFields`),
       userFbr
@@ -86,11 +91,16 @@ export namespace ourFirebase {
         phoneNumberFbr
       );
     }
+
+    // call all checkFunctionIsCalledOnce.
+    // TODO: call fetchGamesList
+    listenToMyMatchesList();
+    listenToSignals();
   }
 
   // Eventually dispatches the action setGamesList.
   export function fetchGamesList() {
-    checkFunctionIsCalledOnce('setGamesList');
+    checkFunctionIsCalledOnce('fetchGamesList');
     assertLoggedIn();
     // TODO: implement.
     getRef('TODO').once('value', gotGamesList);
@@ -102,7 +112,7 @@ export namespace ourFirebase {
   // Eventually dispatches the action setMatchesList
   // every time this field is updated:
   //  /gamePortal/gamePortalUsers/$myUserId/privateButAddable/matchMemberships
-  export function listenToMyMatchesList() {
+  function listenToMyMatchesList() {
     checkFunctionIsCalledOnce('listenToMyMatchesList');
     getMatchMembershipsRef().on('value', snap => {
       getMatchMemberships(snap ? snap.val() : {});
@@ -299,8 +309,32 @@ export namespace ourFirebase {
     );
   }
 
-  // Dispatches updateUserIdsAndPhoneNumbers (reading from /gamePortal/phoneNumberToUserId)
-  export function updateUserIdsAndPhoneNumbers(phoneNumbers: string[]) {
+  // Stores my contacts in firebase and eventually dispatches updateUserIdsAndPhoneNumbers.
+  export function storeContacts(currentContacts: PhoneNumberToContact) {
+    checkFunctionIsCalledOnce('storeContacts');
+    const currentPhoneNumbers = Object.keys(currentContacts);
+    const state = store.getState();
+
+    // Mapping phone number to userId for those numbers that don't have a userId.
+    const phoneNumberToUserId =
+      state.userIdsAndPhoneNumbers.phoneNumberToUserId;
+    const numbersWithoutUserId = currentPhoneNumbers.filter(
+      phoneNumber => phoneNumberToUserId[phoneNumber] === undefined
+    );
+    mapPhoneNumbersToUserIds(numbersWithoutUserId);
+
+    // TODO: Update firebase with changes to contacts (new contacts or name changed).
+    // const oldContacts = store.getState().phoneNumberToContact;
+
+    // TODO: check firebase rules hold:
+    // "$contactPhoneNumber" matches(/^[+][0-9]{5,20}$/)
+    // "contactName": validateMandatoryString(20),
+    dispatch({ updatePhoneNumberToContact: currentContacts });
+  }
+
+  function mapPhoneNumbersToUserIds(phoneNumbers: string[]) {
+    // TODO: compare with existing contacts in store.
+    // TODO: Store contacts in user info + name (so notifications will work).
     const userIdsAndPhoneNumbers: UserIdsAndPhoneNumbers = {
       phoneNumberToUserId: {},
       userIdToPhoneNumber: {}
@@ -314,7 +348,7 @@ export namespace ourFirebase {
     });
   }
 
-  export function getPhoneNumberDetail(
+  function getPhoneNumberDetail(
     userIdsAndPhoneNumbers: UserIdsAndPhoneNumbers,
     phoneNumber: string
   ): Promise<void> {
@@ -335,7 +369,7 @@ export namespace ourFirebase {
   }
 
   // Dispatches setSignals.
-  export function listenToSignals() {
+  function listenToSignals() {
     checkFunctionIsCalledOnce('listenToSignals');
     const userId = getUserId();
     const ref = getRef(
@@ -393,7 +427,7 @@ export namespace ourFirebase {
   }
 
   export function addFcmToken(fcmToken: string, platform: 'ios' | 'android') {
-    // Can be called multiple times if the token is updated.  checkFunctionIsCalledOnce('addFcmToken');
+    // Can be called multiple times if the token is updated.
     const fcmTokenObj: fbr.FcmToken = {
       lastTimeReceived: <any>firebase.database.ServerValue.TIMESTAMP,
       platform: platform
@@ -408,16 +442,13 @@ export namespace ourFirebase {
 
   export let allPromisesForTests: Promise<any>[] | null = null;
 
-  /////////////////////////////////////////////////////////////////////////////
-  // All the non-exported functions (i.e., private functions).
-  /////////////////////////////////////////////////////////////////////////////
   function addPromiseForTests(promise: Promise<any>) {
     if (allPromisesForTests) {
       allPromisesForTests.push(promise);
     }
   }
 
-  export function refSet(ref: firebase.database.Reference, val: any) {
+  function refSet(ref: firebase.database.Reference, val: any) {
     addPromiseForTests(ref.set(val, getOnComplete(ref, val)));
   }
 
@@ -465,7 +496,7 @@ export namespace ourFirebase {
     return firebase.auth().currentUser;
   }
 
-  export function getRef(path: string) {
+  function getRef(path: string) {
     return firebase.database().ref(path);
   }
 }

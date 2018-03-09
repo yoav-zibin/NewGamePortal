@@ -74,9 +74,8 @@ export interface MatchState extends IdIndexer<PieceState> {
 }
 
 export interface Contact {
-  phoneNumber: string; // Must match /^[+0-9]{5,20}$/
+  phoneNumber: string; // Must match /^[+][0-9]{5,20}$/
   name: string;
-  avatarImage: string;
 }
 
 export interface Image {

@@ -176,6 +176,14 @@ declare namespace fbr {
     [phoneNumber: string]: PhoneNumber;
   }
 
+  interface ContactPhoneNumber {
+    contactName: string;
+  }
+
+  interface Contacts {
+    [contactPhoneNumber: string]: ContactPhoneNumber;
+  }
+
   interface FcmToken {
     lastTimeReceived: number /*firebase.database.ServerValue.TIMESTAMP*/;
     platform: 'web' | 'ios' | 'android';
@@ -189,6 +197,7 @@ declare namespace fbr {
     createdOn: number /*firebase.database.ServerValue.TIMESTAMP*/;
     countryCode: string;
     phoneNumber: string;
+    contacts: Contacts;
     fcmTokens: FcmTokens;
   }
 
