@@ -2,7 +2,6 @@
 import { store, dispatch } from '../stores';
 import * as firebase from 'firebase';
 import { checkCondition, getValues, prettyJson } from '../globals';
-import { Action } from '../reducers';
 import {
   BooleanIndexer,
   MatchInfo,
@@ -93,25 +92,39 @@ export namespace ourFirebase {
     }
 
     // call all checkFunctionIsCalledOnce.
-    // TODO: call fetchGamesList
     listenToMyMatchesList();
+    // TODO: put data fetchGamesList();
     listenToSignals();
   }
 
   // Eventually dispatches the action setGamesList.
   export function fetchGamesList() {
     checkFunctionIsCalledOnce('fetchGamesList');
-    // const user = assertLoggedIn();
-    const gameList: GameInfo[] = [];
-    // TODO: implement.
-    getRef('/gamePortal/gamesInfoAndSpec/gameInfo').once('value', snapshot => {
-      snapshot.forEach(snap => {
-        gameList.push(snap.child('gameName').val());
-        return false;
+    assertLoggedIn();
+    getRef('/gamePortal/gamesInfoAndSpec/gameInfos').once('value', snapshot => {
+      const gameInfos: fbr.GameInfos = snapshot.val();
+      if (!gameInfos) {
+        throw new Error('no games!');
+      }
+      const gameInfosKeys = Object.keys(gameInfos);
+      const gameList: GameInfo[] = gameInfosKeys.map(gameInfosKey => {
+        const gameInfoFbr = gameInfos[gameInfosKey];
+        const gameInfo: GameInfo = {
+          gameSpecId: gameInfoFbr.gameSpecId,
+          gameName: gameInfoFbr.gameName,
+          // TODO: handle screenshotImageId
+          screenShoot: {
+            imageId: gameInfoFbr.screenShootImageId,
+            height: 0,
+            width: 0,
+            isBoardImage: false,
+            downloadURL: ''
+          }
+        };
+        return gameInfo;
       });
+      dispatch({ setGamesList: gameList });
     });
-    console.log(gameList);
-    dispatch({ setGamesList: gameList });
   }
 
   // Eventually dispatches the action updateGameSpecs.
@@ -478,14 +491,6 @@ export namespace ourFirebase {
         throw new Error(msg);
       }
     };
-  }
-
-  function gotGamesList(snap: firebase.database.DataSnapshot) {
-    // TODO: create updateGameListAction + reducers etc.
-    let updateGameListAction: Action = snap.val(); // TODO: change this.
-    // TODO2 (after other TODOs are done): handle screenshotImageId
-    // firebase.storage().ref('images/blabla.jpg').getDownloadURL()
-    dispatch(updateGameListAction);
   }
 
   function assertLoggedIn(): firebase.User {
