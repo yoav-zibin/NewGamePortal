@@ -11,6 +11,7 @@ import {
   PhoneNumberToContact
 } from '../types/index';
 import { store, dispatch } from '../stores';
+import { checkCondition } from '../globals';
 
 const testConfig = {
   apiKey: 'AIzaSyA_UNWBNj7zXrrwMYq49aUaSQqygDg66SI',
@@ -49,7 +50,7 @@ const existingUserId = '0E25lvSVm5bTHrQT517kPafiAia2';
 const magicPhoneNumberForTest = '123456789';
 
 function createMatch() {
-  return ourFirebase.createMatch(gameInfo, {});
+  return ourFirebase.createMatch(gameInfo, []);
 }
 
 // Must be the first test: signs in anonyously, writeUser,
@@ -74,15 +75,15 @@ it('adds a new match in firebase', () => {
 
 it('Should update the match state', () => {
   // take match state and matchinfo
-  const state: MatchState = {
-    '0': {
+  const state: MatchState = [
+    {
       x: 100,
       y: 100,
       zDepth: 1,
       currentImageIndex: 0,
       cardVisibility: { '0': true }
     }
-  };
+  ];
   const match: MatchInfo = createMatch();
   ourFirebase.updateMatchState(match, state);
 });
@@ -169,4 +170,16 @@ it('fetch signal list from firebase', done => {
   });
   // send a signal
   ourFirebase.sendSignal(userId, 'candidate', 'hello');
+});
+
+// TODO: check once.
+xit('fetchAllGameSpecs', done => {
+  store.subscribe(() => {
+    const gamesList = store.getState().gamesList;
+    if (gamesList.length > 0) {
+      checkCondition('>170 games', gamesList.length > 170);
+    }
+    gamesList.forEach(g => ourFirebase.fetchGameSpec(g));
+    done();
+  });
 });

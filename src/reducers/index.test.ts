@@ -34,7 +34,7 @@ const matchInfo: MatchInfo = {
   game: gameInfo,
   participantsUserIds: [], // including myself
   lastUpdatedOn: 1234,
-  matchState: {}
+  matchState: []
 };
 
 const userInfo: MyUser = {
@@ -81,7 +81,7 @@ const initialState: StoreState = {
       },
       participantsUserIds: ['7UbETkgeXxe0RId6KxYioSJdARs1'], // including myself
       lastUpdatedOn: 1234,
-      matchState: {}
+      matchState: []
     },
     {
       matchId: '2',
@@ -92,7 +92,7 @@ const initialState: StoreState = {
       },
       participantsUserIds: ['7UbETkgeXxe0RId6KxYioSJdARs1'], // including myself
       lastUpdatedOn: 1564,
-      matchState: {}
+      matchState: []
     }
   ],
   currentMatchIndex: 1,

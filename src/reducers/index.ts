@@ -97,9 +97,8 @@ function checkStoreInvariants(state: StoreState) {
         );
         const deck = gameSpec.pieces[piece.deckPieceIndex].element;
         checkCondition(
-          'deckPieceIndex points to a deck that contains this piece element',
-          deck.elementKind.endsWith('Deck') &&
-            deck.deckElements.indexOf(piece.element) !== -1
+          'deckPieceIndex points to a deck',
+          deck.elementKind.endsWith('Deck')
         );
       }
     });
@@ -110,16 +109,6 @@ function checkStoreInvariants(state: StoreState) {
       checkCondition(
         'element image must be in imageIdToImage',
         image === imageIdToImage[image.imageId]
-      );
-    });
-    element.deckElements.forEach(deckElement => {
-      checkCondition(
-        'deckElement must be in elementIdToElement',
-        deckElement === elementIdToElement[deckElement.elementId]
-      );
-      checkCondition(
-        'deckElement must be a card',
-        deckElement.elementKind === 'card'
       );
     });
     // Some checks based on the element kind
@@ -143,10 +132,6 @@ function checkStoreInvariants(state: StoreState) {
       case 'cardsDeck':
       case 'piecesDeck':
         checkCondition('deck has 1 image', element.images.length === 1);
-        checkCondition(
-          'deckElements has at least 2 elements',
-          element.deckElements.length >= 2
-        );
         break;
       default:
         checkCondition('Illegal elementKind=' + element.elementKind, false);

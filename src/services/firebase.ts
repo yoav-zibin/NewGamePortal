@@ -1,18 +1,32 @@
 // import { Contact } from '../types/index';
 import { store, dispatch } from '../stores';
 import * as firebase from 'firebase';
-import { checkCondition, getValues, prettyJson } from '../globals';
+import {
+  checkCondition,
+  getValues,
+  prettyJson,
+  objectMap,
+  checkNotNull
+} from '../globals';
 import {
   BooleanIndexer,
   MatchInfo,
   GameInfo,
   MatchState,
-  PieceState,
   IdIndexer,
   UserIdsAndPhoneNumbers,
   SignalEntry,
-  PhoneNumberToContact
+  PhoneNumberToContact,
+  Image,
+  Element,
+  ImageIdToImage,
+  ElementIdToElement,
+  GameSpec,
+  Piece,
+  GameSpecIdToGameSpec,
+  GameSpecs
 } from '../types';
+import { Action } from '../reducers';
 
 // All interactions with firebase must be in this module.
 export namespace ourFirebase {
@@ -106,20 +120,15 @@ export namespace ourFirebase {
       if (!gameInfos) {
         throw new Error('no games!');
       }
-      const gameInfosKeys = Object.keys(gameInfos);
-      const gameList: GameInfo[] = gameInfosKeys.map(gameInfosKey => {
-        const gameInfoFbr = gameInfos[gameInfosKey];
+      const gameList: GameInfo[] = getValues(gameInfos).map(gameInfoFbr => {
         const screenShootImage = gameInfoFbr.screenShootImage;
         const gameInfo: GameInfo = {
           gameSpecId: gameInfoFbr.gameSpecId,
           gameName: gameInfoFbr.gameName,
-          screenShoot: {
-            imageId: gameInfoFbr.screenShootImageId,
-            height: screenShootImage.height,
-            width: screenShootImage.width,
-            isBoardImage: screenShootImage.isBoardImage,
-            downloadURL: screenShootImage.downloadURL
-          }
+          screenShoot: convertImage(
+            gameInfoFbr.screenShootImageId,
+            screenShootImage
+          )
         };
         return gameInfo;
       });
@@ -128,7 +137,107 @@ export namespace ourFirebase {
   }
 
   // Eventually dispatches the action updateGameSpecs.
-  // TODO: export function fetchGameSpec(game: GameInfo) {}
+  export function fetchGameSpec(game: GameInfo) {
+    const gameSpecId = game.gameSpecId;
+    assertLoggedIn();
+    getRef(
+      `/gamePortal/gamesInfoAndSpec/gameSpecsForPortal/${gameSpecId}`
+    ).once('value', snapshot => {
+      const gameSpecF: fbr.GameSpecForPortal = snapshot.val();
+      if (!gameSpecF) {
+        throw new Error('no game spec!');
+      }
+      const action: Action = {
+        updateGameSpecs: convertGameSpecForPortal(gameSpecId, gameSpecF)
+      };
+      dispatch(action);
+    });
+  }
+
+  function convertGameSpecForPortal(
+    gameSpecId: string,
+    gameSpecF: fbr.GameSpecForPortal
+  ): GameSpecs {
+    const { images, elements, gameSpec } = gameSpecF;
+    const imageIdToImage: ImageIdToImage = objectMap(
+      images,
+      (img: fbr.Image, imageId: string) => convertImage(imageId, img)
+    );
+    let elementIdToElement: ElementIdToElement = objectMap(
+      elements,
+      (element: fbr.Element, elementId: string) =>
+        convertElement(elementId, element, imageIdToImage)
+    );
+
+    const gameSpecIdToGameSpec: GameSpecIdToGameSpec = {
+      [gameSpecId]: convertGameSpec(
+        gameSpec,
+        imageIdToImage,
+        elementIdToElement
+      )
+    };
+    return {
+      imageIdToImage: imageIdToImage,
+      elementIdToElement: elementIdToElement,
+      gameSpecIdToGameSpec: gameSpecIdToGameSpec
+    };
+  }
+  function convertObjectToArray<T>(obj: IdIndexer<T>): T[] {
+    let vals: T[] = [];
+    let count = 0;
+    for (let key of Object.keys(obj)) {
+      checkCondition('index is int', /^(0|[1-9]\d*)$/.test(key));
+      checkCondition('no duplicate index', !(key in vals));
+      vals[key] = obj[key];
+      count++;
+    }
+    checkCondition('no missing index', count === vals.length);
+    return vals;
+  }
+  function convertImage(imageId: string, img: fbr.Image): Image {
+    return {
+      imageId: imageId,
+      height: img.height,
+      width: img.width,
+      isBoardImage: img.isBoardImage,
+      downloadURL: img.downloadURL
+    };
+  }
+  function convertElement(
+    elementId: string,
+    element: fbr.Element,
+    imgs: ImageIdToImage
+  ): Element {
+    return {
+      elementId: elementId,
+      height: element.height,
+      width: element.width,
+      elementKind: element.elementKind,
+      images: convertObjectToArray(element.images).map(elementImage =>
+        checkNotNull(imgs[elementImage.imageId])
+      ),
+      isDraggable: element.isDraggable
+    };
+  }
+  function convertPiece(piece: fbr.Piece, elements: ElementIdToElement): Piece {
+    return {
+      deckPieceIndex: piece.deckPieceIndex,
+      element: checkNotNull(elements[piece.pieceElementId]),
+      initialState: piece.initialState
+    };
+  }
+  function convertGameSpec(
+    gameSpec: fbr.GameSpec,
+    imgs: ImageIdToImage,
+    elements: ElementIdToElement
+  ): GameSpec {
+    return {
+      board: checkNotNull(imgs[gameSpec.board.imageId]),
+      pieces: convertObjectToArray(gameSpec.pieces).map(piece =>
+        convertPiece(piece, elements)
+      )
+    };
+  }
 
   // Eventually dispatches the action setMatchesList
   // every time this field is updated:
@@ -281,20 +390,12 @@ export namespace ourFirebase {
   function convertPiecesStateToMatchState(
     piecesState: fbr.PiecesState
   ): MatchState {
-    const newMatchStates: MatchState = {};
-    const tempPieces = piecesState ? piecesState : {};
-    Object.keys(tempPieces).forEach(tempPieceKey => {
-      let newMatchState: PieceState;
-      newMatchState = {
-        x: tempPieces[tempPieceKey].currentState.x,
-        y: tempPieces[tempPieceKey].currentState.y,
-        zDepth: tempPieces[tempPieceKey].currentState.zDepth,
-        cardVisibility: tempPieces[tempPieceKey].currentState.cardVisibility,
-        currentImageIndex:
-          tempPieces[tempPieceKey].currentState.currentImageIndex
-      };
-      newMatchStates[tempPieceKey] = newMatchState;
-    });
+    if (!piecesState) {
+      return [];
+    }
+    const newMatchStates: MatchState = convertObjectToArray(piecesState).map(
+      state => state.currentState
+    );
     return newMatchStates;
   }
 
@@ -302,8 +403,8 @@ export namespace ourFirebase {
     matchState: MatchState
   ): fbr.PiecesState {
     const piecesState: fbr.PiecesState = {};
-    for (let pieceIndex of Object.keys(matchState)) {
-      const pieceState = matchState[pieceIndex];
+    let pieceIndex = 0;
+    for (let pieceState of matchState) {
       piecesState[pieceIndex] = {
         currentState: {
           x: pieceState.x,
@@ -315,6 +416,7 @@ export namespace ourFirebase {
           drawing: {}
         }
       };
+      pieceIndex++;
     }
     return piecesState;
   }
