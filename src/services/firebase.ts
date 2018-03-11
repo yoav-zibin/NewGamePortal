@@ -1,4 +1,3 @@
-// import { Contact } from '../types/index';
 import { store, dispatch } from '../stores';
 import * as firebase from 'firebase';
 import {
@@ -24,7 +23,8 @@ import {
   GameSpec,
   Piece,
   GameSpecIdToGameSpec,
-  GameSpecs
+  GameSpecs,
+  PieceState
 } from '../types';
 import { Action } from '../reducers';
 
@@ -380,10 +380,23 @@ export namespace ourFirebase {
     addMatchMembership(userId, matchId);
   }
 
+  // Call this after resetting a match or shuffling a deck.
   export function updateMatchState(match: MatchInfo, matchState: MatchState) {
-    refUpdate(
+    refSet(
       getRef(`/gamePortal/matches/${match.matchId}/pieces`),
       convertMatchStateToPiecesState(matchState)
+    );
+  }
+
+  // Call this after updating a single piece.
+  export function updatePieceState(
+    match: MatchInfo,
+    pieceIndex: number,
+    pieceState: PieceState
+  ) {
+    refSet(
+      getRef(`/gamePortal/matches/${match.matchId}/pieces/${pieceIndex}`),
+      convertPieceState(pieceState)
     );
   }
 
@@ -399,23 +412,26 @@ export namespace ourFirebase {
     return newMatchStates;
   }
 
+  function convertPieceState(pieceState: PieceState): fbr.PieceState {
+    return {
+      currentState: {
+        x: pieceState.x,
+        y: pieceState.y,
+        zDepth: pieceState.zDepth,
+        currentImageIndex: pieceState.currentImageIndex,
+        cardVisibility: pieceState.cardVisibility,
+        rotationDegrees: 360,
+        drawing: {}
+      }
+    };
+  }
   function convertMatchStateToPiecesState(
     matchState: MatchState
   ): fbr.PiecesState {
     const piecesState: fbr.PiecesState = {};
     let pieceIndex = 0;
     for (let pieceState of matchState) {
-      piecesState[pieceIndex] = {
-        currentState: {
-          x: pieceState.x,
-          y: pieceState.y,
-          zDepth: pieceState.zDepth,
-          currentImageIndex: pieceState.currentImageIndex,
-          cardVisibility: pieceState.cardVisibility,
-          rotationDegrees: 360,
-          drawing: {}
-        }
-      };
+      piecesState[pieceIndex] = convertPieceState(pieceState);
       pieceIndex++;
     }
     return piecesState;
