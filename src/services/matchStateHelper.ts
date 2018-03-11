@@ -1,4 +1,4 @@
-import { MatchInfo, GameSpec } from '../types';
+import { MatchInfo, GameSpec, BooleanIndexer } from '../types';
 import { checkCondition, checkNotNull } from '../globals';
 
 export class MatchStateHelper {
@@ -91,6 +91,22 @@ export class MatchStateHelper {
         p.y = deckPos.y + position * deckHeightPercent;
       }
       p.cardVisibility = {}; // Hidden from everyone.
+    });
+  }
+
+  resetMatch() {
+    this.match.matchState = this.spec.pieces.map(piece => piece.initialState);
+    const decksShuffled: BooleanIndexer = {};
+    this.spec.pieces.forEach((p, index) => {
+      if (p.element.elementKind === 'dice') {
+        this.rollDice(index);
+      } else if (
+        p.deckPieceIndex !== -1 &&
+        !(p.deckPieceIndex in decksShuffled)
+      ) {
+        decksShuffled[p.deckPieceIndex] = true;
+        this.shuffleDeck(p.deckPieceIndex);
+      }
     });
   }
 
