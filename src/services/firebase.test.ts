@@ -8,7 +8,13 @@ import {
   MatchInfo,
   GameInfo,
   UserIdsAndPhoneNumbers,
-  PhoneNumberToContact
+  PhoneNumberToContact,
+  GameSpec,
+  Image,
+  GameSpecs,
+  Piece,
+  Element,
+  PieceState
 } from '../types/index';
 import { store, dispatch } from '../stores';
 import { checkCondition } from '../globals';
@@ -30,6 +36,7 @@ afterEach(done => {
 });
 
 // Using real gameSpecId (so no need to insert game spec into db).
+// TODO: refactor this once fetchGamesList is implemented.
 const gameInfo: GameInfo = {
   gameSpecId: '-KxLz3AY3-xB47ZXN9Az',
   gameName: '3 Man Chess',
@@ -42,15 +49,55 @@ const gameInfo: GameInfo = {
   }
 };
 dispatch({ setGamesList: [gameInfo] });
+
+const image: Image = {
+  imageId: 'someImageId',
+  downloadURL: 'https://someurl.com/foo.png',
+  height: 1024,
+  width: 700,
+  isBoardImage: true
+};
+const element: Element = {
+  elementId: 'someElementId',
+  elementKind: 'standard',
+  images: [image],
+  isDraggable: true,
+  width: 100,
+  height: 100
+};
+const pieceState: PieceState = {
+  x: 0,
+  y: 0,
+  zDepth: 1,
+  cardVisibility: {},
+  currentImageIndex: 0
+};
+const piece: Piece = {
+  deckPieceIndex: -1,
+  element: element,
+  initialState: pieceState
+};
+const gameSpec: GameSpec = {
+  board: image,
+  pieces: [piece]
+};
+const gameSpecs: GameSpecs = {
+  imageIdToImage: {
+    [image.imageId]: image
+  },
+  elementIdToElement: {
+    [element.elementId]: element
+  },
+  gameSpecIdToGameSpec: {
+    [gameInfo.gameSpecId]: gameSpec
+  }
+};
+dispatch({ updateGameSpecs: gameSpecs });
+
 const existingUserId = '0E25lvSVm5bTHrQT517kPafiAia2';
-// Since our test use anonymous login
-// and the rules only allow you to write there if you have auth.token.phone_number
-// we can not add in gamePortal/PhoneNumberToUserId/${phoneNumber}
-// So firebase rules add "123456789" for test
-const magicPhoneNumberForTest = '123456789';
 
 function createMatch() {
-  return ourFirebase.createMatch(gameInfo, []);
+  return ourFirebase.createMatch(gameInfo, [pieceState]);
 }
 
 // Must be the first test: signs in anonyously, writeUser,
@@ -60,7 +107,7 @@ it('signInAnonymously finished successfully', done => {
     .auth()
     .signInAnonymously()
     .then(() => {
-      ourFirebase.writeUser(magicPhoneNumberForTest);
+      ourFirebase.writeUser(ourFirebase.magicPhoneNumberForTest);
       done();
     })
     .catch(err => {
@@ -74,7 +121,6 @@ it('adds a new match in firebase', () => {
 });
 
 it('Should update the match state', () => {
-  // take match state and matchinfo
   const state: MatchState = [
     {
       x: 100,
@@ -86,6 +132,18 @@ it('Should update the match state', () => {
   ];
   const match: MatchInfo = createMatch();
   ourFirebase.updateMatchState(match, state);
+});
+
+it('Should update the piece state', () => {
+  const newPieceState: PieceState = {
+    x: 55,
+    y: 55,
+    zDepth: 200,
+    currentImageIndex: 0,
+    cardVisibility: { '0': true }
+  };
+  const match: MatchInfo = createMatch();
+  ourFirebase.updatePieceState(match, 0, newPieceState);
 });
 
 it('addFcmTokens', () => {
@@ -122,6 +180,7 @@ it('fetch match list from firebase', done => {
 it('Should update the phone numbers', done => {
   // write something to gameportal/phoneNumberToUserId
   // get string from contact and convert them to string
+  const magicPhoneNumberForTest = ourFirebase.magicPhoneNumberForTest;
   const phoneNumbers: PhoneNumberToContact = {
     [magicPhoneNumberForTest]: {
       phoneNumber: magicPhoneNumberForTest,

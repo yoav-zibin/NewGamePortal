@@ -99,16 +99,37 @@ export namespace ourFirebase {
       timestamp: getTimestamp()
     };
     if (phoneNumber) {
+      checkPhoneNum(phoneNumber);
       refSet(
         getRef(`/gamePortal/phoneNumberToUserId/${phoneNumber}`),
         phoneNumberFbr
       );
     }
 
+    dispatch({
+      setMyUser: {
+        myUserId: user.uid,
+        myCountryCode: myCountryCode,
+        myPhoneNumber: phoneNumber
+      }
+    });
     // call all checkFunctionIsCalledOnce.
     listenToMyMatchesList();
     // TODO: put data fetchGamesList();
     listenToSignals();
+  }
+
+  // Since our test use anonymous login
+  // and the rules only allow you to write there if you have auth.token.phone_number
+  // we can not add in gamePortal/PhoneNumberToUserId/${phoneNumber}
+  // So firebase rules add "123456789" for test
+  export const magicPhoneNumberForTest = '123456789';
+
+  export function checkPhoneNum(phoneNum: string) {
+    checkCondition(
+      'phone num',
+      /^[+][0-9]{5,20}$/.test(phoneNum) || phoneNum === magicPhoneNumberForTest
+    );
   }
 
   // Eventually dispatches the action setGamesList.
@@ -362,10 +383,15 @@ export namespace ourFirebase {
     refUpdate(getMatchMembershipsRef(toUserId), matchMemberships);
   }
 
+  const MAX_USERS_IN_MATCH = 8;
   export function addParticipant(match: MatchInfo, userId: string) {
     checkCondition(
       'addParticipant',
       match.participantsUserIds.indexOf(userId) === -1
+    );
+    checkCondition(
+      'MAX_USERS_IN_MATCH',
+      match.participantsUserIds.length < MAX_USERS_IN_MATCH
     );
     const matchId = match.matchId;
     const participantNumber = match.participantsUserIds.length;
@@ -382,10 +408,11 @@ export namespace ourFirebase {
 
   // Call this after resetting a match or shuffling a deck.
   export function updateMatchState(match: MatchInfo, matchState: MatchState) {
-    refSet(
-      getRef(`/gamePortal/matches/${match.matchId}/pieces`),
-      convertMatchStateToPiecesState(matchState)
-    );
+    checkCondition('updateMatchState', matchState.length > 0);
+    const updates: any = {};
+    updates['pieces'] = convertMatchStateToPiecesState(matchState);
+    updates['lastUpdatedOn'] = getTimestamp();
+    refUpdate(getRef(`/gamePortal/matches/${match.matchId}`), updates);
   }
 
   // Call this after updating a single piece.
@@ -394,10 +421,10 @@ export namespace ourFirebase {
     pieceIndex: number,
     pieceState: PieceState
   ) {
-    refSet(
-      getRef(`/gamePortal/matches/${match.matchId}/pieces/${pieceIndex}`),
-      convertPieceState(pieceState)
-    );
+    const updates: any = {};
+    updates[`pieces/${pieceIndex}`] = convertPieceState(pieceState);
+    updates['lastUpdatedOn'] = getTimestamp();
+    refUpdate(getRef(`/gamePortal/matches/${match.matchId}`), updates);
   }
 
   function convertPiecesStateToMatchState(
@@ -452,6 +479,7 @@ export namespace ourFirebase {
   export function storeContacts(currentContacts: PhoneNumberToContact) {
     checkFunctionIsCalledOnce('storeContacts');
     const currentPhoneNumbers = Object.keys(currentContacts);
+    currentPhoneNumbers.forEach(phoneNumber => checkPhoneNum(phoneNumber));
     const state = store.getState();
 
     // Mapping phone number to userId for those numbers that don't have a userId.

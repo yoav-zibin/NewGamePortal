@@ -56,6 +56,18 @@ function checkStoreInvariants(state: StoreState) {
     'currentMatchIndex is in range',
     isInRange(state.currentMatchIndex, state.matchesList)
   );
+  state.matchesList.forEach(match => {
+    checkCondition(
+      'I play in match',
+      match.participantsUserIds.indexOf(state.myUser.myUserId) !== -1
+    );
+    checkCondition(
+      'correct num pieces',
+      match.matchState.length ===
+        state.gameSpecs.gameSpecIdToGameSpec[match.game.gameSpecId].pieces
+          .length
+    );
+  });
 
   const userIdsAndPhoneNumbers = state.userIdsAndPhoneNumbers;
   checkCondition(

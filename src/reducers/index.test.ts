@@ -24,7 +24,7 @@ const image: Image = {
 };
 
 const gameInfo: GameInfo = {
-  gameSpecId: 'someId',
+  gameSpecId: '123',
   gameName: 'Some game name',
   screenShoot: image
 };
@@ -32,13 +32,13 @@ const gameInfo: GameInfo = {
 const matchInfo: MatchInfo = {
   matchId: 'someId',
   game: gameInfo,
-  participantsUserIds: [], // including myself
+  participantsUserIds: ['7UbETkgeXxe0RId6KxYioSJdARs1'], // including myself
   lastUpdatedOn: 1234,
   matchState: []
 };
 
 const userInfo: MyUser = {
-  myUserId: 'someId',
+  myUserId: '7UbETkgeXxe0RId6KxYioSJdARs1',
   myPhoneNumber: 'Some phone number',
   myCountryCode: ''
 };
@@ -67,9 +67,20 @@ const initialState: StoreState = {
     }
   ],
   gameSpecs: {
-    imageIdToImage: {},
+    imageIdToImage: {
+      [image.imageId]: image
+    },
     elementIdToElement: {},
-    gameSpecIdToGameSpec: {}
+    gameSpecIdToGameSpec: {
+      '123': {
+        board: image,
+        pieces: []
+      },
+      '456': {
+        board: image,
+        pieces: []
+      }
+    }
   },
   matchesList: [
     {
