@@ -14,7 +14,6 @@ export interface StoreState {
   myUser: MyUser;
 
   signals: SignalEntry[];
-  activeGame: string; // gameSpecId of selected game
 }
 
 export interface UserIdsAndPhoneNumbers {

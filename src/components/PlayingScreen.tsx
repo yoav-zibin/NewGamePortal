@@ -5,7 +5,7 @@ import { StoreState } from '../types/index';
 import { connect } from 'react-redux';
 
 const mapStateToProps = (state: StoreState) => {
-  const selectedGameId = state.activeGame;
+  const selectedGameId = state.currentMatchIndex;
   return {
     pieces: state.gameSpecs['gameSpecIdToGameSpec'][selectedGameId]['pieces']
   };

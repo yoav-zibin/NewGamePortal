@@ -24,7 +24,7 @@ ReactDOM.render(
       >
         <div>
           <Route path="/" component={App} />
-          <Route path="/board" component={PlayingScreen} />
+          <Route path="/match/:matchId" component={PlayingScreen} />
         </div>
       </BrowserRouter>
     </Provider>
