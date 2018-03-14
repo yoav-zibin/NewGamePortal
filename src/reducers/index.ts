@@ -71,7 +71,8 @@ function checkStoreInvariants(state: StoreState) {
 
   const userIdsAndPhoneNumbers = state.userIdsAndPhoneNumbers;
   checkCondition(
-    'UserIdsAndPhoneNumbers have two mappings that are exactly the reverse of each other',
+    'UserIdsAndPhoneNumbers',
+    // UserIdsAndPhoneNumbers have two mappings that are exactly the reverse of each other
     checkEqual(
       Object.keys(userIdsAndPhoneNumbers.phoneNumberToUserId),
       getValues(userIdsAndPhoneNumbers.userIdToPhoneNumber)
@@ -90,12 +91,9 @@ function checkStoreInvariants(state: StoreState) {
   Object.keys(gameSpecIdToGameSpec).forEach(gameSpecId => {
     const gameSpec = gameSpecIdToGameSpec[gameSpecId];
     checkCondition(
-      'board image must be in imageIdToImage',
-      gameSpec.board === imageIdToImage[gameSpec.board.imageId]
-    );
-    checkCondition(
-      'board image must have isBoardImage=true',
-      gameSpec.board.isBoardImage
+      'board image',
+      gameSpec.board === imageIdToImage[gameSpec.board.imageId] &&
+        gameSpec.board.isBoardImage
     );
     gameSpec.pieces.forEach(piece => {
       checkCondition(
@@ -146,7 +144,7 @@ function checkStoreInvariants(state: StoreState) {
         checkCondition('deck has 1 image', element.images.length === 1);
         break;
       default:
-        checkCondition('Illegal elementKind=' + element.elementKind, false);
+        checkCondition('Illegal elementKind', false);
         break;
     }
   });

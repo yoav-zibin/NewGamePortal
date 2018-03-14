@@ -30,6 +30,11 @@ const testConfig = {
 ourFirebase.init(testConfig);
 ourFirebase.allPromisesForTests = [];
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
+(<any>jasmine).getEnv().addReporter({
+  specStarted: function(result: any) {
+    console.log(result.fullName);
+  }
+});
 
 afterEach(done => {
   Promise.all(ourFirebase.allPromisesForTests!).then(done);
@@ -40,7 +45,7 @@ afterEach(done => {
 const gameInfo: GameInfo = {
   gameSpecId: '-KxLz3AY3-xB47ZXN9Az',
   gameName: '3 Man Chess',
-  screenShoot: {
+  screenShot: {
     imageId: '-KuXdJ2ZJPJ-Ad_k02Tf',
     downloadURL: 'https://someurl.com/foo.png',
     height: 1024,
@@ -94,7 +99,7 @@ const gameSpecs: GameSpecs = {
 };
 dispatch({ updateGameSpecs: gameSpecs });
 
-const existingUserId = '0E25lvSVm5bTHrQT517kPafiAia2';
+const existingUserId = '1DkjALsO65UkFT68kE7Ll5LYkET2';
 
 function createMatch() {
   return ourFirebase.createMatch(gameInfo, [pieceState]);
@@ -232,13 +237,13 @@ it('fetch signal list from firebase', done => {
 });
 
 // TODO: check once.
-xit('fetchAllGameSpecs', done => {
-  store.subscribe(() => {
-    const gamesList = store.getState().gamesList;
-    if (gamesList.length > 0) {
-      checkCondition('>170 games', gamesList.length > 170);
-    }
-    gamesList.forEach(g => ourFirebase.fetchGameSpec(g));
-    done();
-  });
+it('fetchAllGameSpecs', () => {
+  const gamesList = store.getState().gamesList;
+  if (gamesList.length > 0) {
+    checkCondition(
+      '>170 games gamesList.length=' + gamesList.length,
+      gamesList.length > 170
+    );
+  }
+  // gamesList.forEach(g => ourFirebase.fetchGameSpec(g));
 });

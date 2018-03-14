@@ -26,7 +26,7 @@ const image: Image = {
 const gameInfo: GameInfo = {
   gameSpecId: '123',
   gameName: 'Some game name',
-  screenShoot: image
+  screenShot: image
 };
 
 const matchInfo: MatchInfo = {
@@ -58,12 +58,12 @@ const initialState: StoreState = {
     {
       gameSpecId: '123',
       gameName: '3 Men Chess',
-      screenShoot: image
+      screenShot: image
     },
     {
       gameSpecId: '456',
       gameName: 'Checkers',
-      screenShoot: image
+      screenShot: image
     }
   ],
   gameSpecs: {
@@ -88,7 +88,7 @@ const initialState: StoreState = {
       game: {
         gameSpecId: '123',
         gameName: '3 Men Chess',
-        screenShoot: image
+        screenShot: image
       },
       participantsUserIds: ['7UbETkgeXxe0RId6KxYioSJdARs1'], // including myself
       lastUpdatedOn: 1234,
@@ -99,7 +99,7 @@ const initialState: StoreState = {
       game: {
         gameSpecId: '456',
         gameName: 'Checkers',
-        screenShoot: image
+        screenShot: image
       },
       participantsUserIds: ['7UbETkgeXxe0RId6KxYioSJdARs1'], // including myself
       lastUpdatedOn: 1564,

@@ -61,6 +61,7 @@ export namespace ourFirebase {
     applicationVerifier: firebase.auth.ApplicationVerifier
   ): Promise<any> {
     checkFunctionIsCalledOnce('signInWithPhoneNumber');
+    checkCondition('countryCode', countryCode.length === 2);
     myCountryCode = countryCode;
     // Eventually call writeUser.
     // TODO: set recaptcha
@@ -115,7 +116,7 @@ export namespace ourFirebase {
     });
     // call all checkFunctionIsCalledOnce.
     listenToMyMatchesList();
-    // TODO: put data fetchGamesList();
+    fetchGamesList();
     listenToSignals();
   }
 
@@ -126,10 +127,9 @@ export namespace ourFirebase {
   export const magicPhoneNumberForTest = '123456789';
 
   export function checkPhoneNum(phoneNum: string) {
-    checkCondition(
-      'phone num',
-      /^[+][0-9]{5,20}$/.test(phoneNum) || phoneNum === magicPhoneNumberForTest
-    );
+    const isValidNum =
+      /^[+][0-9]{5,20}$/.test(phoneNum) || phoneNum === magicPhoneNumberForTest;
+    checkCondition('phone num', isValidNum);
   }
 
   // Eventually dispatches the action setGamesList.
@@ -142,13 +142,13 @@ export namespace ourFirebase {
         throw new Error('no games!');
       }
       const gameList: GameInfo[] = getValues(gameInfos).map(gameInfoFbr => {
-        const screenShootImage = gameInfoFbr.screenShootImage;
+        const screenShotImage = gameInfoFbr.screenShotImage;
         const gameInfo: GameInfo = {
           gameSpecId: gameInfoFbr.gameSpecId,
           gameName: gameInfoFbr.gameName,
-          screenShoot: convertImage(
-            gameInfoFbr.screenShootImageId,
-            screenShootImage
+          screenShot: convertImage(
+            gameInfoFbr.screenShotImageId,
+            screenShotImage
           )
         };
         return gameInfo;
@@ -216,6 +216,7 @@ export namespace ourFirebase {
     return vals;
   }
   function convertImage(imageId: string, img: fbr.Image): Image {
+    checkCondition('compressed', img.cloudStoragePath.startsWith('compressed'));
     return {
       imageId: imageId,
       height: img.height,
@@ -580,6 +581,7 @@ export namespace ourFirebase {
     signalType: 'sdp' | 'candidate',
     signalData: string
   ) {
+    checkCondition('sendSignal', signalData.length < 10000);
     const userId = getUserId();
     const signalFbr: fbr.SignalEntry = {
       addedByUid: userId,
@@ -594,12 +596,13 @@ export namespace ourFirebase {
   }
 
   export function addFcmToken(fcmToken: string, platform: 'ios' | 'android') {
+    checkCondition('addFcmToken', /^.{140,200}$/.test(fcmToken));
     // Can be called multiple times if the token is updated.
     const fcmTokenObj: fbr.FcmToken = {
       lastTimeReceived: <any>firebase.database.ServerValue.TIMESTAMP,
       platform: platform
     };
-    return refSet(
+    refSet(
       getRef(
         `/gamePortal/gamePortalUsers/${getUserId()}/privateFields/fcmTokens/${fcmToken}`
       ),

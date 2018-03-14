@@ -88,7 +88,7 @@ export interface Image {
 export interface GameInfo {
   gameSpecId: string;
   gameName: string;
-  screenShoot: Image;
+  screenShot: Image;
 }
 
 export interface GameSpec {
