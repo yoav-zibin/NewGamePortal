@@ -191,6 +191,11 @@ it('Should update the phone numbers', done => {
       phoneNumber: magicPhoneNumberForTest,
       name: 'name'
     },
+    '+1234567890123456789': {
+      phoneNumber: '+1234567890123456789',
+      name:
+        '………nameThatsVeryLong שם בעברית nameThatsVeryLong nameThatsVeryLong nameThatsVeryLong!'
+    },
     '+666666': {
       phoneNumber: '+666666',
       name: 'name666666'

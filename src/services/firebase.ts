@@ -114,10 +114,11 @@ export namespace ourFirebase {
         myPhoneNumber: phoneNumber
       }
     });
-    // call all checkFunctionIsCalledOnce.
-    listenToMyMatchesList();
-    fetchGamesList();
-    listenToSignals();
+    // I can only listen to matches after I got the match list (because I convert gameSpecId to gameInfo).
+    fetchGamesList().then(() => {
+      listenToMyMatchesList();
+      listenToSignals();
+    });
   }
 
   // Since our test use anonymous login
@@ -133,28 +134,30 @@ export namespace ourFirebase {
   }
 
   // Eventually dispatches the action setGamesList.
-  export function fetchGamesList() {
-    checkFunctionIsCalledOnce('fetchGamesList');
+  function fetchGamesList() {
     assertLoggedIn();
-    getRef('/gamePortal/gamesInfoAndSpec/gameInfos').once('value', snapshot => {
-      const gameInfos: fbr.GameInfos = snapshot.val();
-      if (!gameInfos) {
-        throw new Error('no games!');
+    return getRef('/gamePortal/gamesInfoAndSpec/gameInfos').once(
+      'value',
+      snapshot => {
+        const gameInfos: fbr.GameInfos = snapshot.val();
+        if (!gameInfos) {
+          throw new Error('no games!');
+        }
+        const gameList: GameInfo[] = getValues(gameInfos).map(gameInfoFbr => {
+          const screenShotImage = gameInfoFbr.screenShotImage;
+          const gameInfo: GameInfo = {
+            gameSpecId: gameInfoFbr.gameSpecId,
+            gameName: gameInfoFbr.gameName,
+            screenShot: convertImage(
+              gameInfoFbr.screenShotImageId,
+              screenShotImage
+            )
+          };
+          return gameInfo;
+        });
+        dispatch({ setGamesList: gameList });
       }
-      const gameList: GameInfo[] = getValues(gameInfos).map(gameInfoFbr => {
-        const screenShotImage = gameInfoFbr.screenShotImage;
-        const gameInfo: GameInfo = {
-          gameSpecId: gameInfoFbr.gameSpecId,
-          gameName: gameInfoFbr.gameName,
-          screenShot: convertImage(
-            gameInfoFbr.screenShotImageId,
-            screenShotImage
-          )
-        };
-        return gameInfo;
-      });
-      dispatch({ setGamesList: gameList });
-    });
+    );
   }
 
   // Eventually dispatches the action updateGameSpecs.
@@ -265,7 +268,6 @@ export namespace ourFirebase {
   // every time this field is updated:
   //  /gamePortal/gamePortalUsers/$myUserId/privateButAddable/matchMemberships
   function listenToMyMatchesList() {
-    checkFunctionIsCalledOnce('listenToMyMatchesList');
     getMatchMembershipsRef().on('value', snap => {
       getMatchMemberships(snap ? snap.val() : {});
     });
@@ -481,6 +483,16 @@ export namespace ourFirebase {
     checkFunctionIsCalledOnce('storeContacts');
     const currentPhoneNumbers = Object.keys(currentContacts);
     currentPhoneNumbers.forEach(phoneNumber => checkPhoneNum(phoneNumber));
+    // Max contactName is 20 chars
+    currentPhoneNumbers.forEach(phoneNumber => {
+      const contact = currentContacts[phoneNumber];
+      if (contact.name.length > 17) {
+        contact.name = contact.name.substr(0, 17) + '…';
+      }
+      if (contact.name.length === 0) {
+        contact.name = 'Unknown name';
+      }
+    });
     const state = store.getState();
 
     // Mapping phone number to userId for those numbers that don't have a userId.
@@ -491,18 +503,30 @@ export namespace ourFirebase {
     );
     mapPhoneNumbersToUserIds(numbersWithoutUserId);
 
-    // TODO: Update firebase with changes to contacts (new contacts or name changed).
-    // const oldContacts = store.getState().phoneNumberToContact;
+    const updates = {};
+    const oldContacts = store.getState().phoneNumberToContact;
+    currentPhoneNumbers.forEach(phoneNumber => {
+      const currentContact = currentContacts[phoneNumber];
+      const oldContact = oldContacts[phoneNumber];
+      if (!oldContact) {
+        updates[`${phoneNumber}`] = { contactName: currentContact.name };
+      } else if (currentContact.name !== oldContact.name) {
+        updates[`${phoneNumber}/contactName`] = currentContact.name;
+      }
+    });
+    if (Object.keys(updates).length > 0) {
+      refUpdate(
+        getRef(
+          `/gamePortal/gamePortalUsers/${getUserId()}/privateFields/contacts`
+        ),
+        updates
+      );
+    }
 
-    // TODO: check firebase rules hold:
-    // "$contactPhoneNumber" matches(/^[+][0-9]{5,20}$/)
-    // "contactName": validateMandatoryString(20),
     dispatch({ updatePhoneNumberToContact: currentContacts });
   }
 
   function mapPhoneNumbersToUserIds(phoneNumbers: string[]) {
-    // TODO: compare with existing contacts in store.
-    // TODO: Store contacts in user info + name (so notifications will work).
     const userIdsAndPhoneNumbers: UserIdsAndPhoneNumbers = {
       phoneNumberToUserId: {},
       userIdToPhoneNumber: {}
@@ -538,7 +562,6 @@ export namespace ourFirebase {
 
   // Dispatches setSignals.
   function listenToSignals() {
-    checkFunctionIsCalledOnce('listenToSignals');
     const userId = getUserId();
     const ref = getRef(
       `/gamePortal/gamePortalUsers/${userId}/privateButAddable/signals`
