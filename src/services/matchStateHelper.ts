@@ -1,13 +1,23 @@
-import { MatchInfo, GameSpec, BooleanIndexer } from '../types';
+import { MatchInfo, GameSpec, BooleanIndexer, MatchState } from '../types';
 import { checkCondition, checkNotNull } from '../globals';
+import { store } from '../stores';
 
 export class MatchStateHelper {
+  spec: GameSpec;
+
+  static createInitialState(spec: GameSpec): MatchState {
+    checkCondition('spec', spec);
+    const m: MatchInfo = <MatchInfo>{ gameSpecId: spec.gameSpecId };
+    new MatchStateHelper(m, '').resetMatch();
+    return m.matchState;
+  }
+
   // All functions will modify match.matchState.
-  constructor(
-    private match: MatchInfo,
-    private myUserId: string,
-    private spec: GameSpec
-  ) {}
+  constructor(private match: MatchInfo, private myUserId: string) {
+    this.spec = checkNotNull(
+      store.getState().gameSpecs.gameSpecIdToGameSpec[match.gameSpecId]
+    );
+  }
 
   dragTo(pieceIndex: number, x: number, y: number) {
     checkCondition('dragToXY', -100 <= x && x <= 100 && -100 <= y && y <= 100);
@@ -43,7 +53,7 @@ export class MatchStateHelper {
     this.checkCard(cardIndex);
     const myIndex = this.match.participantsUserIds.indexOf(this.myUserId);
     const pieceState = this.getPieceState(cardIndex);
-    pieceState.cardVisibility[myIndex] = true;
+    pieceState.cardVisibilityPerIndex[myIndex] = true;
   }
 
   // Show a card to everyone (flip the card)
@@ -51,7 +61,7 @@ export class MatchStateHelper {
     this.checkCard(cardIndex);
     const pieceState = this.getPieceState(cardIndex);
     this.match.participantsUserIds.forEach((_userId, index) => {
-      pieceState.cardVisibility[index] = true;
+      pieceState.cardVisibilityPerIndex[index] = true;
     });
   }
 
@@ -59,10 +69,10 @@ export class MatchStateHelper {
   hideFromEveryone(cardIndex: number) {
     this.checkCard(cardIndex);
     const pieceState = this.getPieceState(cardIndex);
-    pieceState.cardVisibility = {};
+    pieceState.cardVisibilityPerIndex = {};
   }
 
-  // Shuffle a deck (updating x,y,z, and cardVisibility of all deck members)
+  // Shuffle a deck (updating x,y,z, and cardVisibilityPerIndex of all deck members)
   shuffleDeck(deckPieceIndex: number) {
     const spec = this.spec;
     const deck = checkNotNull(spec.pieces[deckPieceIndex]);
@@ -70,7 +80,7 @@ export class MatchStateHelper {
     checkCondition('shuffleDeck', deckKind.endsWith('Deck'));
     const deckPos = deck.initialState;
     const isCardsDeck = deckKind === 'cardsDeck';
-    // Updating the x,y,z, and cardVisibility of all deck members
+    // Updating the x,y,z, and cardVisibilityPerIndex of all deck members
     const maxZ = this.getMaxZ();
     this.match.matchState.forEach((p, index) => {
       if (spec.pieces[index].deckPieceIndex !== deckPieceIndex) {
@@ -90,7 +100,7 @@ export class MatchStateHelper {
         p.x = deckPos.x + position * deckWidthPercent;
         p.y = deckPos.y + position * deckHeightPercent;
       }
-      p.cardVisibility = {}; // Hidden from everyone.
+      p.cardVisibilityPerIndex = {}; // Hidden from everyone.
     });
   }
 

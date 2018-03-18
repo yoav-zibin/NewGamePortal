@@ -4,20 +4,14 @@
 import { ourFirebase } from './firebase';
 import * as firebase from 'firebase';
 import {
-  MatchState,
   MatchInfo,
-  GameInfo,
   UserIdsAndPhoneNumbers,
   PhoneNumberToContact,
-  GameSpec,
-  Image,
-  GameSpecs,
-  Piece,
-  Element,
-  PieceState
+  GameSpecs
 } from '../types/index';
-import { store, dispatch } from '../stores';
-import { checkCondition } from '../globals';
+import { store } from '../stores';
+import { checkCondition, prettyJson } from '../globals';
+import { MatchStateHelper } from './matchStateHelper';
 
 const testConfig = {
   apiKey: 'AIzaSyA_UNWBNj7zXrrwMYq49aUaSQqygDg66SI',
@@ -36,84 +30,114 @@ jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
   }
 });
 
-afterEach(done => {
-  Promise.all(ourFirebase.allPromisesForTests!).then(done);
-});
-
-// Using real gameSpecId (so no need to insert game spec into db).
-// TODO: refactor this once fetchGamesList is implemented.
-const gameInfo: GameInfo = {
-  gameSpecId: '-KxLz3AY3-xB47ZXN9Az',
-  gameName: '3 Man Chess',
-  screenShot: {
-    imageId: '-KuXdJ2ZJPJ-Ad_k02Tf',
-    downloadURL: 'https://someurl.com/foo.png',
-    height: 1024,
-    width: 700,
-    isBoardImage: true
-  }
-};
-dispatch({ setGamesList: [gameInfo] });
-
-const image: Image = {
-  imageId: 'someImageId',
-  downloadURL: 'https://someurl.com/foo.png',
-  height: 1024,
-  width: 700,
-  isBoardImage: true
-};
-const element: Element = {
-  elementId: 'someElementId',
-  elementKind: 'standard',
-  images: [image],
-  isDraggable: true,
-  width: 100,
-  height: 100
-};
-const pieceState: PieceState = {
-  x: 0,
-  y: 0,
-  zDepth: 1,
-  cardVisibility: {},
-  currentImageIndex: 0
-};
-const piece: Piece = {
-  deckPieceIndex: -1,
-  element: element,
-  initialState: pieceState
-};
-const gameSpec: GameSpec = {
-  board: image,
-  pieces: [piece]
-};
-const gameSpecs: GameSpecs = {
-  imageIdToImage: {
-    [image.imageId]: image
-  },
-  elementIdToElement: {
-    [element.elementId]: element
-  },
-  gameSpecIdToGameSpec: {
-    [gameInfo.gameSpecId]: gameSpec
-  }
-};
-dispatch({ updateGameSpecs: gameSpecs });
-
+// If you remove all gamePortalUsers, then remember to create one for the test.
 const existingUserId = '1DkjALsO65UkFT68kE7Ll5LYkET2';
 
 function createMatch() {
-  return ourFirebase.createMatch(gameInfo, [pieceState]);
+  const state = store.getState();
+  const gamesList = state.gamesList;
+  const gameInfo = gamesList.find(gameInList =>
+    gameInList.gameName.includes('opoly')
+  )!;
+  const gameSpec = state.gameSpecs.gameSpecIdToGameSpec[gameInfo.gameSpecId];
+  if (!gameSpec) {
+    throw new Error("Can't find gameInfo.gameSpecId=" + gameInfo.gameSpecId);
+  }
+  const initialState = MatchStateHelper.createInitialState(gameSpec);
+  return ourFirebase.createMatch(gameInfo, initialState);
 }
 
-// Must be the first test: signs in anonyously, writeUser,
-// and other methods that can be called just once.
-it('signInAnonymously finished successfully', done => {
+function checkGameSpecs(gameSpecs: GameSpecs) {
+  const {
+    elementIdToElement,
+    imageIdToImage,
+    gameSpecIdToGameSpec
+  } = gameSpecs;
+  Object.keys(gameSpecIdToGameSpec).forEach(gameSpecId => {
+    const gameSpec = gameSpecIdToGameSpec[gameSpecId];
+    expect(gameSpec.board).toEqual(imageIdToImage[gameSpec.board.imageId]);
+    expect(gameSpec.board.isBoardImage).toBe(true);
+    gameSpec.pieces.forEach(piece => {
+      expect(piece.element).toEqual(
+        elementIdToElement[piece.element.elementId]
+      );
+      if (piece.deckPieceIndex !== -1) {
+        checkCondition(
+          'piece must be a card to have deckPieceIndex: gameSpecId=' +
+            gameSpecId +
+            ' piece=' +
+            prettyJson(piece),
+          piece.element.elementKind === 'card'
+        );
+        const deck = gameSpec.pieces[piece.deckPieceIndex].element;
+        checkCondition(
+          'deckPieceIndex points to a deck',
+          deck.elementKind.endsWith('Deck')
+        );
+      }
+    });
+  });
+  Object.keys(elementIdToElement).forEach(elementId => {
+    const element = elementIdToElement[elementId];
+    element.images.forEach(image => {
+      expect(image).toEqual(imageIdToImage[image.imageId]);
+    });
+    // Some checks based on the element kind
+    switch (element.elementKind) {
+      case 'standard':
+        checkCondition(
+          'standard piece has 1 image',
+          element.images.length === 1
+        );
+        break;
+      case 'toggable':
+      case 'dice':
+        checkCondition(
+          'toggable|diece piece has 1 or more images',
+          element.images.length >= 1
+        );
+        break;
+      case 'card':
+        checkCondition('card piece has 2 images', element.images.length === 2);
+        break;
+      case 'cardsDeck':
+      case 'piecesDeck':
+        checkCondition('deck has 1 image', element.images.length === 1);
+        break;
+      default:
+        checkCondition('Illegal elementKind', false);
+        break;
+    }
+  });
+}
+
+function fetchAllGameSpecs() {
+  const gamesList = store.getState().gamesList;
+  expect(gamesList.length).toEqual(183);
+  gamesList.forEach(g => ourFirebase.fetchGameSpec(g));
+}
+
+function getAllPromisesForTests() {
+  return Promise.all(ourFirebase.allPromisesForTests!);
+}
+
+beforeAll(done => {
   firebase
     .auth()
     .signInAnonymously()
     .then(() => {
       ourFirebase.writeUser(ourFirebase.magicPhoneNumberForTest);
-      done();
+      getAllPromisesForTests().then(() => {
+        fetchAllGameSpecs();
+        getAllPromisesForTests().then(() => {
+          const state = store.getState();
+          checkGameSpecs(state.gameSpecs);
+          expect(state.gamesList.length).toEqual(
+            Object.keys(state.gameSpecs.gameSpecIdToGameSpec).length
+          );
+          done();
+        });
+      });
     })
     .catch(err => {
       console.error('error in signInAnonymously with err=', err);
@@ -121,34 +145,24 @@ it('signInAnonymously finished successfully', done => {
     });
 });
 
+afterEach(done => {
+  getAllPromisesForTests().then(done);
+});
+
 it('adds a new match in firebase', () => {
   createMatch();
 });
 
 it('Should update the match state', () => {
-  const state: MatchState = [
-    {
-      x: 100,
-      y: 100,
-      zDepth: 1,
-      currentImageIndex: 0,
-      cardVisibility: { '0': true }
-    }
-  ];
   const match: MatchInfo = createMatch();
-  ourFirebase.updateMatchState(match, state);
-});
-
-it('Should update the piece state', () => {
-  const newPieceState: PieceState = {
-    x: 55,
-    y: 55,
-    zDepth: 200,
-    currentImageIndex: 0,
-    cardVisibility: { '0': true }
-  };
-  const match: MatchInfo = createMatch();
-  ourFirebase.updatePieceState(match, 0, newPieceState);
+  const matchStateHelper = new MatchStateHelper(match, ourFirebase.getUserId());
+  const spec = matchStateHelper.spec;
+  const piece = spec.pieces.find(p => p.element.elementKind === 'card')!;
+  const pieceIndex = spec.pieces.indexOf(piece);
+  matchStateHelper.showMe(pieceIndex);
+  ourFirebase.updateMatchState(match);
+  matchStateHelper.showEveryone(pieceIndex);
+  ourFirebase.updatePieceState(match, pieceIndex);
 });
 
 it('addFcmTokens', () => {
@@ -239,16 +253,4 @@ it('fetch signal list from firebase', done => {
   });
   // send a signal
   ourFirebase.sendSignal(userId, 'candidate', 'hello');
-});
-
-// TODO: check once.
-it('fetchAllGameSpecs', () => {
-  const gamesList = store.getState().gamesList;
-  if (gamesList.length > 0) {
-    checkCondition(
-      '>170 games gamesList.length=' + gamesList.length,
-      gamesList.length > 170
-    );
-  }
-  // gamesList.forEach(g => ourFirebase.fetchGameSpec(g));
 });

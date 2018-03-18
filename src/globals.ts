@@ -7,7 +7,7 @@ export function checkCondition(desc: string, cond: any) {
 }
 
 export function checkNotNull<T>(val: T): T {
-  checkCondition('checkNotNul', val !== undefined && val !== null);
+  checkCondition('checkNotNull', val !== undefined && val !== null);
   return val;
 }
 

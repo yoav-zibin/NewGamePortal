@@ -31,6 +31,7 @@ const gameInfo: GameInfo = {
 
 const matchInfo: MatchInfo = {
   matchId: 'someId',
+  gameSpecId: gameInfo.gameSpecId,
   game: gameInfo,
   participantsUserIds: ['7UbETkgeXxe0RId6KxYioSJdARs1'], // including myself
   lastUpdatedOn: 1234,
@@ -73,10 +74,12 @@ const initialState: StoreState = {
     elementIdToElement: {},
     gameSpecIdToGameSpec: {
       '123': {
+        gameSpecId: '123',
         board: image,
         pieces: []
       },
       '456': {
+        gameSpecId: '456',
         board: image,
         pieces: []
       }
@@ -85,6 +88,7 @@ const initialState: StoreState = {
   matchesList: [
     {
       matchId: '1',
+      gameSpecId: '123',
       game: {
         gameSpecId: '123',
         gameName: '3 Men Chess',
@@ -96,6 +100,7 @@ const initialState: StoreState = {
     },
     {
       matchId: '2',
+      gameSpecId: '456',
       game: {
         gameSpecId: '456',
         gameName: 'Checkers',

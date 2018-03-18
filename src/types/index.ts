@@ -92,6 +92,7 @@ export interface GameInfo {
 }
 
 export interface GameSpec {
+  gameSpecId: string;
   board: Image;
   pieces: Piece[];
 }
@@ -101,11 +102,12 @@ export interface PieceState {
   y: number;
   zDepth: number;
   currentImageIndex: number;
-  cardVisibility: CardVisibility;
+  cardVisibilityPerIndex: CardVisibility;
 }
 
 export interface MatchInfo {
   matchId: string;
+  gameSpecId: string;
   game: GameInfo;
   participantsUserIds: string[]; // including myself
   lastUpdatedOn: number /*firebase.database.ServerValue.TIMESTAMP*/;

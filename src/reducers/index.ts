@@ -62,10 +62,9 @@ function checkStoreInvariants(state: StoreState) {
       match.participantsUserIds.indexOf(state.myUser.myUserId) !== -1
     );
     checkCondition(
-      'correct num pieces',
+      'matchState',
       match.matchState.length ===
-        state.gameSpecs.gameSpecIdToGameSpec[match.game.gameSpecId].pieces
-          .length
+        state.gameSpecs.gameSpecIdToGameSpec[match.gameSpecId].pieces.length
     );
   });
 
@@ -82,72 +81,6 @@ function checkStoreInvariants(state: StoreState) {
         getValues(userIdsAndPhoneNumbers.phoneNumberToUserId)
       )
   );
-
-  const {
-    elementIdToElement,
-    imageIdToImage,
-    gameSpecIdToGameSpec
-  } = state.gameSpecs;
-  Object.keys(gameSpecIdToGameSpec).forEach(gameSpecId => {
-    const gameSpec = gameSpecIdToGameSpec[gameSpecId];
-    checkCondition(
-      'board image',
-      gameSpec.board === imageIdToImage[gameSpec.board.imageId] &&
-        gameSpec.board.isBoardImage
-    );
-    gameSpec.pieces.forEach(piece => {
-      checkCondition(
-        'Every piece element must be in elementIdToElement',
-        piece.element === elementIdToElement[piece.element.elementId]
-      );
-      if (piece.deckPieceIndex !== -1) {
-        checkCondition(
-          'piece must be a card to have deckPieceIndex',
-          piece.element.elementKind === 'card'
-        );
-        const deck = gameSpec.pieces[piece.deckPieceIndex].element;
-        checkCondition(
-          'deckPieceIndex points to a deck',
-          deck.elementKind.endsWith('Deck')
-        );
-      }
-    });
-  });
-  Object.keys(elementIdToElement).forEach(elementId => {
-    const element = elementIdToElement[elementId];
-    element.images.forEach(image => {
-      checkCondition(
-        'element image must be in imageIdToImage',
-        image === imageIdToImage[image.imageId]
-      );
-    });
-    // Some checks based on the element kind
-    switch (element.elementKind) {
-      case 'standard':
-        checkCondition(
-          'standard piece has 1 image',
-          element.images.length === 1
-        );
-        break;
-      case 'toggable':
-      case 'dice':
-        checkCondition(
-          'toggable|diece piece has 1 or more images',
-          element.images.length >= 1
-        );
-        break;
-      case 'card':
-        checkCondition('card piece has 2 images', element.images.length === 2);
-        break;
-      case 'cardsDeck':
-      case 'piecesDeck':
-        checkCondition('deck has 1 image', element.images.length === 1);
-        break;
-      default:
-        checkCondition('Illegal elementKind', false);
-        break;
-    }
-  });
 }
 
 function reduce(state: StoreState, action: Action) {

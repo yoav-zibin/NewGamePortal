@@ -115,10 +115,9 @@ export namespace ourFirebase {
       }
     });
     // I can only listen to matches after I got the match list (because I convert gameSpecId to gameInfo).
-    fetchGamesList().then(() => {
-      listenToMyMatchesList();
-      listenToSignals();
-    });
+    listenToMyMatchesList();
+    fetchGamesList();
+    listenToSignals();
   }
 
   // Since our test use anonymous login
@@ -136,27 +135,31 @@ export namespace ourFirebase {
   // Eventually dispatches the action setGamesList.
   function fetchGamesList() {
     assertLoggedIn();
-    return getRef('/gamePortal/gamesInfoAndSpec/gameInfos').once(
-      'value',
-      snapshot => {
-        const gameInfos: fbr.GameInfos = snapshot.val();
-        if (!gameInfos) {
-          throw new Error('no games!');
+    addPromiseForTests(
+      getRef('/gamePortal/gamesInfoAndSpec/gameInfos').once(
+        'value',
+        snapshot => {
+          const gameInfos: fbr.GameInfos = snapshot.val();
+          if (!gameInfos) {
+            throw new Error('no games!');
+          }
+          const gameList: GameInfo[] = getValues(gameInfos).map(gameInfoFbr => {
+            const screenShotImage = gameInfoFbr.screenShotImage;
+            const gameInfo: GameInfo = {
+              gameSpecId: gameInfoFbr.gameSpecId,
+              gameName: gameInfoFbr.gameName,
+              screenShot: convertImage(
+                gameInfoFbr.screenShotImageId,
+                screenShotImage
+              )
+            };
+            return gameInfo;
+          });
+          gameList.sort((g1, g2) => g1.gameName.localeCompare(g2.gameName));
+          dispatch({ setGamesList: gameList });
+          maybeDispatchSetMatchesList();
         }
-        const gameList: GameInfo[] = getValues(gameInfos).map(gameInfoFbr => {
-          const screenShotImage = gameInfoFbr.screenShotImage;
-          const gameInfo: GameInfo = {
-            gameSpecId: gameInfoFbr.gameSpecId,
-            gameName: gameInfoFbr.gameName,
-            screenShot: convertImage(
-              gameInfoFbr.screenShotImageId,
-              screenShotImage
-            )
-          };
-          return gameInfo;
-        });
-        dispatch({ setGamesList: gameList });
-      }
+      )
     );
   }
 
@@ -164,18 +167,20 @@ export namespace ourFirebase {
   export function fetchGameSpec(game: GameInfo) {
     const gameSpecId = game.gameSpecId;
     assertLoggedIn();
-    getRef(
-      `/gamePortal/gamesInfoAndSpec/gameSpecsForPortal/${gameSpecId}`
-    ).once('value', snapshot => {
-      const gameSpecF: fbr.GameSpecForPortal = snapshot.val();
-      if (!gameSpecF) {
-        throw new Error('no game spec!');
-      }
-      const action: Action = {
-        updateGameSpecs: convertGameSpecForPortal(gameSpecId, gameSpecF)
-      };
-      dispatch(action);
-    });
+    addPromiseForTests(
+      getRef(
+        `/gamePortal/gamesInfoAndSpec/gameSpecsForPortal/${gameSpecId}`
+      ).once('value', snapshot => {
+        const gameSpecF: fbr.GameSpecForPortal = snapshot.val();
+        if (!gameSpecF) {
+          throw new Error('no game spec!');
+        }
+        const action: Action = {
+          updateGameSpecs: convertGameSpecForPortal(gameSpecId, gameSpecF)
+        };
+        dispatch(action);
+      })
+    );
   }
 
   function convertGameSpecForPortal(
@@ -195,6 +200,7 @@ export namespace ourFirebase {
 
     const gameSpecIdToGameSpec: GameSpecIdToGameSpec = {
       [gameSpecId]: convertGameSpec(
+        gameSpecId,
         gameSpec,
         imageIdToImage,
         elementIdToElement
@@ -248,15 +254,17 @@ export namespace ourFirebase {
     return {
       deckPieceIndex: piece.deckPieceIndex,
       element: checkNotNull(elements[piece.pieceElementId]),
-      initialState: piece.initialState
+      initialState: convertFbrPieceState(piece.initialState)
     };
   }
   function convertGameSpec(
+    gameSpecId: string,
     gameSpec: fbr.GameSpec,
     imgs: ImageIdToImage,
     elements: ElementIdToElement
   ): GameSpec {
     return {
+      gameSpecId: gameSpecId,
       board: checkNotNull(imgs[gameSpec.board.imageId]),
       pieces: convertObjectToArray(gameSpec.pieces).map(piece =>
         convertPiece(piece, elements)
@@ -296,6 +304,16 @@ export namespace ourFirebase {
     }
   }
 
+  function findGameInfo(gameSpecId: string): GameInfo {
+    const game: GameInfo | undefined = store
+      .getState()
+      .gamesList.find(gameInList => gameInList.gameSpecId === gameSpecId);
+    if (!game) {
+      console.warn('missing gameSpecId for match', game);
+    }
+    return game!;
+  }
+
   function listenToMatch(matchId: string) {
     checkCondition(
       'listeningToMatchIds',
@@ -312,11 +330,10 @@ export namespace ourFirebase {
         return;
       }
       const gameSpecId = matchFb.gameSpecId;
-      const game: GameInfo | undefined = store
-        .getState()
-        .gamesList.find(gameInList => gameInList.gameSpecId === gameSpecId);
-      checkCondition('missing gameSpecId for match', game);
-      const newMatchStates = convertPiecesStateToMatchState(matchFb.pieces);
+      const newMatchStates = convertPiecesStateToMatchState(
+        matchFb.pieces,
+        gameSpecId
+      );
       const participants = matchFb.participants;
       // Sort by participant's index (ascending participantIndex order)
       const participantsUserIds = Object.keys(participants).sort(
@@ -327,20 +344,34 @@ export namespace ourFirebase {
 
       const match: MatchInfo = {
         matchId: matchId,
-        game: game!,
+        gameSpecId: gameSpecId,
+        game: findGameInfo(gameSpecId),
         participantsUserIds: participantsUserIds,
         lastUpdatedOn: matchFb.lastUpdatedOn,
         matchState: newMatchStates
       };
       receivedMatches[matchId] = match;
-      const matches = getValues(receivedMatches);
-      if (matches.length === listeningToMatchIds.length) {
-        // We got all the matches.
-        // Sort by lastUpdatedOn (descending lastUpdatedOn order).
-        matches.sort((a, b) => b.lastUpdatedOn - a.lastUpdatedOn);
+      maybeDispatchSetMatchesList();
+    });
+  }
+
+  function maybeDispatchSetMatchesList() {
+    const matches = getValues(receivedMatches);
+    if (matches.length >= listeningToMatchIds.length) {
+      // We got all the matches.
+      // Sort by lastUpdatedOn (descending lastUpdatedOn order).
+      matches.sort((a, b) => b.lastUpdatedOn - a.lastUpdatedOn);
+      // If a match doesn't have a gameInfo (we didn't get the games list yet),
+      // then we'll dispatch setMatchesList after getting the gamesList.
+      matches.forEach(m => {
+        if (!m.game) {
+          m.game = findGameInfo(m.gameSpecId);
+        }
+      });
+      if (matches.every(m => !!m.game)) {
         dispatch({ setMatchesList: matches });
       }
-    });
+    }
   }
 
   export function createMatch(
@@ -355,18 +386,21 @@ export namespace ourFirebase {
       participantIndex: 0,
       pingOpponents: getTimestamp()
     };
+
+    const gameSpecId = game.gameSpecId;
     const newFBMatch: fbr.Match = {
-      gameSpecId: game.gameSpecId,
+      gameSpecId: gameSpecId,
       participants: participants,
       createdOn: getTimestamp(),
       lastUpdatedOn: getTimestamp(),
-      pieces: convertMatchStateToPiecesState(initialState)
+      pieces: convertMatchStateToPiecesState(initialState, gameSpecId)
     };
     refSet(matchRef, newFBMatch);
     addMatchMembership(uid, matchId);
 
     const newMatch: MatchInfo = {
       matchId: matchId,
+      gameSpecId: game.gameSpecId,
       game: game,
       participantsUserIds: [uid],
       lastUpdatedOn: newFBMatch.lastUpdatedOn,
@@ -410,38 +444,61 @@ export namespace ourFirebase {
   }
 
   // Call this after resetting a match or shuffling a deck.
-  export function updateMatchState(match: MatchInfo, matchState: MatchState) {
+  export function updateMatchState(match: MatchInfo) {
+    const matchState: MatchState = match.matchState;
     checkCondition('updateMatchState', matchState.length > 0);
     const updates: any = {};
-    updates['pieces'] = convertMatchStateToPiecesState(matchState);
+    updates['pieces'] = convertMatchStateToPiecesState(
+      matchState,
+      match.gameSpecId
+    );
     updates['lastUpdatedOn'] = getTimestamp();
     refUpdate(getRef(`/gamePortal/matches/${match.matchId}`), updates);
   }
 
   // Call this after updating a single piece.
-  export function updatePieceState(
-    match: MatchInfo,
-    pieceIndex: number,
-    pieceState: PieceState
-  ) {
+  export function updatePieceState(match: MatchInfo, pieceIndex: number) {
+    const pieceState: PieceState = match.matchState[pieceIndex];
     const updates: any = {};
     updates[`pieces/${pieceIndex}`] = convertPieceState(pieceState);
     updates['lastUpdatedOn'] = getTimestamp();
     refUpdate(getRef(`/gamePortal/matches/${match.matchId}`), updates);
   }
 
+  export function checkMatchState(matchState: MatchState, gameSpecId: string) {
+    checkCondition(
+      '#pieces',
+      matchState.length ===
+        store.getState().gameSpecs.gameSpecIdToGameSpec[gameSpecId].pieces
+          .length
+    );
+  }
+
   function convertPiecesStateToMatchState(
-    piecesState: fbr.PiecesState
+    piecesState: fbr.PiecesState,
+    gameSpecId: string
   ): MatchState {
     if (!piecesState) {
       return [];
     }
     const newMatchStates: MatchState = convertObjectToArray(piecesState).map(
-      state => state.currentState
+      state => convertFbrPieceState(state.currentState)
     );
+    checkMatchState(newMatchStates, gameSpecId);
     return newMatchStates;
   }
 
+  function convertFbrPieceState(pieceState: fbr.CurrentState): PieceState {
+    return {
+      x: pieceState.x,
+      y: pieceState.y,
+      zDepth: pieceState.zDepth,
+      currentImageIndex: pieceState.currentImageIndex,
+      cardVisibilityPerIndex: pieceState.cardVisibility
+        ? pieceState.cardVisibility
+        : {}
+    };
+  }
   function convertPieceState(pieceState: PieceState): fbr.PieceState {
     return {
       currentState: {
@@ -449,16 +506,18 @@ export namespace ourFirebase {
         y: pieceState.y,
         zDepth: pieceState.zDepth,
         currentImageIndex: pieceState.currentImageIndex,
-        cardVisibility: pieceState.cardVisibility,
+        cardVisibility: pieceState.cardVisibilityPerIndex,
         rotationDegrees: 360,
         drawing: {}
       }
     };
   }
   function convertMatchStateToPiecesState(
-    matchState: MatchState
+    matchState: MatchState,
+    gameSpecId: string
   ): fbr.PiecesState {
     const piecesState: fbr.PiecesState = {};
+    checkMatchState(matchState, gameSpecId);
     let pieceIndex = 0;
     for (let pieceState of matchState) {
       piecesState[pieceIndex] = convertPieceState(pieceState);
@@ -504,7 +563,7 @@ export namespace ourFirebase {
     mapPhoneNumbersToUserIds(numbersWithoutUserId);
 
     const updates = {};
-    const oldContacts = store.getState().phoneNumberToContact;
+    const oldContacts = state.phoneNumberToContact;
     currentPhoneNumbers.forEach(phoneNumber => {
       const currentContact = currentContacts[phoneNumber];
       const oldContact = oldContacts[phoneNumber];
