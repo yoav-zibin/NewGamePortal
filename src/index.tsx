@@ -6,6 +6,7 @@ import { Route, BrowserRouter } from 'react-router-dom';
 
 import { store } from './stores/index';
 import App from './App';
+import ContactsList from './components/ContactsList';
 import registerServiceWorker from './registerServiceWorker';
 import './index.css';
 
@@ -17,6 +18,7 @@ ReactDOM.render(
       <BrowserRouter basename="/">
         <div>
           <Route path="/" component={App} />
+          <Route path="/addComponent" component={ContactsList} />
         </div>
       </BrowserRouter>
     </Provider>
