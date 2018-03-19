@@ -24,21 +24,22 @@ const image: Image = {
 };
 
 const gameInfo: GameInfo = {
-  gameSpecId: 'someId',
+  gameSpecId: '123',
   gameName: 'Some game name',
-  screenShoot: image
+  screenShot: image
 };
 
 const matchInfo: MatchInfo = {
   matchId: 'someId',
+  gameSpecId: gameInfo.gameSpecId,
   game: gameInfo,
-  participantsUserIds: [], // including myself
+  participantsUserIds: ['7UbETkgeXxe0RId6KxYioSJdARs1'], // including myself
   lastUpdatedOn: 1234,
-  matchState: {}
+  matchState: []
 };
 
 const userInfo: MyUser = {
-  myUserId: 'someId',
+  myUserId: '7UbETkgeXxe0RId6KxYioSJdARs1',
   myPhoneNumber: 'Some phone number',
   myCountryCode: ''
 };
@@ -58,49 +59,63 @@ const initialState: StoreState = {
     {
       gameSpecId: '123',
       gameName: '3 Men Chess',
-      screenShoot: image
+      screenShot: image
     },
     {
       gameSpecId: '456',
       gameName: 'Checkers',
-      screenShoot: image
+      screenShot: image
     }
   ],
   gameSpecs: {
-    imageIdToImage: {},
+    imageIdToImage: {
+      [image.imageId]: image
+    },
     elementIdToElement: {},
-    gameSpecIdToGameSpec: {}
+    gameSpecIdToGameSpec: {
+      '123': {
+        gameSpecId: '123',
+        board: image,
+        pieces: []
+      },
+      '456': {
+        gameSpecId: '456',
+        board: image,
+        pieces: []
+      }
+    }
   },
   matchesList: [
     {
       matchId: '1',
+      gameSpecId: '123',
       game: {
         gameSpecId: '123',
         gameName: '3 Men Chess',
-        screenShoot: image
+        screenShot: image
       },
       participantsUserIds: ['7UbETkgeXxe0RId6KxYioSJdARs1'], // including myself
       lastUpdatedOn: 1234,
-      matchState: {}
+      matchState: []
     },
     {
       matchId: '2',
+      gameSpecId: '456',
       game: {
         gameSpecId: '456',
         gameName: 'Checkers',
-        screenShoot: image
+        screenShot: image
       },
       participantsUserIds: ['7UbETkgeXxe0RId6KxYioSJdARs1'], // including myself
       lastUpdatedOn: 1564,
-      matchState: {}
+      matchState: []
     }
   ],
   currentMatchIndex: 1,
   phoneNumberToContact: {
     phoneNumber: {
       phoneNumber: '+1234567890',
-      name: 'someName',
-      avatarImage: 'someImage'
+      name: 'someName'
     }
   },
   userIdsAndPhoneNumbers: {
@@ -208,8 +223,7 @@ it('updatePhoneNumberToContact', () => {
 
   let someContact: Contact = {
     phoneNumber: '+1234567890',
-    name: 'someName',
-    avatarImage: 'someImage'
+    name: 'someName'
   };
 
   let newPhoneNumberToContact: PhoneNumberToContact = {};

@@ -48,7 +48,7 @@ class GamesList extends React.Component<Props, {}> {
                     </IconButton>
                   }
                 >
-                  <img src={gameInfo.screenShoot.downloadURL} />
+                  <img src={gameInfo.screenShot.downloadURL} />
                 </GridTile>
               ))}
             </GridList>

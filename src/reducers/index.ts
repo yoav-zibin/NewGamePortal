@@ -56,10 +56,22 @@ function checkStoreInvariants(state: StoreState) {
     'currentMatchIndex is in range',
     isInRange(state.currentMatchIndex, state.matchesList)
   );
+  state.matchesList.forEach(match => {
+    checkCondition(
+      'I play in match',
+      match.participantsUserIds.indexOf(state.myUser.myUserId) !== -1
+    );
+    checkCondition(
+      'matchState',
+      match.matchState.length ===
+        state.gameSpecs.gameSpecIdToGameSpec[match.gameSpecId].pieces.length
+    );
+  });
 
   const userIdsAndPhoneNumbers = state.userIdsAndPhoneNumbers;
   checkCondition(
-    'UserIdsAndPhoneNumbers have two mappings that are exactly the reverse of each other',
+    'UserIdsAndPhoneNumbers',
+    // UserIdsAndPhoneNumbers have two mappings that are exactly the reverse of each other
     checkEqual(
       Object.keys(userIdsAndPhoneNumbers.phoneNumberToUserId),
       getValues(userIdsAndPhoneNumbers.userIdToPhoneNumber)
@@ -69,90 +81,6 @@ function checkStoreInvariants(state: StoreState) {
         getValues(userIdsAndPhoneNumbers.phoneNumberToUserId)
       )
   );
-
-  const {
-    elementIdToElement,
-    imageIdToImage,
-    gameSpecIdToGameSpec
-  } = state.gameSpecs;
-  Object.keys(gameSpecIdToGameSpec).forEach(gameSpecId => {
-    const gameSpec = gameSpecIdToGameSpec[gameSpecId];
-    checkCondition(
-      'board image must be in imageIdToImage',
-      gameSpec.board === imageIdToImage[gameSpec.board.imageId]
-    );
-    checkCondition(
-      'board image must have isBoardImage=true',
-      gameSpec.board.isBoardImage
-    );
-    gameSpec.pieces.forEach(piece => {
-      checkCondition(
-        'Every piece element must be in elementIdToElement',
-        piece.element === elementIdToElement[piece.element.elementId]
-      );
-      if (piece.deckPieceIndex !== -1) {
-        checkCondition(
-          'piece must be a card to have deckPieceIndex',
-          piece.element.elementKind === 'card'
-        );
-        const deck = gameSpec.pieces[piece.deckPieceIndex].element;
-        checkCondition(
-          'deckPieceIndex points to a deck that contains this piece element',
-          deck.elementKind.endsWith('Deck') &&
-            deck.deckElements.indexOf(piece.element) !== -1
-        );
-      }
-    });
-  });
-  Object.keys(elementIdToElement).forEach(elementId => {
-    const element = elementIdToElement[elementId];
-    element.images.forEach(image => {
-      checkCondition(
-        'element image must be in imageIdToImage',
-        image === imageIdToImage[image.imageId]
-      );
-    });
-    element.deckElements.forEach(deckElement => {
-      checkCondition(
-        'deckElement must be in elementIdToElement',
-        deckElement === elementIdToElement[deckElement.elementId]
-      );
-      checkCondition(
-        'deckElement must be a card',
-        deckElement.elementKind === 'card'
-      );
-    });
-    // Some checks based on the element kind
-    switch (element.elementKind) {
-      case 'standard':
-        checkCondition(
-          'standard piece has 1 image',
-          element.images.length === 1
-        );
-        break;
-      case 'toggable':
-      case 'dice':
-        checkCondition(
-          'toggable|diece piece has 1 or more images',
-          element.images.length >= 1
-        );
-        break;
-      case 'card':
-        checkCondition('card piece has 2 images', element.images.length === 2);
-        break;
-      case 'cardsDeck':
-      case 'piecesDeck':
-        checkCondition('deck has 1 image', element.images.length === 1);
-        checkCondition(
-          'deckElements has at least 2 elements',
-          element.deckElements.length >= 2
-        );
-        break;
-      default:
-        checkCondition('Illegal elementKind=' + element.elementKind, false);
-        break;
-    }
-  });
 }
 
 function reduce(state: StoreState, action: Action) {
