@@ -2,10 +2,14 @@ import * as React from 'react';
 import RaisedButton from 'material-ui/RaisedButton';
 import AppBar from 'material-ui/AppBar';
 
+// import { StoreState } from '../types/index';
 import { GridList, GridTile } from 'material-ui/GridList';
+import FloatingActionButton from 'material-ui/FloatingActionButton';
+import ContentAdd from 'material-ui/svg-icons/content/add';
 import IconButton from 'material-ui/IconButton';
 import Subheader from 'material-ui/Subheader';
 import StarBorder from 'material-ui/svg-icons/toggle/star-border';
+// import { GameInfo } from '../types/index';
 
 const styles: any = {
   root: {
@@ -17,6 +21,11 @@ const styles: any = {
     width: 500,
     height: 450,
     overflowY: 'auto'
+  },
+  button: {
+    float: 'right',
+    marginRight: 500,
+    marginTop: 70
   }
 };
 
@@ -91,6 +100,9 @@ class MatchesList extends React.Component {
             ))}
           </GridList>
         </div>
+        <FloatingActionButton style={styles.button} href="/addMatches">
+          <ContentAdd />
+        </FloatingActionButton>
       </div>
     );
   }
