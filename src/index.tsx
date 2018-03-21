@@ -6,6 +6,8 @@ import { Route, BrowserRouter } from 'react-router-dom';
 
 import { store } from './stores/index';
 import App from './App';
+import PlayingScreenContainer from './containers/PlayingScreenContainer';
+import Board from './components/Board';
 import registerServiceWorker from './registerServiceWorker';
 import './index.css';
 
@@ -16,7 +18,9 @@ ReactDOM.render(
     <Provider store={store}>
       <BrowserRouter basename="/">
         <div>
-          <Route path="/" component={App} />
+          <Route path="/" component={App} exact={true} />
+          <Route path="/match/:matchId" component={PlayingScreenContainer} />
+          <Route path="/board" component={Board} />
         </div>
       </BrowserRouter>
     </Provider>
