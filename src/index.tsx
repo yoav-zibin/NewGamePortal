@@ -3,11 +3,14 @@ import * as ReactDOM from 'react-dom';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import { Provider } from 'react-redux';
 import { Route, BrowserRouter } from 'react-router-dom';
+import MatchesList from './components/MatchesList';
+import AddMatches from './components/AddMatches';
 
 import { store } from './stores/index';
 import App from './App';
 import PlayingScreenContainer from './containers/PlayingScreenContainer';
 import Board from './components/Board';
+import ContactsList from './components/ContactsList';
 import registerServiceWorker from './registerServiceWorker';
 import './index.css';
 
@@ -21,6 +24,10 @@ ReactDOM.render(
           <Route path="/" component={App} exact={true} />
           <Route path="/match/:matchId" component={PlayingScreenContainer} />
           <Route path="/board" component={Board} />
+          <Route path="/" component={App} />
+          <Route path="/myMatches" component={MatchesList} />
+          <Route path="/addMatches" component={AddMatches} />
+          <Route path="/addComponent" component={ContactsList} />
         </div>
       </BrowserRouter>
     </Provider>
