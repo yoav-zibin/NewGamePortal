@@ -3,6 +3,8 @@ import * as ReactDOM from 'react-dom';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import { Provider } from 'react-redux';
 import { Route, BrowserRouter } from 'react-router-dom';
+import MatchesList from './components/MatchesList';
+import AddMatches from './components/AddMatches';
 
 import { store } from './stores/index';
 import App from './App';
@@ -18,6 +20,8 @@ ReactDOM.render(
       <BrowserRouter basename="/">
         <div>
           <Route path="/" component={App} />
+          <Route path="/myMatches" component={MatchesList} />
+          <Route path="/addMatches" component={AddMatches} />
           <Route path="/addComponent" component={ContactsList} />
         </div>
       </BrowserRouter>
