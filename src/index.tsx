@@ -8,7 +8,7 @@ import AddMatches from './components/AddMatches';
 
 import { store } from './stores/index';
 import App from './App';
-
+import ContactsList from './components/ContactsList';
 import registerServiceWorker from './registerServiceWorker';
 import './index.css';
 
@@ -22,6 +22,7 @@ ReactDOM.render(
           <Route path="/" component={App} />
           <Route path="/myMatches" component={MatchesList} />
           <Route path="/addMatches" component={AddMatches} />
+          <Route path="/addComponent" component={ContactsList} />
         </div>
       </BrowserRouter>
     </Provider>
