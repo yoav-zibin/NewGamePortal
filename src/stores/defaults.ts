@@ -30,7 +30,26 @@ export const storeStateDefault: StoreState = {
     elementIdToElement: {},
     gameSpecIdToGameSpec: {}
   },
-  matchesList: [],
+  matchesList: [
+    {
+      matchId: 'someId',
+      gameSpecId: '456',
+      game: {
+        gameSpecId: '456',
+        gameName: 'Checkers',
+        screenShot: {
+          imageId: 'someImageId',
+          downloadURL: 'https://someurl.com/foo.png',
+          height: 1024,
+          width: 700,
+          isBoardImage: true
+        }
+      },
+      participantsUserIds: ['7UbETkgeXxe0RId6KxYioSJdARs1'], // including myself
+      lastUpdatedOn: 1234,
+      matchState: []
+    }
+  ],
   currentMatchIndex: -1,
   phoneNumberToContact: {},
   userIdsAndPhoneNumbers: {
@@ -40,7 +59,7 @@ export const storeStateDefault: StoreState = {
   myUser: {
     myPhoneNumber: '',
     myCountryCode: '',
-    myUserId: ''
+    myUserId: '7UbETkgeXxe0RId6KxYioSJdARs1'
   },
   signals: []
 };
