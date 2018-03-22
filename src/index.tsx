@@ -3,9 +3,6 @@ import * as ReactDOM from 'react-dom';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import { Provider } from 'react-redux';
 import { Route, BrowserRouter } from 'react-router-dom';
-import MatchesList from './components/MatchesList';
-import AddMatches from './components/AddMatches';
-import PrivateRoute from './components/PrivateRoute';
 
 import { store } from './stores/index';
 import App from './App';
