@@ -8,12 +8,12 @@ export class MatchStateHelper {
   static createInitialState(spec: GameSpec): MatchState {
     checkCondition('spec', spec);
     const m: MatchInfo = <MatchInfo>{ gameSpecId: spec.gameSpecId };
-    new MatchStateHelper(m, '').resetMatch();
+    new MatchStateHelper(m).resetMatch();
     return m.matchState;
   }
 
   // All functions will modify match.matchState.
-  constructor(private match: MatchInfo, private myUserId: string) {
+  constructor(private match: MatchInfo) {
     this.spec = checkNotNull(
       store.getState().gameSpecs.gameSpecIdToGameSpec[match.gameSpecId]
     );
@@ -26,6 +26,7 @@ export class MatchStateHelper {
     const pieceState = this.getPieceState(pieceIndex);
     pieceState.x = x;
     pieceState.y = y;
+    // TODO: the UI should show cards that are visible just for you at the highest layer always.
     this.setMaxZ(pieceIndex);
   }
 
@@ -51,7 +52,8 @@ export class MatchStateHelper {
   // Show a card to me (look/peek at the card).
   showMe(cardIndex: number) {
     this.checkCard(cardIndex);
-    const myIndex = this.match.participantsUserIds.indexOf(this.myUserId);
+    const myUserId = store.getState().myUser.myUserId;
+    const myIndex = this.match.participantsUserIds.indexOf(myUserId);
     const pieceState = this.getPieceState(cardIndex);
     pieceState.cardVisibilityPerIndex[myIndex] = true;
   }
