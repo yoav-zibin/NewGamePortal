@@ -24,7 +24,6 @@ ReactDOM.render(
           <Route path="/" component={App} exact={true} />
           <Route path="/match/:matchId" component={PlayingScreenContainer} />
           <Route path="/board" component={Board} />
-          <Route path="/" component={App} />
           <Route path="/myMatches" component={MatchesList} />
           <Route path="/addMatches" component={AddMatches} />
           <Route path="/addComponent" component={ContactsList} />
