@@ -7,6 +7,7 @@ import { Route, BrowserRouter } from 'react-router-dom';
 import { store } from './stores/index';
 import App from './App';
 import registerServiceWorker from './registerServiceWorker';
+import Login from './components/Login';
 import './index.css';
 
 // TODO: In basename, add support for gh-pages baseURL
@@ -16,7 +17,8 @@ ReactDOM.render(
     <Provider store={store}>
       <BrowserRouter basename="/">
         <div>
-          <Route path="/" component={App} />
+          <Route path="/App" component={App} />
+          <Route path="/login" component={Login} />
         </div>
       </BrowserRouter>
     </Provider>
