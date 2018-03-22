@@ -3,9 +3,9 @@ import * as ReactDOM from 'react-dom';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import { Provider } from 'react-redux';
 import { Route, BrowserRouter } from 'react-router-dom';
-import MatchesList from './components/MatchesList';
-import AddMatches from './components/AddMatches';
-import PrivateRoute from './components/PrivateRoute';
+import ViewMatches from './components/ViewMatches';
+import QueryMatches from './components/QueryMatches';
+// import PrivateRoute from './components/PrivateRoute';
 
 import { store } from './stores/index';
 import App from './App';
@@ -24,8 +24,8 @@ ReactDOM.render(
       >
         <div>
           <Route path="/" component={App} />
-          <PrivateRoute exact={true} path="/update" component={MatchesList} />
-          <PrivateRoute exact={true} path="/create" component={AddMatches} />
+          <Route exact={true} path="/update" component={ViewMatches} />
+          <Route exact={true} path="/create" component={QueryMatches} />
           <Route path="/addComponent" component={ContactsList} />
         </div>
       </BrowserRouter>
