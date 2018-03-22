@@ -5,13 +5,13 @@ import { Provider } from 'react-redux';
 import { Route, BrowserRouter } from 'react-router-dom';
 import MatchesList from './components/MatchesList';
 import AddMatches from './components/AddMatches';
+import PrivateRoute from './components/PrivateRoute';
 
 import { store } from './stores/index';
 import App from './App';
 import ContactsList from './components/ContactsList';
 import registerServiceWorker from './registerServiceWorker';
 import './index.css';
-
 document.getElementById('loadingSpinner')!.style.display = 'none';
 
 ReactDOM.render(
@@ -24,8 +24,8 @@ ReactDOM.render(
       >
         <div>
           <Route path="/" component={App} />
-          <Route path="/myMatches" component={MatchesList} />
-          <Route path="/addMatches" component={AddMatches} />
+          <PrivateRoute exact={true} path="/update" component={MatchesList} />
+          <PrivateRoute exact={true} path="/create" component={AddMatches} />
           <Route path="/addComponent" component={ContactsList} />
         </div>
       </BrowserRouter>
