@@ -3,21 +3,29 @@ import * as ReactDOM from 'react-dom';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import { Provider } from 'react-redux';
 import { Route, BrowserRouter } from 'react-router-dom';
+import MatchesList from './components/MatchesList';
+import AddMatches from './components/AddMatches';
+import PrivateRoute from './components/PrivateRoute';
 
 import { store } from './stores/index';
 import App from './App';
 import ContactsList from './components/ContactsList';
 import registerServiceWorker from './registerServiceWorker';
 import './index.css';
+document.getElementById('loadingSpinner')!.style.display = 'none';
 
-// TODO: In basename, add support for gh-pages baseURL
-// Either use config for that or use location href to decide
 ReactDOM.render(
   <MuiThemeProvider>
     <Provider store={store}>
-      <BrowserRouter basename="/">
+      <BrowserRouter
+        basename={
+          location.hostname === 'yoav-zibin.github.io' ? 'NewGamePortal' : '/'
+        }
+      >
         <div>
           <Route path="/" component={App} />
+          <PrivateRoute exact={true} path="/update" component={MatchesList} />
+          <PrivateRoute exact={true} path="/create" component={AddMatches} />
           <Route path="/addComponent" component={ContactsList} />
         </div>
       </BrowserRouter>

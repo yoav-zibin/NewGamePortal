@@ -155,7 +155,7 @@ it('adds a new match in firebase', () => {
 
 it('Should update the match state', () => {
   const match: MatchInfo = createMatch();
-  const matchStateHelper = new MatchStateHelper(match, ourFirebase.getUserId());
+  const matchStateHelper = new MatchStateHelper(match);
   const spec = matchStateHelper.spec;
   const piece = spec.pieces.find(p => p.element.elementKind === 'card')!;
   const pieceIndex = spec.pieces.indexOf(piece);
