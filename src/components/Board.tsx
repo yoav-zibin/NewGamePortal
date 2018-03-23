@@ -4,9 +4,6 @@ import { MatchInfo, GameSpec, Piece } from '../types';
 import CanvasImage from './CanvasImage';
 // import BoardPiece from './BoardPiece';
 import { AppBar, FlatButton } from 'material-ui';
-import { ourFirebase } from '../services/firebase';
-import { store, dispatch } from '../stores';
-import { MatchStateHelper } from '../services/matchStateHelper';
 import { connect, Dispatch } from 'react-redux';
 import { StoreState } from '../types/index';
 import { Action } from '../reducers';
@@ -27,31 +24,6 @@ interface BoardProps {
 class Board extends React.Component<BoardProps, {}> {
   constructor(props: BoardProps) {
     super(props);
-  }
-
-  componentDidMount() {
-    // TODO: delete once we have phone-number login.
-    ourFirebase.allPromisesForTests = [];
-    ourFirebase.init();
-    ourFirebase.signInAnonymously().then(() => {
-      console.warn('Signed in anonymously, userId=', ourFirebase.getUserId());
-      Promise.all(ourFirebase.allPromisesForTests!).then(() => {
-        const gameInfo = store
-          .getState()
-          .gamesList.find(gameInList => gameInList.gameName === 'Chess')!;
-        ourFirebase.fetchGameSpec(gameInfo);
-        Promise.all(ourFirebase.allPromisesForTests!).then(() => {
-          if (store.getState().matchesList.length === 0) {
-            const gameSpec = store.getState().gameSpecs.gameSpecIdToGameSpec[
-              gameInfo.gameSpecId
-            ];
-            const initialState = MatchStateHelper.createInitialState(gameSpec);
-            ourFirebase.createMatch(gameInfo, initialState);
-          }
-          dispatch({ setCurrentMatchIndex: 0 });
-        });
-      });
-    });
   }
 
   render() {
