@@ -4,6 +4,7 @@ import { MatchInfo, GameSpec, Piece } from '../types';
 import CanvasImage from './CanvasImage';
 import BoardPiece from './BoardPiece';
 import { AppBar, FlatButton } from 'material-ui';
+// import { MatchStateHelper } from '../services/matchStateHelper'
 
 interface Props {
   pieces: Piece[];
@@ -54,6 +55,21 @@ const testProps: Props = {
     console.log('Reset Pressed');
   }
 };
+// const matchDispatchToPropsForBoard = (dispatch) => {
+//     return {
+//         handleChange: (key) => {
+//             action : Action = {};
+//             const newMatchStateHelper: MatchStateHelper = {};
+//             // get pieces state like pieceIndex: number, x: number, y: number using key
+//             newMatchStateHelper.dragTo(1,1,1);
+//             //dispatch new state of pieces
+//             // dispatch();
+//             newMatchStateHelper.resetMatch();
+//             dispatch(action);
+//         }
+//     }
+// };
+// onChange={() => {this.props.handleChange(this.props.key)}}
 
 /**
  * A reusable board class, that given a board image and pieces in props
