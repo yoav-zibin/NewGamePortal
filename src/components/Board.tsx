@@ -4,9 +4,8 @@ import { MatchInfo, GameSpec, Piece } from '../types';
 import CanvasImage from './CanvasImage';
 // import BoardPiece from './BoardPiece';
 import { AppBar, FlatButton } from 'material-ui';
-import { connect, Dispatch } from 'react-redux';
+import { connect } from 'react-redux';
 import { StoreState } from '../types/index';
-import { Action } from '../reducers';
 
 interface BoardProps {
   pieces: Piece[];
@@ -101,12 +100,9 @@ const mapStateToProps = (state: StoreState) => {
 };
 
 // Later this will take dispatch: any as argument
-const mapDispatchToProps = (d: Dispatch<any>) => ({
+const mapDispatchToProps = () => ({
   onReset: () => {
-    const action: Action = {
-      resetMatch: null
-    };
-    d({ type: action });
+    // TODO ourFirebase.updateMatchState();
   }
 });
 

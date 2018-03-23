@@ -23,7 +23,8 @@ document.getElementById('loadingSpinner')!.style.display = 'none';
 ourFirebase.allPromisesForTests = [];
 ourFirebase.init();
 ourFirebase.signInAnonymously().then(() => {
-  console.warn('Signed in anonymously, userId=', ourFirebase.getUserId());
+  const userId = ourFirebase.getUserId();
+  console.warn('Signed in anonymously, userId=', userId);
   Promise.all(ourFirebase.allPromisesForTests!).then(() => {
     const gameInfo = store
       .getState()
