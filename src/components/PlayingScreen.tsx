@@ -1,7 +1,7 @@
 import * as React from 'react';
-import BoardGameContainer from '../containers/BoardGameContainer';
 import VideoAreaContainer from '../containers/VideoAreaContainer';
 import { MatchInfo } from '../types';
+import Board from './Board';
 
 interface Props {
   myMatches: MatchInfo[];
@@ -16,7 +16,7 @@ const PlayingScreen = (props: Props) => {
   ) {
     return (
       <>
-        <BoardGameContainer />
+        <Board />
         <VideoAreaContainer />
       </>
     );

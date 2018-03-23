@@ -7,7 +7,6 @@ import { Route, BrowserRouter } from 'react-router-dom';
 import { store } from './stores/index';
 import App from './App';
 import PlayingScreenContainer from './containers/PlayingScreenContainer';
-import Board from './components/Board';
 import ContactsList from './components/ContactsList';
 import PlayingScreen from './components/PlayingScreen';
 import MatchesList from './components/MatchesList';
@@ -15,6 +14,8 @@ import AddMatches from './components/AddMatches';
 import registerServiceWorker from './registerServiceWorker';
 import Login from './components/Login';
 import './index.css';
+import Board from './components/Board';
+
 document.getElementById('loadingSpinner')!.style.display = 'none';
 
 ReactDOM.render(

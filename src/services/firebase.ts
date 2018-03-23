@@ -30,6 +30,12 @@ import { Action } from '../reducers';
 
 // All interactions with firebase must be in this module.
 export namespace ourFirebase {
+  // Since our test use anonymous login
+  // and the rules only allow you to write there if you have auth.token.phone_number
+  // we can not add in gamePortal/PhoneNumberToUserId/${phoneNumber}
+  // So firebase rules add "123456789" for test
+  export const magicPhoneNumberForTest = '123456789';
+
   // We're using redux, so all state must be stored in the store.
   // I.e., we can't have any state/variables/etc that is used externally.
   let calledFunctions: BooleanIndexer = {};
@@ -72,6 +78,15 @@ export namespace ourFirebase {
 
   function getTimestamp(): number {
     return <number>firebase.database.ServerValue.TIMESTAMP;
+  }
+
+  export function signInAnonymously() {
+    return firebase
+      .auth()
+      .signInAnonymously()
+      .then(() => {
+        writeUser(magicPhoneNumberForTest);
+      });
   }
 
   export function writeUser(overridePhoneNumberForTest: string = '') {
@@ -119,12 +134,6 @@ export namespace ourFirebase {
     fetchGamesList();
     listenToSignals();
   }
-
-  // Since our test use anonymous login
-  // and the rules only allow you to write there if you have auth.token.phone_number
-  // we can not add in gamePortal/PhoneNumberToUserId/${phoneNumber}
-  // So firebase rules add "123456789" for test
-  export const magicPhoneNumberForTest = '123456789';
 
   export function checkPhoneNum(phoneNum: string) {
     const isValidNum =
