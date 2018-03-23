@@ -6,6 +6,7 @@ import { Route, BrowserRouter } from 'react-router-dom';
 
 import { store } from './stores/index';
 import App from './App';
+import ContactsList from './components/ContactsList';
 import PlayingScreen from './components/PlayingScreen';
 import registerServiceWorker from './registerServiceWorker';
 import './index.css';
@@ -20,7 +21,9 @@ ReactDOM.render(
         }
       >
         <div>
-          <Route path="/" component={App} />
+          <Route path="/App" component={App} />
+          <Route path="/AddComponent" component={ContactsList} />
+
           <Route path="/match/:matchId" component={PlayingScreen} />
         </div>
       </BrowserRouter>
