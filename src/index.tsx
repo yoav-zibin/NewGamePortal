@@ -13,6 +13,7 @@ import PlayingScreen from './components/PlayingScreen';
 import MatchesList from './components/MatchesList';
 import AddMatches from './components/AddMatches';
 import registerServiceWorker from './registerServiceWorker';
+import Login from './components/Login';
 import './index.css';
 document.getElementById('loadingSpinner')!.style.display = 'none';
 
@@ -31,7 +32,7 @@ ReactDOM.render(
           <Route path="/myMatches" component={MatchesList} />
           <Route path="/addMatches" component={AddMatches} />
           <Route path="/addComponent" component={ContactsList} />
-          <Route path="/" component={App} />
+          <Route path="/login" component={Login} />
           <Route path="/match/:matchId" component={PlayingScreen} />
         </div>
       </BrowserRouter>
