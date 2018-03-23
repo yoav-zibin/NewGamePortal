@@ -6,7 +6,6 @@ import { Route, BrowserRouter } from 'react-router-dom';
 
 import { store } from './stores/index';
 import App from './App';
-import PlayingScreenContainer from './containers/PlayingScreenContainer';
 import ContactsList from './components/ContactsList';
 import PlayingScreen from './components/PlayingScreen';
 import MatchesList from './components/MatchesList';
@@ -28,7 +27,7 @@ ReactDOM.render(
       >
         <div>
           <Route path="/" component={App} exact={true} />
-          <Route path="/match/:matchId" component={PlayingScreenContainer} />
+          <Route path="/match/:matchId" component={PlayingScreen} />
           <Route path="/board" component={Board} />
           <Route path="/myMatches" component={MatchesList} />
           <Route path="/addMatches" component={AddMatches} />
