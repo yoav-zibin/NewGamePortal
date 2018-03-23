@@ -25,10 +25,42 @@ export const storeStateDefault: StoreState = {
       }
     }
   ],
+  // state.gameSpecs.gameSpecIdToGameSpec[match.gameSpecId].pieces.length
   gameSpecs: {
     imageIdToImage: {},
     elementIdToElement: {},
-    gameSpecIdToGameSpec: {}
+    gameSpecIdToGameSpec: {
+      '456': {
+        gameSpecId: '456',
+        board: {
+          imageId: '456',
+          width: 1,
+          height: 2,
+          isBoardImage: true,
+          downloadURL: 'https://someurl.com/foo.png'
+        },
+        pieces: [
+          {
+            element: {
+              elementId: '123',
+              width: 23,
+              height: 23,
+              images: [],
+              isDraggable: true,
+              elementKind: 'standard'
+            },
+            initialState: {
+              x: 1,
+              y: 2,
+              zDepth: 3,
+              currentImageIndex: 4,
+              cardVisibilityPerIndex: {}
+            },
+            deckPieceIndex: 1
+          }
+        ]
+      }
+    }
   },
   matchesList: [
     {
@@ -47,7 +79,15 @@ export const storeStateDefault: StoreState = {
       },
       participantsUserIds: ['7UbETkgeXxe0RId6KxYioSJdARs1'], // including myself
       lastUpdatedOn: 1234,
-      matchState: []
+      matchState: [
+        {
+          x: 1,
+          y: 2,
+          zDepth: 3,
+          currentImageIndex: 4,
+          cardVisibilityPerIndex: {}
+        }
+      ]
     }
   ],
   currentMatchIndex: -1,
