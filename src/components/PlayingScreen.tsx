@@ -1,7 +1,9 @@
 import * as React from 'react';
-import BoardGameContainer from '../containers/BoardGameContainer';
-import VideoAreaContainer from '../containers/VideoAreaContainer';
 import { MatchInfo } from '../types';
+import Board from './Board';
+import { connect } from 'react-redux';
+import { StoreState } from '../types/index';
+import VideoArea from './VideoArea';
 
 interface Props {
   myMatches: MatchInfo[];
@@ -16,8 +18,8 @@ const PlayingScreen = (props: Props) => {
   ) {
     return (
       <>
-        <BoardGameContainer />
-        <VideoAreaContainer />
+        <Board />
+        <VideoArea />
       </>
     );
   } else {
@@ -25,4 +27,11 @@ const PlayingScreen = (props: Props) => {
   }
 };
 
-export default PlayingScreen;
+const mapStateToProps = (state: StoreState) => ({
+  myMatches: state.matchesList
+});
+
+// Later this will take dispatch: any as argument
+const mapDispatchToProps = () => ({});
+
+export default connect(mapStateToProps, mapDispatchToProps)(PlayingScreen);

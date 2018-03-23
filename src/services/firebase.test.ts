@@ -2,7 +2,6 @@
  * @jest-environment node
  */
 import { ourFirebase } from './firebase';
-import * as firebase from 'firebase';
 import {
   MatchInfo,
   UserIdsAndPhoneNumbers,
@@ -122,11 +121,9 @@ function getAllPromisesForTests() {
 }
 
 beforeAll(done => {
-  firebase
-    .auth()
+  ourFirebase
     .signInAnonymously()
     .then(() => {
-      ourFirebase.writeUser(ourFirebase.magicPhoneNumberForTest);
       getAllPromisesForTests().then(() => {
         fetchAllGameSpecs();
         getAllPromisesForTests().then(() => {
