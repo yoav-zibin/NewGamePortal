@@ -1,29 +1,28 @@
 import * as React from 'react';
-import Board from './Board';
-import VideoArea from './VideoArea';
-import { StoreState } from '../types/index';
-import { connect } from 'react-redux';
+import BoardGameContainer from '../containers/BoardGameContainer';
+import VideoAreaContainer from '../containers/VideoAreaContainer';
+import { MatchInfo } from '../types';
 
-const mapStateToProps = (state: StoreState) => {
-  const selectedGameId = state.currentMatchIndex;
-  return {
-    pieces: state.gameSpecs['gameSpecIdToGameSpec'][selectedGameId]['pieces']
+interface Props {
+  myMatches: MatchInfo[];
+  params: {
+    matchId: string;
   };
-};
-
-const mapDispatchToProps = () => ({});
-
-const BoardContainer = connect(mapStateToProps, mapDispatchToProps)(Board);
-
-class PlayingScreen extends React.Component<{}, {}> {
-  render() {
-    return (
-      <div>
-        <BoardContainer />
-        <VideoArea />
-      </div>
-    );
-  }
 }
+
+const PlayingScreen = (props: Props) => {
+  if (
+    props.myMatches.filter(e => e.matchId === props.params.matchId).length === 1
+  ) {
+    return (
+      <>
+        <BoardGameContainer />
+        <VideoAreaContainer />
+      </>
+    );
+  } else {
+    return <div>Match not found!</div>;
+  }
+};
 
 export default PlayingScreen;

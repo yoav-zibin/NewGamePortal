@@ -22,33 +22,33 @@ const style = {
 
 const testUsers: Contact[] = [
   {
-    phoneNumber: '24324',
+    phoneNumber: '9175730795',
     name: 'Brendan Lim'
   },
   {
-    phoneNumber: '235352',
+    phoneNumber: '2016824408',
     name: 'Eric Hoffman'
   },
   {
-    phoneNumber: '1531235',
+    phoneNumber: '7326476905',
     name: 'Grace Ng'
   },
   {
-    phoneNumber: '5123523',
+    phoneNumber: '7187107933',
     name: 'Chelsea Otakan'
   }
 ];
 const testNotUsers: Contact[] = [
   {
-    phoneNumber: '23415432',
+    phoneNumber: '7185525029',
     name: 'Kerem Suer'
   },
   {
-    phoneNumber: '12341234',
+    phoneNumber: '2038859211',
     name: 'Raquel Parrado'
   },
   {
-    phoneNumber: '41234123',
+    phoneNumber: '5513586613',
     name: 'James Anderson'
   }
 ];

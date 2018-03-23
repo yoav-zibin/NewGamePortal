@@ -26,6 +26,7 @@ export interface Action {
   updateUserIdsAndPhoneNumbers?: UserIdsAndPhoneNumbers;
   setMyUser?: MyUser;
   setSignals?: SignalEntry[];
+  resetMatch?: null;
 }
 
 export function mergeMaps<T>(

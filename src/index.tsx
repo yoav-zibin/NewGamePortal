@@ -6,8 +6,12 @@ import { Route, BrowserRouter } from 'react-router-dom';
 
 import { store } from './stores/index';
 import App from './App';
+import PlayingScreenContainer from './containers/PlayingScreenContainer';
+import Board from './components/Board';
 import ContactsList from './components/ContactsList';
 import PlayingScreen from './components/PlayingScreen';
+import MatchesList from './components/MatchesList';
+import AddMatches from './components/AddMatches';
 import registerServiceWorker from './registerServiceWorker';
 import './index.css';
 document.getElementById('loadingSpinner')!.style.display = 'none';
@@ -21,9 +25,12 @@ ReactDOM.render(
         }
       >
         <div>
-          <Route path="/App" component={App} />
-          <Route path="/AddComponent" component={ContactsList} />
-
+          <Route path="/" component={App} exact={true} />
+          <Route path="/match/:matchId" component={PlayingScreenContainer} />
+          <Route path="/board" component={Board} />
+          <Route path="/myMatches" component={MatchesList} />
+          <Route path="/addMatches" component={AddMatches} />
+          <Route path="/addComponent" component={ContactsList} />
           <Route path="/match/:matchId" component={PlayingScreen} />
         </div>
       </BrowserRouter>
