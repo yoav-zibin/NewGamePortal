@@ -2,11 +2,16 @@ import * as React from 'react';
 import { Layer, Stage } from 'react-konva';
 import { MatchInfo, GameSpec, Piece } from '../types';
 import CanvasImage from './CanvasImage';
-import BoardPiece from './BoardPiece';
+// import BoardPiece from './BoardPiece';
 import { AppBar, FlatButton } from 'material-ui';
-// import { MatchStateHelper } from '../services/matchStateHelper'
+import { ourFirebase } from '../services/firebase';
+import { store, dispatch } from '../stores';
+import { MatchStateHelper } from '../services/matchStateHelper';
+import { connect, Dispatch } from 'react-redux';
+import { StoreState } from '../types/index';
+import { Action } from '../reducers';
 
-interface Props {
+interface BoardProps {
   pieces: Piece[];
   matchInfo: MatchInfo;
   gameSpec: GameSpec;
@@ -14,122 +19,123 @@ interface Props {
   onReset: () => void;
 }
 
-// for testing purposes
-const testProps: Props = {
-  pieces: [],
-  matchInfo: {
-    matchId: '123',
-    gameSpecId: 'test',
-    game: {
-      gameSpecId: 'test',
-      gameName: 'Chess',
-      screenShot: {
-        imageId: '',
-        width: 100,
-        height: 100,
-        isBoardImage: false,
-        downloadURL:
-          'https://firebasestorage.googleapis.com/v0/b/universalgamemaker.appspot.com/o/images' +
-          '%2F-KtRrhplWWiDZXECJ_FO.jpg?alt=media&token=6808e2bb-cb5c-48ec-ae15-4a5d3e9a2b29'
-      }
-    },
-    participantsUserIds: ['test user'],
-    lastUpdatedOn: 0,
-    matchState: []
-  },
-  gameSpec: {
-    board: {
-      imageId: '',
-      width: 100,
-      height: 100,
-      isBoardImage: true,
-      downloadURL:
-        'https://firebasestorage.googleapis.com/v0/b/universalgamemaker.appspot.com/o/images' +
-        '%2F-KtRrhplWWiDZXECJ_FO.jpg?alt=media&token=6808e2bb-cb5c-48ec-ae15-4a5d3e9a2b29'
-    },
-    gameSpecId: 'test',
-    pieces: []
-  },
-  myUserId: 'test user',
-  onReset: () => {
-    console.log('Reset Pressed');
-  }
-};
-// const matchDispatchToPropsForBoard = (dispatch) => {
-//     return {
-//         handleChange: (key) => {
-//             action : Action = {};
-//             const newMatchStateHelper: MatchStateHelper = {};
-//             // get pieces state like pieceIndex: number, x: number, y: number using key
-//             newMatchStateHelper.dragTo(1,1,1);
-//             //dispatch new state of pieces
-//             // dispatch();
-//             newMatchStateHelper.resetMatch();
-//             dispatch(action);
-//         }
-//     }
-// };
-// onChange={() => {this.props.handleChange(this.props.key)}}
-
 /**
  * A reusable board class, that given a board image and pieces in props
  * can draw the board and piece on top of it using konva.
  * Should also add drag and drop functionality later on.
  */
-const Board = (props: Props) => {
-  let width = 600;
-  let height = 600;
+class Board extends React.Component<BoardProps, {}> {
+  constructor(props: BoardProps) {
+    super(props);
+  }
 
-  props = {
-    ...props,
-    ...testProps
-  };
+  componentDidMount() {
+    // TODO: delete once we have phone-number login.
+    ourFirebase.allPromisesForTests = [];
+    ourFirebase.init();
+    ourFirebase.signInAnonymously().then(() => {
+      console.warn('Signed in anonymously, userId=', ourFirebase.getUserId());
+      Promise.all(ourFirebase.allPromisesForTests!).then(() => {
+        const gameInfo = store
+          .getState()
+          .gamesList.find(gameInList => gameInList.gameName === 'Chess')!;
+        ourFirebase.fetchGameSpec(gameInfo);
+        Promise.all(ourFirebase.allPromisesForTests!).then(() => {
+          if (store.getState().matchesList.length === 0) {
+            const gameSpec = store.getState().gameSpecs.gameSpecIdToGameSpec[
+              gameInfo.gameSpecId
+            ];
+            const initialState = MatchStateHelper.createInitialState(gameSpec);
+            ourFirebase.createMatch(gameInfo, initialState);
+          }
+          dispatch({ setCurrentMatchIndex: 0 });
+        });
+      });
+    });
+  }
 
-  // TODO: Complete layer for board
-  let boardImage = props.gameSpec.board.downloadURL;
-  let boardLayer = (
-    <CanvasImage height={height} width={width} src={boardImage} />
-  );
+  render() {
+    const props = this.props;
+    if (!props.gameSpec) {
+      return <div>No game spec</div>;
+    }
+    let width = 600;
+    let height = 600;
 
-  // TODO: Complete layer for pieces
-  let piecesLayer = props.matchInfo.matchState.map((piece, i) => {
-    let pieceSpec = props.gameSpec.pieces[piece.currentImageIndex];
-    return (
-      <BoardPiece
-        key={'piece' + i}
-        height={pieceSpec.element.height * height / props.gameSpec.board.height}
-        width={pieceSpec.element.width * width / props.gameSpec.board.height}
-        x={piece.x * width / 100}
-        y={piece.y * height / 100}
-        src={'placeholder'}
-        element={pieceSpec.element}
-      />
+    // TODO: Complete layer for board
+    let boardImage = props.gameSpec.board.downloadURL;
+    let boardLayer = (
+      <CanvasImage height={height} width={width} src={boardImage} />
     );
-  });
 
-  return (
-    <>
-      <AppBar
-        showMenuIconButton={false}
-        iconElementRight={
-          <FlatButton
-            label="Reset"
-            onClick={e => {
-              e.preventDefault();
-              props.onReset();
-            }}
-          />
-        }
-        title={<span>Match: {props.matchInfo.game.gameName}</span>}
-      />
-      <div ref={() => 'parentContainer'}>
-        <Stage width={width} height={height}>
-          <Layer ref={() => 'boardLayer'}>{boardLayer}</Layer>
-          <Layer ref={() => 'piecesLayer'}>{piecesLayer}</Layer>
-        </Stage>
-      </div>
-    </>
-  );
+    // // TODO: Complete layer for pieces
+    // let piecesLayer = props.matchInfo.matchState.map((piece, i) => {
+    //   let pieceSpec = props.gameSpec.pieces[piece.currentImageIndex];
+    //   return (
+    //     <BoardPiece
+    //       key={'piece' + i}
+    //       height={pieceSpec.element.height * height / props.gameSpec.board.height}
+    //       width={pieceSpec.element.width * width / props.gameSpec.board.height}
+    //       x={piece.x * width / 100}
+    //       y={piece.y * height / 100}
+    //       src={'placeholder'}
+    //       element={pieceSpec.element}
+    //     />
+    //   );
+    // });
+
+    return (
+      <>
+        <AppBar
+          showMenuIconButton={false}
+          iconElementRight={
+            <FlatButton
+              label="Reset"
+              onClick={e => {
+                e.preventDefault();
+                props.onReset();
+              }}
+            />
+          }
+          title={<span>Match: {props.matchInfo.game.gameName}</span>}
+        />
+        <div ref={() => 'parentContainer'}>
+          <Stage width={width} height={height}>
+            <Layer ref={() => 'boardLayer'}>{boardLayer}</Layer>
+            {/* <Layer ref={() => 'piecesLayer'}>{piecesLayer}</Layer> */}
+          </Stage>
+        </div>
+      </>
+    );
+  }
+}
+
+const mapStateToProps = (state: StoreState) => {
+  if (state.currentMatchIndex === -1) {
+    return {};
+  }
+  return {
+    pieces:
+      state.gameSpecs.gameSpecIdToGameSpec[
+        state.matchesList[state.currentMatchIndex].game.gameSpecId
+      ].pieces,
+    matchInfo: state.matchesList[state.currentMatchIndex],
+    gameSpec:
+      state.gameSpecs.gameSpecIdToGameSpec[
+        state.matchesList[state.currentMatchIndex].game.gameSpecId
+      ],
+    myUserId: state.myUser.myUserId
+  };
 };
 
-export default Board;
+// Later this will take dispatch: any as argument
+const mapDispatchToProps = (d: Dispatch<any>) => ({
+  onReset: () => {
+    const action: Action = {
+      resetMatch: null
+    };
+    d({ type: action });
+  }
+});
+
+export default connect(mapStateToProps, mapDispatchToProps)(Board);

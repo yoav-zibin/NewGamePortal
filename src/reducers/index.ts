@@ -85,9 +85,9 @@ function checkStoreInvariants(state: StoreState) {
 }
 
 function reduce(state: StoreState, action: Action) {
-  if (action.setGamesList) {
+  if (undefined !== action.setGamesList) {
     return { ...state, gamesList: action.setGamesList };
-  } else if (action.setMatchesList) {
+  } else if (undefined !== action.setMatchesList) {
     let { matchesList, currentMatchIndex, ...rest } = state;
     if (!isInRange(state.currentMatchIndex, action.setMatchesList)) {
       currentMatchIndex = -1;
@@ -97,11 +97,11 @@ function reduce(state: StoreState, action: Action) {
       matchesList: action.setMatchesList,
       currentMatchIndex: currentMatchIndex
     };
-  } else if (action.setSignals) {
+  } else if (undefined !== action.setSignals) {
     return { ...state, signals: action.setSignals };
-  } else if (action.setMyUser) {
+  } else if (undefined !== action.setMyUser) {
     return { ...state, myUser: action.setMyUser };
-  } else if (action.updatePhoneNumberToContact) {
+  } else if (undefined !== action.updatePhoneNumberToContact) {
     let { phoneNumberToContact, ...rest } = state;
     return {
       phoneNumberToContact: mergeMaps(
@@ -110,7 +110,7 @@ function reduce(state: StoreState, action: Action) {
       ),
       ...rest
     };
-  } else if (action.updateUserIdsAndPhoneNumbers) {
+  } else if (undefined !== action.updateUserIdsAndPhoneNumbers) {
     let { userIdsAndPhoneNumbers, ...rest } = state;
     return {
       userIdsAndPhoneNumbers: {
@@ -125,9 +125,9 @@ function reduce(state: StoreState, action: Action) {
       },
       ...rest
     };
-  } else if (action.setCurrentMatchIndex) {
+  } else if (undefined !== action.setCurrentMatchIndex) {
     return { ...state, currentMatchIndex: action.setCurrentMatchIndex };
-  } else if (action.updateGameSpecs) {
+  } else if (undefined !== action.updateGameSpecs) {
     let {
       imageIdToImage,
       elementIdToElement,
