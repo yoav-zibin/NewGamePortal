@@ -1,6 +1,6 @@
 import * as React from 'react';
 // import Contacts from './Contacts';
-import SearchBar from './SearchBar';
+// import SearchBar from './SearchBar';
 // import {PhoneNumberToUserId, PhoneNumberToContact, Contact} from '../types';
 import { Contact } from '../types';
 import { List, ListItem } from 'material-ui/List';
@@ -9,6 +9,7 @@ import Subheader from 'material-ui/Subheader';
 import FloatingActionButton from 'material-ui/FloatingActionButton';
 import RaisedButton from 'material-ui/RaisedButton';
 import ContentAdd from 'material-ui/svg-icons/content/add';
+import TextField from 'material-ui/TextField';
 // import TextField from 'material-ui/TextField';
 
 const style = {
@@ -53,23 +54,49 @@ const testNotUsers: Contact[] = [
   }
 ];
 
+// interface Props
+
 class ContactsList extends React.Component<{}, {}> {
-  constructor(props: any) {
-    super(props);
-    /*this.state = {
-      users: [],
-      notUsers: []
-    };*/
-    //  this.setState({users: testUsers, notUsers: testNotUsers});
-  }
+  state = {
+    users: testUsers,
+    notUsers: testNotUsers,
+    value: ''
+  };
+
+  handleChange = (event: any) => {
+    this.setState({
+      value: event.target.value
+    });
+    if (this.state.value.length > 0) {
+      let targetUser: Contact[] = [];
+      let targetNotUser: Contact[] = [];
+      this.state.users.map((user: Contact) => {
+        if (user.name.indexOf(this.state.value) !== -1) {
+          targetUser.push(user);
+        }
+      });
+      this.state.notUsers.map((user: Contact) => {
+        if (user.name.indexOf(this.state.value) !== -1) {
+          targetNotUser.push(user);
+        }
+      });
+      this.setState({ users: targetUser, notUsers: targetNotUser });
+    } else {
+      this.setState({ users: testUsers, notUsers: testNotUsers });
+    }
+  };
+
   render() {
     return (
       <div>
-        <SearchBar />
-
+        <TextField
+          hintText="Search"
+          fullWidth={true}
+          onChange={this.handleChange}
+        />
         <List>
           <Subheader>Game User</Subheader>
-          {testUsers.map((user: Contact) => (
+          {this.state.users.map((user: Contact) => (
             <ListItem
               primaryText={user.name}
               rightIconButton={
@@ -83,7 +110,7 @@ class ContactsList extends React.Component<{}, {}> {
         <Divider />
         <List>
           <Subheader>Not Game User</Subheader>
-          {testNotUsers.map((user: Contact) => (
+          {this.state.notUsers.map((user: Contact) => (
             <ListItem
               primaryText={user.name}
               rightIconButton={
