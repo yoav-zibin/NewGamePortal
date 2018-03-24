@@ -2,7 +2,6 @@ import * as React from 'react';
 import { Layer, Stage } from 'react-konva';
 import { MatchInfo, GameSpec, Piece } from '../types';
 import CanvasImage from './CanvasImage';
-// import BoardPiece from './BoardPiece';
 import { AppBar, FlatButton } from 'material-ui';
 import { connect } from 'react-redux';
 import { StoreState } from '../types/index';
@@ -40,21 +39,68 @@ class Board extends React.Component<BoardProps, {}> {
     );
 
     // // TODO: Complete layer for pieces
-    // let piecesLayer = props.matchInfo.matchState.map((piece, i) => {
-    //   let pieceSpec = props.gameSpec.pieces[piece.currentImageIndex];
-    //   return (
-    //     <BoardPiece
-    //       key={'piece' + i}
-    //       height={pieceSpec.element.height * height / props.gameSpec.board.height}
-    //       width={pieceSpec.element.width * width / props.gameSpec.board.height}
-    //       x={piece.x * width / 100}
-    //       y={piece.y * height / 100}
-    //       src={'placeholder'}
-    //       element={pieceSpec.element}
-    //     />
-    //   );
-    // });
+    let piecesLayer = props.matchInfo.matchState.map((piece, index) => {
+      let pieceSpec = props.gameSpec.pieces[piece.currentImageIndex];
+      let kind = pieceSpec.element.elementKind;
+      return (
+        <CanvasImage
+          ref={'canvasImage' + index}
+          key={index}
+          draggable={pieceSpec.element.isDraggable || kind === 'standard'}
+          onClick={() => {
+            console.log('Piece clicked!');
+            // if (kind === 'standard') {
+            //   this.rotatePiece('canvasImage' + index, index, piece);
+            // } else if (piece.kind === 'toggable') {
+            //   this.togglePiece('canvasImage' + index, index, piece);
+            // } else if (piece.kind === 'dice') {
+            //   this.rollDice('canvasImage' + index, index, piece);
+            // } else if (piece.kind === 'card') {
+            //   this.handleCardClick('canvasImage' + index, index, piece);
+            // }
+          }}
+          onMouseOver={() => {
+            // this.props.hideCardOptions();
+            // if (piece.kind === 'card') {
+            //   this.showCardVisibility(index);
+            // }
+            console.log('Mouse over');
+          }}
+          onMouseOut={() => {
+            // if (piece.kind === 'card') {
+            //   this.hideCardVisibility();
+            // }
+            console.log('Mouse out!');
+          }}
+          height={
+            pieceSpec.element.height * height / this.props.gameSpec.board.height
+          }
+          width={
+            pieceSpec.element.width * width / this.props.gameSpec.board.width
+          }
+          x={piece.x * width / 100}
+          y={piece.y * height / 100}
+          src={pieceSpec.element.images[piece.currentImageIndex].downloadURL}
+          onDragStart={() => {
+            // if (piece.kind === 'card') {
+            //   thiz.hideCardVisibility();
+            //   thiz.props.hideCardOptions();
+            // }
+            // thiz.handleDragStart(index);
+            console.log('Drag Start');
+          }}
+          onDragEnd={() => {
+            // if (piece.kind === 'card') {
+            //   thiz.showCardVisibility(index);
+            // }
+            // thiz.handleDragEnd(index)
+            console.log('Drag End');
+          }}
+        />
+      );
+    });
 
+    console.log('Pieces Layer:', piecesLayer);
     return (
       <>
         <AppBar
@@ -73,7 +119,7 @@ class Board extends React.Component<BoardProps, {}> {
         <div ref={() => 'parentContainer'}>
           <Stage width={width} height={height}>
             <Layer ref={() => 'boardLayer'}>{boardLayer}</Layer>
-            {/* <Layer ref={() => 'piecesLayer'}>{piecesLayer}</Layer> */}
+            <Layer ref={() => 'piecesLayer'}>{piecesLayer}</Layer>
           </Stage>
         </div>
       </>
