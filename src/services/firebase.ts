@@ -92,6 +92,9 @@ export namespace ourFirebase {
   export function writeUser(overridePhoneNumberForTest: string = '') {
     checkFunctionIsCalledOnce('writeUser');
     const user = assertLoggedIn();
+    if (user.uid !== store.getState().myUser.myUserId) {
+      dispatch({ resetStoreToDefaults: null });
+    }
     const phoneNumber = user.phoneNumber
       ? user.phoneNumber
       : overridePhoneNumberForTest;
