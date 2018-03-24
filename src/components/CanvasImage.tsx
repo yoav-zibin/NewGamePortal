@@ -1,4 +1,4 @@
-import { Image } from 'react-konva';
+import { Image, KonvaNodeProps } from 'react-konva';
 import * as React from 'react';
 
 // global Window class doesn't come with Image()
@@ -13,7 +13,7 @@ declare global {
 }
 
 // try drag& drop rectangle
-interface CanvasImageProps {
+interface CanvasImageProps extends KonvaNodeProps {
   src: string;
   width: number;
   height: number;
