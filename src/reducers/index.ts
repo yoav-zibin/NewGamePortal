@@ -26,7 +26,7 @@ export interface Action {
   updateUserIdsAndPhoneNumbers?: UserIdsAndPhoneNumbers;
   setMyUser?: MyUser;
   setSignals?: SignalEntry[];
-  resetMatch?: null;
+  resetStoreToDefaults?: null;
 }
 
 export function mergeMaps<T>(
@@ -87,6 +87,8 @@ function checkStoreInvariants(state: StoreState) {
 function reduce(state: StoreState, action: Action) {
   if (undefined !== action.setGamesList) {
     return { ...state, gamesList: action.setGamesList };
+  } else if (undefined !== action.resetStoreToDefaults) {
+    return storeStateDefault;
   } else if (undefined !== action.setMatchesList) {
     let { matchesList, currentMatchIndex, ...rest } = state;
     if (!isInRange(state.currentMatchIndex, action.setMatchesList)) {
