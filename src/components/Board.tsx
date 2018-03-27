@@ -57,10 +57,15 @@ class Board extends React.Component<BoardProps, {}> {
     ] as CanvasImage).imageNode.getAbsolutePosition();
     console.log(position);
 
+    let width = this.props.gameSpec.board.width;
+    let height = this.props.gameSpec.board.height;
+    let x = position.x / width * 100;
+    let y = position.y / height * 100;
+    console.log(x, y);
+
     const match: MatchInfo = this.props.matchInfo;
     const helper: MatchStateHelper = new MatchStateHelper(match);
-    // console.log(match);
-    helper.dragTo(index, position.x, position.y);
+    helper.dragTo(index, x, y);
     ourFirebase.updatePieceState(match, index);
   };
 
