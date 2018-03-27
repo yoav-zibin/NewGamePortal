@@ -1,16 +1,16 @@
 import * as React from 'react';
-import RaisedButton from 'material-ui/RaisedButton';
 import AppBar from 'material-ui/AppBar';
 import { connect } from 'react-redux';
 import { StoreState } from '../types/index';
 
 import { MatchInfo } from '../types';
-import { GridList, GridTile } from 'material-ui/GridList';
+// import { GridList, GridTile } from 'material-ui/GridList';
 import FloatingActionButton from 'material-ui/FloatingActionButton';
 import ContentAdd from 'material-ui/svg-icons/content/add';
-import IconButton from 'material-ui/IconButton';
-import Subheader from 'material-ui/Subheader';
-import StarBorder from 'material-ui/svg-icons/toggle/star-border';
+
+import { List, ListItem } from 'material-ui/List';
+// import ActionGrade from 'material-ui/svg-icons/action/grade';
+import Avatar from 'material-ui/Avatar';
 
 const styles: any = {
   root: {
@@ -19,14 +19,20 @@ const styles: any = {
     justifyContent: 'space-around'
   },
   gridList: {
-    width: 500,
-    height: 450,
+    top: 10,
+    position: 'absolute',
+    left: 0,
+    right: 0,
     overflowY: 'auto'
+    // float:'center'
   },
   button: {
-    float: 'right',
-    marginRight: 500,
-    marginTop: 70
+    flex: 1,
+    position: 'fixed',
+    bottom: 10,
+    right: 0,
+    alignSelf: 'flex-end'
+    // float: 'right'
   }
 };
 
@@ -36,31 +42,26 @@ interface Props {
 
 class MatchesList extends React.Component<Props, {}> {
   render() {
+    let dates = this.props.matchesList.map(tile => {
+      return timeSince(tile.lastUpdatedOn);
+    });
+
     return (
       <div>
         <AppBar
           title="Game Portal"
           iconClassNameRight="muidocs-icon-navigation-expand-more"
         />
-        <RaisedButton label="Default" />
         <div style={styles.root}>
-          <GridList cellHeight={180} style={styles.gridList}>
-            <Subheader>December</Subheader>
-            {this.props.matchesList.map(tile => (
-              <GridTile
-                key={tile.game.gameSpecId}
-                title={tile.game.gameName}
-                subtitle={''}
-                actionIcon={
-                  <IconButton>
-                    <StarBorder color="white" />
-                  </IconButton>
-                }
-              >
-                <img src={tile.game.screenShot.downloadURL} />
-              </GridTile>
+          <List>
+            {this.props.matchesList.map((tile, idx) => (
+              <ListItem
+                primaryText={tile.game.gameName}
+                secondaryText={'Last Played: ' + dates[idx]}
+                rightAvatar={<Avatar src={tile.game.screenShot.downloadURL} />}
+              />
             ))}
-          </GridList>
+          </List>
         </div>
         <FloatingActionButton style={styles.button} href="/addMatches">
           <ContentAdd />
@@ -68,6 +69,32 @@ class MatchesList extends React.Component<Props, {}> {
       </div>
     );
   }
+}
+function timeSince(date: number) {
+  var seconds: number = Math.floor((+new Date() - date) / 1000);
+
+  var interval: number = Math.floor(seconds / 31536000);
+
+  if (interval > 1) {
+    return interval + ' years';
+  }
+  interval = Math.floor(seconds / 2592000);
+  if (interval > 1) {
+    return interval + ' months';
+  }
+  interval = Math.floor(seconds / 86400);
+  if (interval > 1) {
+    return interval + ' days';
+  }
+  interval = Math.floor(seconds / 3600);
+  if (interval > 1) {
+    return interval + ' hours';
+  }
+  interval = Math.floor(seconds / 60);
+  if (interval > 1) {
+    return interval + ' minutes';
+  }
+  return Math.floor(seconds) + ' seconds';
 }
 
 const mapStateToProps = (state: StoreState) => ({
