@@ -470,6 +470,7 @@ export namespace ourFirebase {
 
   // Call this after updating a single piece.
   export function updatePieceState(match: MatchInfo, pieceIndex: number) {
+    console.log('updatePieceState');
     const pieceState: PieceState = match.matchState[pieceIndex];
     const updates: any = {};
     updates[`pieces/${pieceIndex}`] = convertPieceState(pieceState);

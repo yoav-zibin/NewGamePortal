@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Layer, Stage } from 'react-konva';
+import { Layer, Stage, Image } from 'react-konva';
 import { MatchInfo, GameSpec, Piece } from '../types';
 import CanvasImage from './CanvasImage';
 import { AppBar, FlatButton } from 'material-ui';
@@ -49,16 +49,49 @@ class Board extends React.Component<BoardProps, {}> {
     console.log('Handle Card Click for index:', index);
   }
 
+  handleDragEnd = (index: number) => {
+    console.log('handleragEnd' + index);
+    let items = this.props.matchInfo.matchState;
+    let item = items[index];
+    console.log(this.refs['canvasImage' + index]);
+
+    let position = ((this.refs['canvasImage' + index] as CanvasImage).refs
+      .image as Image)
+      .getNativeNode()
+      .getAbsolutePosition();
+
+    let width = this.props.gameSpec.board.width;
+    let height = this.props.gameSpec.board.height;
+
+    if (
+      position.x > 0 &&
+      position.x < width &&
+      position.y > 0 &&
+      position.y < height
+    ) {
+      item.x = position.x;
+      item.y = position.y;
+      items[index] = item;
+    }
+  };
+
+  //   componentWillUpdate() {
+  //     for (let i = 0; i < this.props.pieces.length; i++) {
+  //       this.refs['canvasImage' + i].refs['image'].cache();
+  //       this.refs['canvasImage' + i].refs['image'].drawHitFromCache();
+  //     }
+  //   }
+
   render() {
     const props = this.props;
     if (!props.gameSpec) {
       return <div>No game spec</div>;
     }
-    let width = 600;
-    let height = 600;
 
     // TODO: Complete layer for board
     let boardImage = props.gameSpec.board.downloadURL;
+    let width = props.gameSpec.board.width;
+    let height = props.gameSpec.board.height;
     let boardLayer = (
       <CanvasImage height={height} width={width} src={boardImage} />
     );
@@ -120,6 +153,8 @@ class Board extends React.Component<BoardProps, {}> {
             //   thiz.showCardVisibility(index);
             // }
             // thiz.handleDragEnd(index)
+            this.handleDragEnd(index);
+            // ourFirebase.updatePieceState(props.matchInfo, index);
             console.log('Drag End');
           }}
         />
