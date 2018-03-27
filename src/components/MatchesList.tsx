@@ -18,13 +18,12 @@ const styles: any = {
     flexWrap: 'wrap',
     justifyContent: 'space-around'
   },
-  gridList: {
-    top: 10,
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    overflowY: 'auto'
-    // float:'center'
+  list: {
+    width: '100%'
+  },
+  icon: {
+    height: 60,
+    width: 60
   },
   button: {
     flex: 1,
@@ -53,12 +52,22 @@ class MatchesList extends React.Component<Props, {}> {
           iconClassNameRight="muidocs-icon-navigation-expand-more"
         />
         <div style={styles.root}>
-          <List>
+          <List style={styles.list}>
             {this.props.matchesList.map((tile, idx) => (
               <ListItem
                 primaryText={tile.game.gameName}
-                secondaryText={'Last Played: ' + dates[idx]}
-                rightAvatar={<Avatar src={tile.game.screenShot.downloadURL} />}
+                secondaryText={
+                  'Last played ' +
+                  dates[idx] +
+                  ' ago with ' +
+                  tile.participantsUserIds
+                }
+                rightAvatar={
+                  <Avatar
+                    src={tile.game.screenShot.downloadURL}
+                    style={styles.icon}
+                  />
+                }
               />
             ))}
           </List>
