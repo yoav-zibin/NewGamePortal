@@ -51,28 +51,17 @@ class Board extends React.Component<BoardProps, {}> {
 
   handleDragEnd = (index: number) => {
     console.log('handleragEnd' + index);
-    let items = this.props.matchInfo.matchState;
-    let item = items[index];
-    console.log(this.refs['canvasImage' + index]);
 
     let position = (this.refs[
       'canvasImage' + index
     ] as CanvasImage).imageNode.getAbsolutePosition();
     console.log(position);
 
-    let width = this.props.gameSpec.board.width;
-    let height = this.props.gameSpec.board.height;
-
-    if (
-      position.x > 0 &&
-      position.x < width &&
-      position.y > 0 &&
-      position.y < height
-    ) {
-      item.x = position.x;
-      item.y = position.y;
-      items[index] = item;
-    }
+    const match: MatchInfo = this.props.matchInfo;
+    const helper: MatchStateHelper = new MatchStateHelper(match);
+    // console.log(match);
+    helper.dragTo(index, position.x, position.y);
+    ourFirebase.updatePieceState(match, index);
   };
 
   //   componentWillUpdate() {
