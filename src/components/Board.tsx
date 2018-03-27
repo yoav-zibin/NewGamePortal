@@ -5,13 +5,14 @@ import CanvasImage from './CanvasImage';
 import { AppBar, FlatButton } from 'material-ui';
 import { connect } from 'react-redux';
 import { StoreState } from '../types/index';
+import { ourFirebase } from '../services/firebase';
+import { MatchStateHelper } from '../services/matchStateHelper';
 
 interface BoardProps {
   pieces: Piece[];
   matchInfo: MatchInfo;
   gameSpec: GameSpec;
   myUserId: string;
-  onReset: () => void;
 }
 
 /**
@@ -22,6 +23,30 @@ interface BoardProps {
 class Board extends React.Component<BoardProps, {}> {
   constructor(props: BoardProps) {
     super(props);
+  }
+
+  // cycles through the images of each piece
+  togglePiece(index: number) {
+    this.props.pieces[index].deckPieceIndex += 1;
+    this.props.pieces[index].deckPieceIndex %= this.props.pieces[
+      index
+    ].element.images.length;
+    ourFirebase.updateMatchState(this.props.matchInfo);
+  }
+
+  rotatePiece(index: number) {
+    // TODO:
+    console.log('Rotate Piece index:', index);
+  }
+
+  rollDice(index: number) {
+    // TODO:
+    console.log('Roll Dice for index:', index);
+  }
+
+  handleCardClick(index: number) {
+    // TODO:
+    console.log('Handle Card Click for index:', index);
   }
 
   render() {
@@ -40,7 +65,7 @@ class Board extends React.Component<BoardProps, {}> {
 
     // // TODO: Complete layer for pieces
     let piecesLayer = props.matchInfo.matchState.map((piece, index) => {
-      let pieceSpec = props.gameSpec.pieces[piece.currentImageIndex];
+      const pieceSpec = props.gameSpec.pieces[index];
       let kind = pieceSpec.element.elementKind;
       return (
         <CanvasImage
@@ -49,15 +74,16 @@ class Board extends React.Component<BoardProps, {}> {
           draggable={pieceSpec.element.isDraggable || kind === 'standard'}
           onClick={() => {
             console.log('Piece clicked!');
-            // if (kind === 'standard') {
-            //   this.rotatePiece('canvasImage' + index, index, piece);
-            // } else if (piece.kind === 'toggable') {
-            //   this.togglePiece('canvasImage' + index, index, piece);
-            // } else if (piece.kind === 'dice') {
-            //   this.rollDice('canvasImage' + index, index, piece);
-            // } else if (piece.kind === 'card') {
-            //   this.handleCardClick('canvasImage' + index, index, piece);
-            // }
+            if (kind === 'standard') {
+              this.rotatePiece(index);
+            } else if (kind === 'toggable') {
+              console.log('here');
+              this.togglePiece(index);
+            } else if (kind === 'dice') {
+              this.rollDice(index);
+            } else if (kind === 'card') {
+              this.handleCardClick(index);
+            }
           }}
           onMouseOver={() => {
             // this.props.hideCardOptions();
@@ -100,7 +126,6 @@ class Board extends React.Component<BoardProps, {}> {
       );
     });
 
-    console.log('Pieces Layer:', piecesLayer);
     return (
       <>
         <AppBar
@@ -110,7 +135,9 @@ class Board extends React.Component<BoardProps, {}> {
               label="Reset"
               onClick={e => {
                 e.preventDefault();
-                props.onReset();
+                const helper = new MatchStateHelper(props.matchInfo);
+                helper.resetMatch();
+                ourFirebase.updateMatchState(props.matchInfo);
               }}
             />
           }
@@ -146,10 +173,6 @@ const mapStateToProps = (state: StoreState) => {
 };
 
 // Later this will take dispatch: any as argument
-const mapDispatchToProps = () => ({
-  onReset: () => {
-    // TODO ourFirebase.updateMatchState();
-  }
-});
+const mapDispatchToProps = () => ({});
 
 export default connect(mapStateToProps, mapDispatchToProps)(Board);
