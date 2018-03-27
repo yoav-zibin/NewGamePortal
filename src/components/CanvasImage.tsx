@@ -1,5 +1,6 @@
 import { Image, KonvaNodeProps } from 'react-konva';
 import * as React from 'react';
+import * as Konva from 'konva';
 
 // global Window class doesn't come with Image()
 // so we have to add it ourselves
@@ -31,6 +32,8 @@ interface CanvasImageState {
 }
 
 class CanvasImage extends React.Component<CanvasImageProps, CanvasImageState> {
+  imageNode: Konva.Image;
+
   constructor(props: CanvasImageProps) {
     super(props);
     this.state = {
@@ -50,6 +53,8 @@ class CanvasImage extends React.Component<CanvasImageProps, CanvasImageState> {
       this.setState({
         image: image
       });
+      this.imageNode.cache();
+      this.imageNode.drawHitFromCache(0);
     };
   }
 
@@ -61,12 +66,23 @@ class CanvasImage extends React.Component<CanvasImageProps, CanvasImageState> {
       this.setState({
         image: image
       });
+      this.imageNode.cache();
+      this.imageNode.drawHitFromCache(0);
     };
   };
 
   render() {
     return (
-      <Image ref={() => 'image'} {...this.props} image={this.state.image} />
+      <Image
+        ref={(node: any) => {
+          if (node !== null) {
+            this.imageNode = node;
+          }
+          return 'image';
+        }}
+        {...this.props}
+        image={this.state.image}
+      />
     );
   }
 }
