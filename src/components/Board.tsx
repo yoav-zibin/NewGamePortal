@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Layer, Stage, Image } from 'react-konva';
+import { Layer, Stage } from 'react-konva';
 import { MatchInfo, GameSpec, Piece } from '../types';
 import CanvasImage from './CanvasImage';
 import { AppBar, FlatButton } from 'material-ui';
@@ -55,10 +55,10 @@ class Board extends React.Component<BoardProps, {}> {
     let item = items[index];
     console.log(this.refs['canvasImage' + index]);
 
-    let position = ((this.refs['canvasImage' + index] as CanvasImage).refs
-      .image as Image)
-      .getNativeNode()
-      .getAbsolutePosition();
+    let position = (this.refs[
+      'canvasImage' + index
+    ] as CanvasImage).imageNode.getAbsolutePosition();
+    console.log(position);
 
     let width = this.props.gameSpec.board.width;
     let height = this.props.gameSpec.board.height;
