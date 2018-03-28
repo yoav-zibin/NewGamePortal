@@ -49,16 +49,43 @@ class Board extends React.Component<BoardProps, {}> {
     console.log('Handle Card Click for index:', index);
   }
 
+  handleDragEnd = (index: number) => {
+    console.log('handleragEnd' + index);
+
+    let position = (this.refs[
+      'canvasImage' + index
+    ] as CanvasImage).imageNode.getAbsolutePosition();
+    console.log(position);
+
+    let width = this.props.gameSpec.board.width;
+    let height = this.props.gameSpec.board.height;
+    let x = position.x / width * 100;
+    let y = position.y / height * 100;
+    console.log(x, y);
+
+    const match: MatchInfo = this.props.matchInfo;
+    const helper: MatchStateHelper = new MatchStateHelper(match);
+    helper.dragTo(index, x, y);
+    ourFirebase.updatePieceState(match, index);
+  };
+
+  //   componentWillUpdate() {
+  //     for (let i = 0; i < this.props.pieces.length; i++) {
+  //       this.refs['canvasImage' + i].refs['image'].cache();
+  //       this.refs['canvasImage' + i].refs['image'].drawHitFromCache();
+  //     }
+  //   }
+
   render() {
     const props = this.props;
     if (!props.gameSpec) {
       return <div>No game spec</div>;
     }
-    let width = 600;
-    let height = 600;
 
     // TODO: Complete layer for board
     let boardImage = props.gameSpec.board.downloadURL;
+    let width = props.gameSpec.board.width;
+    let height = props.gameSpec.board.height;
     let boardLayer = (
       <CanvasImage height={height} width={width} src={boardImage} />
     );
@@ -120,6 +147,8 @@ class Board extends React.Component<BoardProps, {}> {
             //   thiz.showCardVisibility(index);
             // }
             // thiz.handleDragEnd(index)
+            this.handleDragEnd(index);
+            // ourFirebase.updatePieceState(props.matchInfo, index);
             console.log('Drag End');
           }}
         />

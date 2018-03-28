@@ -43,6 +43,8 @@ class CanvasImage extends React.Component<CanvasImageProps, CanvasImageState> {
 
   componentDidMount() {
     this.setImage();
+    // this.refs['image'].cache();
+    // this.refs['image'].drawHitFromCache();
   }
 
   componentWillReceiveProps(nextProps: CanvasImageProps) {
