@@ -23,7 +23,9 @@ const styles: any = {
   },
   icon: {
     height: 60,
-    width: 60
+    width: 60,
+    bottom: '5px',
+    top: '5px'
   },
   button: {
     flex: 1,
