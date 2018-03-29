@@ -3,7 +3,7 @@ import AppBar from 'material-ui/AppBar';
 import { connect } from 'react-redux';
 import { StoreState } from '../types/index';
 
-import { MatchInfo } from '../types';
+import { MatchInfo, UserIdToPhoneNumber, PhoneNumberToContact } from '../types';
 // import { GridList, GridTile } from 'material-ui/GridList';
 import FloatingActionButton from 'material-ui/FloatingActionButton';
 import ContentAdd from 'material-ui/svg-icons/content/add';
@@ -39,14 +39,12 @@ const styles: any = {
 
 interface Props {
   matchesList: MatchInfo[];
+  userIdToPhoneNumber: UserIdToPhoneNumber;
+  phoneNumberToContact: PhoneNumberToContact;
 }
 
 class MatchesList extends React.Component<Props, {}> {
   render() {
-    let dates = this.props.matchesList.map(tile => {
-      return timeSince(tile.lastUpdatedOn);
-    });
-
     return (
       <div>
         <AppBar
@@ -55,14 +53,27 @@ class MatchesList extends React.Component<Props, {}> {
         />
         <div style={styles.root}>
           <List style={styles.list}>
-            {this.props.matchesList.map((tile, idx) => (
+            {this.props.matchesList.map(tile => (
               <ListItem
                 primaryText={tile.game.gameName}
                 secondaryText={
                   'Last played ' +
-                  dates[idx] +
+                  timeSince(tile.lastUpdatedOn) +
                   ' ago with ' +
-                  tile.participantsUserIds
+                  // FIXME: The store doesn't have values for phoneNumberToContact and
+                  // userIdToPhoneNumber, so it throws an undefined error.
+                  tile.participantsUserIds.reduce(
+                    (accum: string, userId: string) => {
+                      const phone: string = this.props.userIdToPhoneNumber[
+                        userId
+                      ];
+                      const name: string = this.props.phoneNumberToContact[
+                        phone
+                      ].name;
+                      return (accum += name + ' ');
+                    },
+                    ''
+                  )
                 }
                 rightAvatar={
                   <Avatar
@@ -109,7 +120,9 @@ function timeSince(date: number) {
 }
 
 const mapStateToProps = (state: StoreState) => ({
-  matchesList: state.matchesList
+  matchesList: state.matchesList,
+  userIdToPhoneNumber: state.userIdsAndPhoneNumbers.userIdToPhoneNumber,
+  phoneNumberToContact: state.phoneNumberToContact
 });
 
 // Later this will take dispatch: any as argument
