@@ -119,7 +119,7 @@ class Login extends React.Component {
       .then(function(result: any) {
         /// User signed in successfully.
         var user = result.user;
-        ourFirebase.writeUser(result.user);
+        ourFirebase.writeUser();
         ourFirebase.storeContacts(testContacts);
         return user;
       })
