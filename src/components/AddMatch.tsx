@@ -19,6 +19,8 @@ class AddMatches extends React.Component<Props, {}> {
   // Invoked when a list item is selected
   onNewRequest = () => {
     // TODO: Link to the new match setup (adding contacts, etc...)
+    // Create the match via firebase
+    // Use router to go to /matches/:matchId
   };
 
   render() {
