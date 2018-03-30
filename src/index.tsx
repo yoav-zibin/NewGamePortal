@@ -20,37 +20,38 @@ import { Contact, PhoneNumberToContact } from './types';
 document.getElementById('loadingSpinner')!.style.display = 'none';
 
 // TODO: delete once we have phone-number login.
+// These phone numbers are also in our firebase rules (so we can do testing).
 const testUsers: Contact[] = [
   {
-    phoneNumber: '9175730795',
+    phoneNumber: '+19175730795',
     name: 'Yoav Zibin'
   },
   {
-    phoneNumber: '2016824408',
+    phoneNumber: '+12016824408',
     name: 'Amanpreet Singh'
   },
   {
-    phoneNumber: '7326476905',
+    phoneNumber: '+17326476905',
     name: 'Herbert Li'
   },
   {
-    phoneNumber: '7187107933',
+    phoneNumber: '+17187107933',
     name: 'Jiaqi Zou (Angelina)'
   },
   {
-    phoneNumber: '7185525029',
+    phoneNumber: '+17185525029',
     name: 'Priyanka vaidya'
   },
   {
-    phoneNumber: '2038859211',
+    phoneNumber: '+12038859211',
     name: 'Radhika Mattoo'
   },
   {
-    phoneNumber: '5513586613',
+    phoneNumber: '+15513586613',
     name: 'Sisi Li'
   },
   {
-    phoneNumber: '9174021465',
+    phoneNumber: '+19174021465',
     name: 'Yiwei Wu'
   }
 ];
@@ -60,9 +61,10 @@ const myUserIndex = window.location.search
   ? Number(window.location.search.substr(1))
   : 0;
 const myUser = testUsers[myUserIndex] || testUsers[0];
+console.log('My fake user is: ', myUser);
 ourFirebase.signInAnonymously(myUser.phoneNumber).then(() => {
   const userId = ourFirebase.getUserId();
-  console.warn('Signed in anonymously, userId=', userId);
+  console.warn('Signed in anonymously, userId=', userId, ' myUser=', myUser);
   let currentContacts: PhoneNumberToContact = {};
   for (let contact of testUsers) {
     currentContacts[contact.phoneNumber] = contact;
@@ -80,7 +82,7 @@ ReactDOM.render(
       >
         <div>
           <Route path="/" component={App} exact={true} />
-          <Route path="/match/:matchId" component={PlayingScreen} />
+          <Route path="/PlayingScreen" component={PlayingScreen} />
           <Route path="/board" component={Board} />
           <Route path="/myMatches" component={MatchesList} />
           <Route path="/addMatch" component={AddMatch} />
