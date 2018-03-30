@@ -93,6 +93,13 @@ class ContactsList extends React.Component<{}, {}> {
     return index;
   };
 
+  handleUpdate = (searchText: string, dataSource: any[]) => {
+    if (searchText.length === 0) {
+      this.setState({ users: testUsers, notUsers: testNotUsers });
+    }
+    console.log(dataSource.length);
+  };
+
   render() {
     return (
       <div>
@@ -103,6 +110,7 @@ class ContactsList extends React.Component<{}, {}> {
           dataSource={allUsers}
           maxSearchResults={5}
           onNewRequest={this.handleRequest}
+          onUpdateInput={this.handleUpdate}
         />
         <List>
           <Subheader>Game User</Subheader>
