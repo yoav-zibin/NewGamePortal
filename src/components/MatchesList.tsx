@@ -90,7 +90,7 @@ class MatchesList extends React.Component<Props, {}> {
             ))}
           </List>
         </div>
-        <FloatingActionButton style={styles.button} href="/addMatches">
+        <FloatingActionButton style={styles.button} href="/addMatch">
           <ContentAdd />
         </FloatingActionButton>
       </div>
