@@ -19,6 +19,7 @@ interface CanvasImageProps extends KonvaNodeProps {
   width: number;
   height: number;
   onClick?: (e: React.MouseEvent<{}>) => void;
+  onContextMenu?: (e: React.MouseEvent<{}>) => void;
   x?: number;
   y?: number;
   rotation?: number;
@@ -43,8 +44,6 @@ class CanvasImage extends React.Component<CanvasImageProps, CanvasImageState> {
 
   componentDidMount() {
     this.setImage();
-    // this.refs['image'].cache();
-    // this.refs['image'].drawHitFromCache();
   }
 
   componentWillReceiveProps(nextProps: CanvasImageProps) {
