@@ -54,6 +54,7 @@ class ContactsList extends React.Component<Props, {}> {
           {this.filterContacts(this.props.users)
             .map((user: Contact) => (
             <ListItem
+              key={user.phoneNumber}
               primaryText={user.name}
               rightIconButton={
                 <FloatingActionButton mini={true} style={style}>
@@ -69,6 +70,7 @@ class ContactsList extends React.Component<Props, {}> {
           {this.filterContacts(this.props.notUsers)
             .map((user: Contact) => (
             <ListItem
+              key={user.phoneNumber}
               primaryText={user.name}
               rightIconButton={
                 <RaisedButton label="invite" primary={true} style={style} />

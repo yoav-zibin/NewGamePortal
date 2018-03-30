@@ -421,7 +421,6 @@ export namespace ourFirebase {
     dispatchSetMatchesList();
     const matchIndex = store.getState().matchesList.indexOf(newMatch);
     checkCondition('matchIndex', matchIndex >= 0);
-    dispatch({ setCurrentMatchIndex: matchIndex });
     return newMatch;
   }
 
