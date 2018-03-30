@@ -5,6 +5,7 @@ import { GameInfo } from '../types';
 import GamesList from './GamesList';
 import { connect } from 'react-redux';
 import { StoreState } from '../types/index';
+import { ourFirebase } from '../services/firebase';
 
 const style: any = {
   display: 'block',
@@ -17,10 +18,14 @@ interface Props {
 
 class AddMatches extends React.Component<Props, {}> {
   // Invoked when a list item is selected
-  onNewRequest = () => {
-    // TODO: Link to the new match setup (adding contacts, etc...)
-    // Create the match via firebase
-    // Use router to go to /matches/:matchId
+  onNewRequest = (chosenGame: string, index: number) => {
+    console.log('CHOSEN GAME:', chosenGame, index);
+    this.props.gamesList.forEach((game: GameInfo) => {
+      if (game.gameName === chosenGame) {
+        let matchId = ourFirebase.createMatch(game).matchId;
+        window.location.href = '/matches/' + matchId;
+      }
+    });
   };
 
   render() {
