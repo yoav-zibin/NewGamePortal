@@ -1,6 +1,4 @@
 import * as React from 'react';
-// import Contacts from './Contacts';
-// import SearchBar from './SearchBar';
 // import {PhoneNumberToUserId, PhoneNumberToContact, Contact} from '../types';
 import { Contact } from '../types';
 import { List, ListItem } from 'material-ui/List';
@@ -9,17 +7,11 @@ import Subheader from 'material-ui/Subheader';
 import FloatingActionButton from 'material-ui/FloatingActionButton';
 import RaisedButton from 'material-ui/RaisedButton';
 import ContentAdd from 'material-ui/svg-icons/content/add';
-import TextField from 'material-ui/TextField';
-// import TextField from 'material-ui/TextField';
+import AutoComplete from 'material-ui/AutoComplete';
 
 const style = {
   marginRight: 20
 };
-
-/*interface Props {
-  users: Contact[];
-  notUsers: Contact[]
-}*/
 
 const testUsers: Contact[] = [
   {
@@ -54,6 +46,16 @@ const testNotUsers: Contact[] = [
   }
 ];
 
+const allUsers: String[] = [
+  'Brendan Lim',
+  'Eric Hoffman',
+  'Grace Ng',
+  'Chelsea Otakan',
+  'Kerem Suer',
+  'Raquel Parrado',
+  'James Anderson'
+];
+
 // interface Props
 
 class ContactsList extends React.Component<{}, {}> {
@@ -63,36 +65,44 @@ class ContactsList extends React.Component<{}, {}> {
     value: ''
   };
 
-  handleChange = (event: any) => {
-    this.setState({
-      value: event.target.value
-    });
-    if (this.state.value.length > 0) {
+  handleRequest = (chosenRequest: string, index: number) => {
+    if (chosenRequest.length > 0) {
       let targetUser: Contact[] = [];
       let targetNotUser: Contact[] = [];
-      this.state.users.map((user: Contact) => {
-        if (user.name.indexOf(this.state.value) !== -1) {
+      let flag: number = 0;
+
+      testUsers.map((user: Contact) => {
+        if (user.name === chosenRequest) {
           targetUser.push(user);
+          flag = 1;
         }
       });
-      this.state.notUsers.map((user: Contact) => {
-        if (user.name.indexOf(this.state.value) !== -1) {
-          targetNotUser.push(user);
-        }
-      });
+
+      if (flag !== 1) {
+        testNotUsers.map((user: Contact) => {
+          if (user.name === chosenRequest) {
+            targetNotUser.push(user);
+          }
+        });
+      }
       this.setState({ users: targetUser, notUsers: targetNotUser });
     } else {
       this.setState({ users: testUsers, notUsers: testNotUsers });
     }
+    console.log(chosenRequest.length);
+    return index;
   };
 
   render() {
     return (
       <div>
-        <TextField
-          hintText="Search"
-          fullWidth={true}
-          onChange={this.handleChange}
+        <br />
+        <AutoComplete
+          floatingLabelText="Search"
+          filter={AutoComplete.fuzzyFilter}
+          dataSource={allUsers}
+          maxSearchResults={5}
+          onNewRequest={this.handleRequest}
         />
         <List>
           <Subheader>Game User</Subheader>
