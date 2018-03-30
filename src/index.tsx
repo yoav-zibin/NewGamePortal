@@ -4,7 +4,7 @@ import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import { Provider } from 'react-redux';
 import { Route, BrowserRouter } from 'react-router-dom';
 
-import { store, dispatch } from './stores/index';
+import { store } from './stores/index';
 import App from './App';
 import ContactsList from './components/ContactsList';
 import PlayingScreen from './components/PlayingScreen';
@@ -15,32 +15,59 @@ import Login from './components/Login';
 import './index.css';
 import Board from './components/Board';
 import { ourFirebase } from './services/firebase';
-import { MatchStateHelper } from './services/matchStateHelper';
+import { Contact, PhoneNumberToContact } from './types';
 
 document.getElementById('loadingSpinner')!.style.display = 'none';
 
 // TODO: delete once we have phone-number login.
+const testUsers: Contact[] = [
+  {
+    phoneNumber: '9175730795',
+    name: 'Yoav Zibin'
+  },
+  {
+    phoneNumber: '2016824408',
+    name: 'Amanpreet Singh'
+  },
+  {
+    phoneNumber: '7326476905',
+    name: 'Herbert Li'
+  },
+  {
+    phoneNumber: '7187107933',
+    name: 'Jiaqi Zou (Angelina)'
+  },
+  {
+    phoneNumber: '7185525029',
+    name: 'Priyanka vaidya'
+  },
+  {
+    phoneNumber: '2038859211',
+    name: 'Radhika Mattoo'
+  },
+  {
+    phoneNumber: '5513586613',
+    name: 'Sisi Li'
+  },
+  {
+    phoneNumber: '9174021465',
+    name: 'Yiwei Wu'
+  }
+];
 ourFirebase.allPromisesForTests = [];
 ourFirebase.init();
-ourFirebase.signInAnonymously().then(() => {
+const myUserIndex = window.location.search
+  ? Number(window.location.search.substr(1))
+  : 0;
+const myUser = testUsers[myUserIndex] || testUsers[0];
+ourFirebase.signInAnonymously(myUser.phoneNumber).then(() => {
   const userId = ourFirebase.getUserId();
   console.warn('Signed in anonymously, userId=', userId);
-  Promise.all(ourFirebase.allPromisesForTests!).then(() => {
-    const gameInfo = store
-      .getState()
-      .gamesList.find(gameInList => gameInList.gameName === 'Gin Rummy')!;
-    ourFirebase.fetchGameSpec(gameInfo);
-    Promise.all(ourFirebase.allPromisesForTests!).then(() => {
-      if (store.getState().matchesList.length === 4) {
-        const gameSpec = store.getState().gameSpecs.gameSpecIdToGameSpec[
-          gameInfo.gameSpecId
-        ];
-        const initialState = MatchStateHelper.createInitialState(gameSpec);
-        ourFirebase.createMatch(gameInfo, initialState);
-      }
-      dispatch({ setCurrentMatchIndex: 0 });
-    });
-  });
+  let currentContacts: PhoneNumberToContact = {};
+  for (let contact of testUsers) {
+    currentContacts[contact.phoneNumber] = contact;
+  }
+  ourFirebase.storeContacts(currentContacts);
 });
 
 ReactDOM.render(
