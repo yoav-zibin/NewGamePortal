@@ -28,10 +28,10 @@ ourFirebase.signInAnonymously().then(() => {
   Promise.all(ourFirebase.allPromisesForTests!).then(() => {
     const gameInfo = store
       .getState()
-      .gamesList.find(gameInList => gameInList.gameName === 'Chess')!;
+      .gamesList.find(gameInList => gameInList.gameName === 'Gin Rummy')!;
     ourFirebase.fetchGameSpec(gameInfo);
     Promise.all(ourFirebase.allPromisesForTests!).then(() => {
-      if (store.getState().matchesList.length === 0) {
+      if (store.getState().matchesList.length === 4) {
         const gameSpec = store.getState().gameSpecs.gameSpecIdToGameSpec[
           gameInfo.gameSpecId
         ];

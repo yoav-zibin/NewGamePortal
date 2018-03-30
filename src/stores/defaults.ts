@@ -25,22 +25,90 @@ export const storeStateDefault: StoreState = {
       }
     }
   ],
+  // state.gameSpecs.gameSpecIdToGameSpec[match.gameSpecId].pieces.length
   gameSpecs: {
     imageIdToImage: {},
     elementIdToElement: {},
-    gameSpecIdToGameSpec: {}
+    gameSpecIdToGameSpec: {
+      '456': {
+        gameSpecId: '456',
+        board: {
+          imageId: '456',
+          width: 1,
+          height: 2,
+          isBoardImage: true,
+          downloadURL: 'https://someurl.com/foo.png'
+        },
+        pieces: [
+          {
+            element: {
+              elementId: '123',
+              width: 23,
+              height: 23,
+              images: [],
+              isDraggable: true,
+              elementKind: 'standard'
+            },
+            initialState: {
+              x: 1,
+              y: 2,
+              zDepth: 3,
+              currentImageIndex: 4,
+              cardVisibilityPerIndex: {}
+            },
+            deckPieceIndex: 1
+          }
+        ]
+      }
+    }
   },
-  matchesList: [],
+  matchesList: [
+    {
+      matchId: 'someId',
+      gameSpecId: '456',
+      game: {
+        gameSpecId: '456',
+        gameName: 'Checkers',
+        screenShot: {
+          imageId: 'someImageId',
+          downloadURL: 'https://someurl.com/foo.png',
+          height: 1024,
+          width: 700,
+          isBoardImage: true
+        }
+      },
+      participantsUserIds: ['7UbETkgeXxe0RId6KxYioSJdARs1'], // including myself
+      lastUpdatedOn: 1234,
+      matchState: [
+        {
+          x: 1,
+          y: 2,
+          zDepth: 3,
+          currentImageIndex: 4,
+          cardVisibilityPerIndex: {}
+        }
+      ]
+    }
+  ],
   currentMatchIndex: -1,
-  phoneNumberToContact: {},
+  phoneNumberToContact: {
+    '2129981037': {
+      phoneNumber: '2129981037',
+      name: 'myContactName'
+    }
+  },
   userIdsAndPhoneNumbers: {
-    phoneNumberToUserId: {},
-    userIdToPhoneNumber: {}
+    phoneNumberToUserId: {
+      '2129981037': '7UbETkgeXxe0RId6KxYioSJdARs1'
+    },
+    userIdToPhoneNumber: {
+      '7UbETkgeXxe0RId6KxYioSJdARs1': '2129981037'
+    }
   },
   myUser: {
-    myPhoneNumber: '',
-    myCountryCode: '',
-    myUserId: ''
+    myPhoneNumber: '2129981037',
+    myCountryCode: '+1',
+    myUserId: '7UbETkgeXxe0RId6KxYioSJdARs1'
   },
   signals: []
 };

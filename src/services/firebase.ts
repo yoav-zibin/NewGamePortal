@@ -230,7 +230,7 @@ export namespace ourFirebase {
     for (let key of Object.keys(obj)) {
       checkCondition('index is int', /^(0|[1-9]\d*)$/.test(key));
       checkCondition('no duplicate index', !(key in vals));
-      vals[key] = obj[key];
+      vals[Number(key)] = obj[key];
       count++;
     }
     checkCondition('no missing index', count === vals.length);
@@ -326,7 +326,7 @@ export namespace ourFirebase {
     return game!;
   }
 
-  function listenToMatch(matchId: string) {
+  export function listenToMatch(matchId: string) {
     checkCondition(
       'listeningToMatchIds',
       listeningToMatchIds.indexOf(matchId) === -1
@@ -362,6 +362,8 @@ export namespace ourFirebase {
         lastUpdatedOn: matchFb.lastUpdatedOn,
         matchState: newMatchStates
       };
+
+      console.log('listenToMatch update');
       receivedMatches[matchId] = match;
       maybeDispatchSetMatchesList();
     });
@@ -421,7 +423,7 @@ export namespace ourFirebase {
     return newMatch;
   }
 
-  function addMatchMembership(toUserId: string, matchId: string) {
+  export function addMatchMembership(toUserId: string, matchId: string) {
     const matchMembership: fbr.MatchMembership = {
       addedByUid: getUserId(),
       timestamp: getTimestamp()
@@ -470,6 +472,7 @@ export namespace ourFirebase {
 
   // Call this after updating a single piece.
   export function updatePieceState(match: MatchInfo, pieceIndex: number) {
+    console.log('updatePieceState');
     const pieceState: PieceState = match.matchState[pieceIndex];
     const updates: any = {};
     updates[`pieces/${pieceIndex}`] = convertPieceState(pieceState);
@@ -574,7 +577,7 @@ export namespace ourFirebase {
     );
     mapPhoneNumbersToUserIds(numbersWithoutUserId);
 
-    const updates = {};
+    const updates: any = {};
     const oldContacts = state.phoneNumberToContact;
     currentPhoneNumbers.forEach(phoneNumber => {
       const currentContact = currentContacts[phoneNumber];
@@ -658,10 +661,10 @@ export namespace ourFirebase {
       // Deleting the signals we got from firebase.
       refUpdate(ref, updates);
 
-      // filtering old signals.
-      const now = new Date().getTime();
-      const fiveMinAgo = now - 5 * 60 * 1000;
-      signals = signals.filter(signal => fiveMinAgo <= signal.timestamp);
+      // filtering old signals isn't needed.
+      // const now = new Date().getTime();
+      // const fiveMinAgo = now - 5 * 60 * 1000;
+      // signals = signals.filter(signal => fiveMinAgo <= signal.timestamp);
 
       // Sorting: oldest entries are at the beginning
       signals.sort((signal1, signal2) => signal1.timestamp - signal2.timestamp);
@@ -687,6 +690,8 @@ export namespace ourFirebase {
       `/gamePortal/gamePortalUsers/${toUserId}/privateButAddable/signals`
     ).push();
     refSet(signalFbrRef, signalFbr);
+    // If we disconnect, cleanup the signal.
+    signalFbrRef.onDisconnect().remove();
   }
 
   export function addFcmToken(fcmToken: string, platform: 'ios' | 'android') {
