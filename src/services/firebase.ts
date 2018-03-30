@@ -183,15 +183,18 @@ export namespace ourFirebase {
 
   // Eventually dispatches the action updateGameSpecs.
   function fetchGameSpec(game: GameInfo) {
+    console.log('fetchGameSpec:', game);
     const gameSpecId = game.gameSpecId;
     assertLoggedIn();
     if (store.getState().gameSpecs.gameSpecIdToGameSpec[gameSpecId]) {
+      console.log('Game spec already exists');
       return;
     }
     addPromiseForTests(
       getRef(
         `/gamePortal/gamesInfoAndSpec/gameSpecsForPortal/${gameSpecId}`
       ).once('value', snapshot => {
+        console.log('Got game spec for:', game);
         const gameSpecF: fbr.GameSpecForPortal = snapshot.val();
         if (!gameSpecF) {
           throw new Error('no game spec!');
@@ -342,7 +345,6 @@ export namespace ourFirebase {
       listeningToMatchIds.indexOf(matchId) === -1
     );
     listeningToMatchIds.push(matchId);
-    // let matchInfo = {};
     return getRef('/gamePortal/matches/' + matchId).on('value', snap => {
       if (!snap) {
         return;
@@ -374,7 +376,9 @@ export namespace ourFirebase {
       };
 
       receivedMatches[matchId] = match;
-      dispatchSetMatchesList();
+      if (Object.keys(receivedMatches).length >= listeningToMatchIds.length) {
+        dispatchSetMatchesList();
+      }
     });
   }
 
@@ -386,6 +390,7 @@ export namespace ourFirebase {
   }
 
   export function createMatch(game: GameInfo) {
+    console.log('createMatch for:', game);
     const uid = getUserId();
     const matchRef = getRef('/gamePortal/matches').push();
     const matchId = matchRef.key!;
