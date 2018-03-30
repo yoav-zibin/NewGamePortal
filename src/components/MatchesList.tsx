@@ -53,9 +53,11 @@ class MatchesList extends React.Component<Props, {}> {
         />
         <div style={styles.root}>
           <List style={styles.list}>
-            {this.props.matchesList.map(tile => (
+            {this.props.matchesList.map((tile, index) => (
               <ListItem
-                key={tile.toString()}
+                // test implementation has the same match repeating,
+                // will cause warning with just tile.matchId
+                key={tile.matchId + index}
                 primaryText={tile.game.gameName}
                 secondaryText={
                   'Last played ' +
