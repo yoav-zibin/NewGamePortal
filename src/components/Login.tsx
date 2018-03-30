@@ -55,7 +55,11 @@ class Login extends React.Component {
   state = {
     code: '',
     phoneNum: '',
-    errorText: ''
+    veriCode: '',
+    errorText: '',
+    veriErrorText: '',
+    confirmationResult: null,
+    veriDisabled: true
   };
 
   handleChange = (event: any, index: number, value: any) => {
@@ -75,24 +79,55 @@ class Login extends React.Component {
     }
   };
 
+  handleCodeInput = (event: any) => {
+    if (!event.target.value) {
+      this.setState({
+        veriCode: event.target.value,
+        veriErrorText: 'This field is required'
+      });
+    } else {
+      this.setState({
+        veriCode: event.target.value,
+        phoneNum: event.target.value,
+        veriErrorText: ''
+      });
+    }
+  };
+
   onLogin = () => {
     ourFirebase.init();
-    if (
-      ourFirebase.signInWithPhoneNumber(
+
+    ourFirebase
+      .signInWithPhoneNumber(
         this.state.phoneNum,
         this.state.code,
         new firebase.auth.RecaptchaVerifier('recaptcha-container', {
           size: 'invisible'
         })
       )
-    ) {
-      alert('login success');
-      console.log(testContacts);
-      // ourFirebase.writeUser();
-      // ourFirebase.storeContacts(testContacts);
-    } else {
-      alert('login failed');
-    }
+      .then(function(confirmationResult: any) {
+        (window as any).confirmationResult = confirmationResult;
+      });
+
+    this.setState({ veriDisabled: false });
+  };
+
+  sendCode = () => {
+    var confirmationResult = (window as any).confirmationResult;
+    confirmationResult
+      .confirm(this.state.veriCode)
+      .then(function(result: any) {
+        /// User signed in successfully.
+        var user = result.user;
+        ourFirebase.writeUser(result.user);
+        ourFirebase.storeContacts(testContacts);
+        return user;
+      })
+      .catch(function(error: any) {
+        // User couldn't sign in (bad verification code?)
+        // ...
+        console.log(error);
+      });
   };
 
   render() {
@@ -125,7 +160,28 @@ class Login extends React.Component {
           />
           <br />
           <br />
-          <RaisedButton label="Login" primary={true} onClick={this.onLogin} />
+          <RaisedButton
+            label="get verification code"
+            primary={true}
+            onClick={this.onLogin}
+          />
+          <br />
+          <br />
+          <TextField
+            id="veriCode"
+            hintText="Enter your verification code"
+            errorText={this.state.veriErrorText}
+            onChange={this.handleCodeInput}
+            disabled={this.state.veriDisabled}
+          />
+          <br />
+          <br />
+          <RaisedButton
+            label="Login"
+            primary={true}
+            onClick={this.sendCode}
+            disabled={this.state.veriDisabled}
+          />
         </div>
       </div>
     );

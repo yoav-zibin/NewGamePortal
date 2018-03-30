@@ -1,11 +1,16 @@
 import * as React from 'react';
-import RaisedButton from 'material-ui/RaisedButton';
 import AppBar from 'material-ui/AppBar';
+import { connect } from 'react-redux';
+import { StoreState } from '../types/index';
 
-import { GridList, GridTile } from 'material-ui/GridList';
-import IconButton from 'material-ui/IconButton';
-import Subheader from 'material-ui/Subheader';
-import StarBorder from 'material-ui/svg-icons/toggle/star-border';
+import { MatchInfo, UserIdToPhoneNumber, PhoneNumberToContact } from '../types';
+// import { GridList, GridTile } from 'material-ui/GridList';
+import FloatingActionButton from 'material-ui/FloatingActionButton';
+import ContentAdd from 'material-ui/svg-icons/content/add';
+
+import { List, ListItem } from 'material-ui/List';
+// import ActionGrade from 'material-ui/svg-icons/action/grade';
+import Avatar from 'material-ui/Avatar';
 
 const styles: any = {
   root: {
@@ -13,57 +18,32 @@ const styles: any = {
     flexWrap: 'wrap',
     justifyContent: 'space-around'
   },
-  gridList: {
-    width: 500,
-    height: 450,
-    overflowY: 'auto'
+  list: {
+    width: '100%'
+  },
+  icon: {
+    height: 60,
+    width: 60,
+    bottom: '5px',
+    top: '5px'
+  },
+  button: {
+    flex: 1,
+    position: 'fixed',
+    bottom: 10,
+    right: 0,
+    alignSelf: 'flex-end'
+    // float: 'right'
   }
 };
 
-const tilesData = [
-  {
-    img: 'images/grid-list/00-52-29-429_640.jpg',
-    title: 'Breakfast',
-    author: 'jill111'
-  },
-  {
-    img: 'images/grid-list/burger-827309_640.jpg',
-    title: 'Tasty burger',
-    author: 'pashminu'
-  },
-  {
-    img: 'images/grid-list/camera-813814_640.jpg',
-    title: 'Camera',
-    author: 'Danson67'
-  },
-  {
-    img: 'images/grid-list/morning-819362_640.jpg',
-    title: 'Morning',
-    author: 'fancycrave1'
-  },
-  {
-    img: 'images/grid-list/hats-829509_640.jpg',
-    title: 'Hats',
-    author: 'Hans'
-  },
-  {
-    img: 'images/grid-list/honey-823614_640.jpg',
-    title: 'Honey',
-    author: 'fancycravel'
-  },
-  {
-    img: 'images/grid-list/vegetables-790022_640.jpg',
-    title: 'Vegetables',
-    author: 'jill111'
-  },
-  {
-    img: 'images/grid-list/water-plant-821293_640.jpg',
-    title: 'Water plant',
-    author: 'BkrmadtyaKarki'
-  }
-];
+interface Props {
+  matchesList: MatchInfo[];
+  userIdToPhoneNumber: UserIdToPhoneNumber;
+  phoneNumberToContact: PhoneNumberToContact;
+}
 
-class MatchesList extends React.Component {
+class MatchesList extends React.Component<Props, {}> {
   render() {
     return (
       <div>
@@ -71,29 +51,86 @@ class MatchesList extends React.Component {
           title="Game Portal"
           iconClassNameRight="muidocs-icon-navigation-expand-more"
         />
-        <RaisedButton label="Default" />
         <div style={styles.root}>
-          <GridList cellHeight={180} style={styles.gridList}>
-            <Subheader>December</Subheader>
-            {tilesData.map(tile => (
-              <GridTile
-                key={tile.img}
-                title={tile.title}
-                subtitle={''}
-                actionIcon={
-                  <IconButton>
-                    <StarBorder color="white" />
-                  </IconButton>
+          <List style={styles.list}>
+            {this.props.matchesList.map(tile => (
+              <ListItem
+                key={tile.toString()}
+                primaryText={tile.game.gameName}
+                secondaryText={
+                  'Last played ' +
+                  timeSince(tile.lastUpdatedOn) +
+                  ' ago with ' +
+                  // FIXME: The store doesn't have values for phoneNumberToContact and
+                  // userIdToPhoneNumber, so it throws an undefined error.
+                  tile.participantsUserIds.reduce(
+                    (accum: string, userId: string) => {
+                      const phone: string = this.props.userIdToPhoneNumber[
+                        userId
+                      ];
+                      if (phone) {
+                        const name: string = this.props.phoneNumberToContact[
+                          phone
+                        ].name;
+                        return (accum += name + ' ');
+                      } else {
+                        return (accum += 'Unidentified User ');
+                      }
+                    },
+                    ''
+                  )
                 }
-              >
-                <img src={tile.img} />
-              </GridTile>
+                rightAvatar={
+                  <Avatar
+                    src={tile.game.screenShot.downloadURL}
+                    style={styles.icon}
+                  />
+                }
+              />
             ))}
-          </GridList>
+          </List>
         </div>
+        <FloatingActionButton style={styles.button} href="/addMatch">
+          <ContentAdd />
+        </FloatingActionButton>
       </div>
     );
   }
 }
+function timeSince(date: number) {
+  var seconds: number = Math.floor((+new Date() - date) / 1000);
 
-export default MatchesList;
+  var interval: number = Math.floor(seconds / 31536000);
+
+  if (interval > 1) {
+    return interval + ' years';
+  }
+  interval = Math.floor(seconds / 2592000);
+  if (interval > 1) {
+    return interval + ' months';
+  }
+  interval = Math.floor(seconds / 86400);
+  if (interval > 1) {
+    return interval + ' days';
+  }
+  interval = Math.floor(seconds / 3600);
+  if (interval > 1) {
+    return interval + ' hours';
+  }
+  interval = Math.floor(seconds / 60);
+  if (interval > 1) {
+    return interval + ' minutes';
+  }
+  return Math.floor(seconds) + ' seconds';
+}
+
+const mapStateToProps = (state: StoreState) => ({
+  matchesList: state.matchesList,
+  userIdToPhoneNumber: state.userIdsAndPhoneNumbers.userIdToPhoneNumber,
+  phoneNumberToContact: state.phoneNumberToContact
+});
+
+// Later this will take dispatch: any as argument
+const mapDispatchToProps = () => ({});
+
+export default connect(mapStateToProps, mapDispatchToProps)(MatchesList);

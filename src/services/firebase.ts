@@ -30,6 +30,12 @@ import { Action } from '../reducers';
 
 // All interactions with firebase must be in this module.
 export namespace ourFirebase {
+  // Since our test use anonymous login
+  // and the rules only allow you to write there if you have auth.token.phone_number
+  // we can not add in gamePortal/PhoneNumberToUserId/${phoneNumber}
+  // So firebase rules add "123456789" for test
+  export const magicPhoneNumberForTest = '123456789';
+
   // We're using redux, so all state must be stored in the store.
   // I.e., we can't have any state/variables/etc that is used externally.
   let calledFunctions: BooleanIndexer = {};
@@ -74,9 +80,21 @@ export namespace ourFirebase {
     return <number>firebase.database.ServerValue.TIMESTAMP;
   }
 
+  export function signInAnonymously(phoneNumberForTest: string) {
+    return firebase
+      .auth()
+      .signInAnonymously()
+      .then(() => {
+        writeUser(phoneNumberForTest);
+      });
+  }
+
   export function writeUser(overridePhoneNumberForTest: string = '') {
     checkFunctionIsCalledOnce('writeUser');
     const user = assertLoggedIn();
+    if (user.uid !== store.getState().myUser.myUserId) {
+      dispatch({ resetStoreToDefaults: null });
+    }
     const phoneNumber = user.phoneNumber
       ? user.phoneNumber
       : overridePhoneNumberForTest;
@@ -114,17 +132,18 @@ export namespace ourFirebase {
         myPhoneNumber: phoneNumber
       }
     });
-    // I can only listen to matches after I got the match list (because I convert gameSpecId to gameInfo).
-    listenToMyMatchesList();
-    fetchGamesList();
+    // I can only listen to matches after I got the games list (because I convert gameSpecId to gameInfo).
+    const canListToMatches = store.getState().gamesList.length > 0;
+    if (canListToMatches) {
+      listenToMyMatchesList();
+    }
+    fetchGamesList().then(() => {
+      if (!canListToMatches) {
+        listenToMyMatchesList();
+      }
+    });
     listenToSignals();
   }
-
-  // Since our test use anonymous login
-  // and the rules only allow you to write there if you have auth.token.phone_number
-  // we can not add in gamePortal/PhoneNumberToUserId/${phoneNumber}
-  // So firebase rules add "123456789" for test
-  export const magicPhoneNumberForTest = '123456789';
 
   export function checkPhoneNum(phoneNum: string) {
     const isValidNum =
@@ -135,7 +154,7 @@ export namespace ourFirebase {
   // Eventually dispatches the action setGamesList.
   function fetchGamesList() {
     assertLoggedIn();
-    addPromiseForTests(
+    return addPromiseForTests(
       getRef('/gamePortal/gamesInfoAndSpec/gameInfos').once(
         'value',
         snapshot => {
@@ -157,16 +176,18 @@ export namespace ourFirebase {
           });
           gameList.sort((g1, g2) => g1.gameName.localeCompare(g2.gameName));
           dispatch({ setGamesList: gameList });
-          maybeDispatchSetMatchesList();
         }
       )
     );
   }
 
   // Eventually dispatches the action updateGameSpecs.
-  export function fetchGameSpec(game: GameInfo) {
+  function fetchGameSpec(game: GameInfo) {
     const gameSpecId = game.gameSpecId;
     assertLoggedIn();
+    if (store.getState().gameSpecs.gameSpecIdToGameSpec[gameSpecId]) {
+      return;
+    }
     addPromiseForTests(
       getRef(
         `/gamePortal/gamesInfoAndSpec/gameSpecsForPortal/${gameSpecId}`
@@ -218,7 +239,7 @@ export namespace ourFirebase {
     for (let key of Object.keys(obj)) {
       checkCondition('index is int', /^(0|[1-9]\d*)$/.test(key));
       checkCondition('no duplicate index', !(key in vals));
-      vals[key] = obj[key];
+      vals[Number(key)] = obj[key];
       count++;
     }
     checkCondition('no missing index', count === vals.length);
@@ -276,6 +297,7 @@ export namespace ourFirebase {
   // every time this field is updated:
   //  /gamePortal/gamePortalUsers/$myUserId/privateButAddable/matchMemberships
   function listenToMyMatchesList() {
+    checkFunctionIsCalledOnce('listenToMyMatchesList');
     getMatchMembershipsRef().on('value', snap => {
       getMatchMemberships(snap ? snap.val() : {});
     });
@@ -314,7 +336,7 @@ export namespace ourFirebase {
     return game!;
   }
 
-  function listenToMatch(matchId: string) {
+  export function listenToMatch(matchId: string) {
     checkCondition(
       'listeningToMatchIds',
       listeningToMatchIds.indexOf(matchId) === -1
@@ -345,39 +367,25 @@ export namespace ourFirebase {
       const match: MatchInfo = {
         matchId: matchId,
         gameSpecId: gameSpecId,
-        game: findGameInfo(gameSpecId),
+        game: checkCondition('gameInfo missing', findGameInfo(gameSpecId)),
         participantsUserIds: participantsUserIds,
         lastUpdatedOn: matchFb.lastUpdatedOn,
         matchState: newMatchStates
       };
+
       receivedMatches[matchId] = match;
-      maybeDispatchSetMatchesList();
+      dispatchSetMatchesList();
     });
   }
 
-  function maybeDispatchSetMatchesList() {
+  function dispatchSetMatchesList() {
     const matches = getValues(receivedMatches);
-    if (matches.length >= listeningToMatchIds.length) {
-      // We got all the matches.
-      // Sort by lastUpdatedOn (descending lastUpdatedOn order).
-      matches.sort((a, b) => b.lastUpdatedOn - a.lastUpdatedOn);
-      // If a match doesn't have a gameInfo (we didn't get the games list yet),
-      // then we'll dispatch setMatchesList after getting the gamesList.
-      matches.forEach(m => {
-        if (!m.game) {
-          m.game = findGameInfo(m.gameSpecId);
-        }
-      });
-      if (matches.every(m => !!m.game)) {
-        dispatch({ setMatchesList: matches });
-      }
-    }
+    // Sort by lastUpdatedOn (descending lastUpdatedOn order).
+    matches.sort((a, b) => b.lastUpdatedOn - a.lastUpdatedOn);
+    dispatch({ setMatchesList: matches });
   }
 
-  export function createMatch(
-    game: GameInfo,
-    initialState: MatchState
-  ): MatchInfo {
+  export function createMatch(game: GameInfo) {
     const uid = getUserId();
     const matchRef = getRef('/gamePortal/matches').push();
     const matchId = matchRef.key!;
@@ -388,12 +396,14 @@ export namespace ourFirebase {
     };
 
     const gameSpecId = game.gameSpecId;
+    fetchGameSpec(game);
+
     const newFBMatch: fbr.Match = {
       gameSpecId: gameSpecId,
       participants: participants,
       createdOn: getTimestamp(),
       lastUpdatedOn: getTimestamp(),
-      pieces: convertMatchStateToPiecesState(initialState, gameSpecId)
+      pieces: {}
     };
     refSet(matchRef, newFBMatch);
     addMatchMembership(uid, matchId);
@@ -404,12 +414,18 @@ export namespace ourFirebase {
       game: game,
       participantsUserIds: [uid],
       lastUpdatedOn: newFBMatch.lastUpdatedOn,
-      matchState: initialState
+      matchState: []
     };
+
+    receivedMatches[newMatch.matchId] = newMatch;
+    dispatchSetMatchesList();
+    const matchIndex = store.getState().matchesList.indexOf(newMatch);
+    checkCondition('matchIndex', matchIndex >= 0);
+    dispatch({ setCurrentMatchIndex: matchIndex });
     return newMatch;
   }
 
-  function addMatchMembership(toUserId: string, matchId: string) {
+  export function addMatchMembership(toUserId: string, matchId: string) {
     const matchMembership: fbr.MatchMembership = {
       addedByUid: getUserId(),
       timestamp: getTimestamp()
@@ -458,6 +474,7 @@ export namespace ourFirebase {
 
   // Call this after updating a single piece.
   export function updatePieceState(match: MatchInfo, pieceIndex: number) {
+    console.log('updatePieceState');
     const pieceState: PieceState = match.matchState[pieceIndex];
     const updates: any = {};
     updates[`pieces/${pieceIndex}`] = convertPieceState(pieceState);
@@ -562,7 +579,7 @@ export namespace ourFirebase {
     );
     mapPhoneNumbersToUserIds(numbersWithoutUserId);
 
-    const updates = {};
+    const updates: any = {};
     const oldContacts = state.phoneNumberToContact;
     currentPhoneNumbers.forEach(phoneNumber => {
       const currentContact = currentContacts[phoneNumber];
@@ -646,10 +663,10 @@ export namespace ourFirebase {
       // Deleting the signals we got from firebase.
       refUpdate(ref, updates);
 
-      // filtering old signals.
-      const now = new Date().getTime();
-      const fiveMinAgo = now - 5 * 60 * 1000;
-      signals = signals.filter(signal => fiveMinAgo <= signal.timestamp);
+      // filtering old signals isn't needed.
+      // const now = new Date().getTime();
+      // const fiveMinAgo = now - 5 * 60 * 1000;
+      // signals = signals.filter(signal => fiveMinAgo <= signal.timestamp);
 
       // Sorting: oldest entries are at the beginning
       signals.sort((signal1, signal2) => signal1.timestamp - signal2.timestamp);
@@ -675,6 +692,8 @@ export namespace ourFirebase {
       `/gamePortal/gamePortalUsers/${toUserId}/privateButAddable/signals`
     ).push();
     refSet(signalFbrRef, signalFbr);
+    // If we disconnect, cleanup the signal.
+    signalFbrRef.onDisconnect().remove();
   }
 
   export function addFcmToken(fcmToken: string, platform: 'ios' | 'android') {
@@ -698,6 +717,7 @@ export namespace ourFirebase {
     if (allPromisesForTests) {
       allPromisesForTests.push(promise);
     }
+    return promise;
   }
 
   function refSet(ref: firebase.database.Reference, val: any) {

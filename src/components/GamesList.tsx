@@ -1,8 +1,5 @@
 import * as React from 'react';
-import RaisedButton from 'material-ui/RaisedButton';
-import IconButton from 'material-ui/IconButton';
 import Subheader from 'material-ui/Subheader';
-import StarBorder from 'material-ui/svg-icons/toggle/star-border';
 import { GridList, GridTile } from 'material-ui/GridList';
 import { GameInfo } from '../types';
 
@@ -13,8 +10,9 @@ const styles: any = {
     justifyContent: 'space-around'
   },
   gridList: {
-    width: 500,
-    height: 450,
+    position: 'absolute',
+    left: 0,
+    right: 0,
     overflowY: 'auto'
   }
 };
@@ -32,7 +30,6 @@ class GamesList extends React.Component<Props, {}> {
   render() {
     return (
       <div>
-        <RaisedButton label="Default" />
         {
           <div style={styles.root}>
             <GridList cellHeight={180} style={styles.gridList}>
@@ -42,11 +39,6 @@ class GamesList extends React.Component<Props, {}> {
                   key={gameInfo.gameSpecId}
                   title={gameInfo.gameName}
                   subtitle={''}
-                  actionIcon={
-                    <IconButton>
-                      <StarBorder color="white" />
-                    </IconButton>
-                  }
                 >
                   <img src={gameInfo.screenShot.downloadURL} />
                 </GridTile>
@@ -59,4 +51,13 @@ class GamesList extends React.Component<Props, {}> {
   }
 }
 
-export default GamesList;
+import { connect } from 'react-redux';
+import { StoreState } from '../types/index';
+
+const mapStateToProps = (state: StoreState) => ({
+  gamesList: state.gamesList
+});
+// Later this will take dispatch: any as argument
+const mapDispatchToProps = () => ({});
+
+export default connect(mapStateToProps, mapDispatchToProps)(GamesList);
