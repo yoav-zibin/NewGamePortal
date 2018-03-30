@@ -80,7 +80,7 @@ ReactDOM.render(
       >
         <div>
           <Route path="/" component={App} exact={true} />
-          <Route path="/match/:matchId" component={PlayingScreen} />
+          <Route path="/PlayingScreen" component={PlayingScreen} />
           <Route path="/board" component={Board} />
           <Route path="/myMatches" component={MatchesList} />
           <Route path="/addMatch" component={AddMatch} />
