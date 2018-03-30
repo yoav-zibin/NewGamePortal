@@ -326,7 +326,7 @@ export namespace ourFirebase {
     return game!;
   }
 
-  function listenToMatch(matchId: string) {
+  export function listenToMatch(matchId: string) {
     checkCondition(
       'listeningToMatchIds',
       listeningToMatchIds.indexOf(matchId) === -1
@@ -362,6 +362,8 @@ export namespace ourFirebase {
         lastUpdatedOn: matchFb.lastUpdatedOn,
         matchState: newMatchStates
       };
+
+      console.log('listenToMatch update');
       receivedMatches[matchId] = match;
       maybeDispatchSetMatchesList();
     });
@@ -421,7 +423,7 @@ export namespace ourFirebase {
     return newMatch;
   }
 
-  function addMatchMembership(toUserId: string, matchId: string) {
+  export function addMatchMembership(toUserId: string, matchId: string) {
     const matchMembership: fbr.MatchMembership = {
       addedByUid: getUserId(),
       timestamp: getTimestamp()

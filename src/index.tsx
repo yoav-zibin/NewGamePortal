@@ -9,7 +9,7 @@ import App from './App';
 import ContactsList from './components/ContactsList';
 import PlayingScreen from './components/PlayingScreen';
 import MatchesList from './components/MatchesList';
-import AddMatches from './components/AddMatches';
+import AddMatch from './components/AddMatch';
 import registerServiceWorker from './registerServiceWorker';
 import Login from './components/Login';
 import './index.css';
@@ -28,10 +28,10 @@ ourFirebase.signInAnonymously().then(() => {
   Promise.all(ourFirebase.allPromisesForTests!).then(() => {
     const gameInfo = store
       .getState()
-      .gamesList.find(gameInList => gameInList.gameName === 'Chess')!;
+      .gamesList.find(gameInList => gameInList.gameName === 'Gin Rummy')!;
     ourFirebase.fetchGameSpec(gameInfo);
     Promise.all(ourFirebase.allPromisesForTests!).then(() => {
-      if (store.getState().matchesList.length === 0) {
+      if (store.getState().matchesList.length === 4) {
         const gameSpec = store.getState().gameSpecs.gameSpecIdToGameSpec[
           gameInfo.gameSpecId
         ];
@@ -56,7 +56,7 @@ ReactDOM.render(
           <Route path="/match/:matchId" component={PlayingScreen} />
           <Route path="/board" component={Board} />
           <Route path="/myMatches" component={MatchesList} />
-          <Route path="/addMatches" component={AddMatches} />
+          <Route path="/addMatch" component={AddMatch} />
           <Route path="/addComponent" component={ContactsList} />
           <Route path="/login" component={Login} />
         </div>

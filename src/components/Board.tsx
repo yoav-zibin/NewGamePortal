@@ -51,13 +51,19 @@ class Board extends React.Component<BoardProps, BoardState> {
     };
   }
 
+  //   componentDidMount() {
+  //       const matchId = this.props.matchInfo.matchId;
+  //       ourFirebase.listenToMatch(matchId);
+  //       ourFirebase.addMatchMembership(this.props.myUserId, '-L8JTrbrFT46x-PcQ5EY');
+  //   }
+
   // cycles through the images of each piece
   togglePiece(index: number) {
-    this.props.pieces[index].deckPieceIndex += 1;
-    this.props.pieces[index].deckPieceIndex %= this.props.pieces[
-      index
-    ].element.images.length;
-    ourFirebase.updateMatchState(this.props.matchInfo);
+    const match: MatchInfo = this.props.matchInfo;
+    const helper: MatchStateHelper = new MatchStateHelper(match);
+    helper.toggleImage(index);
+    ourFirebase.updatePieceState(match, index);
+    console.log('toggle Piece index:', index);
   }
 
   rotatePiece(index: number) {
@@ -66,8 +72,11 @@ class Board extends React.Component<BoardProps, BoardState> {
   }
 
   rollDice(index: number) {
-    // TODO:
     console.log('Roll Dice for index:', index);
+    const match: MatchInfo = this.props.matchInfo;
+    const helper: MatchStateHelper = new MatchStateHelper(match);
+    helper.rollDice(index);
+    ourFirebase.updatePieceState(match, index);
   }
 
   shuffleDeck(index: number) {
@@ -76,8 +85,13 @@ class Board extends React.Component<BoardProps, BoardState> {
   }
 
   handleCardClick(index: number) {
-    // TODO:
-    console.log('Handle Card Click for index:', index);
+    // const prop = this.props;
+    // if (prop.matchInfo.matchState[index].cardVisibilityPerIndex[prop.myUserId]) {
+    //     prop.matchInfo.matchState[index].currentImageIndex = 1;
+    // } else {
+    //     prop.matchInfo.matchState[index].currentImageIndex = 0;
+    // }
+    console.log('Handle Card right Click for index:', index);
   }
 
   handleDragEnd = (index: number) => {
@@ -187,17 +201,20 @@ class Board extends React.Component<BoardProps, BoardState> {
           ref={'canvasImage' + index}
           key={index}
           draggable={pieceSpec.element.isDraggable || kind === 'standard'}
+          onContextMenu={() => {
+            console.log('Piece right clicked!');
+            if (kind === 'card') {
+              this.handleCardClick(index);
+            }
+          }}
           onClick={() => {
-            console.log('Piece clicked!');
-            if (kind === 'standard') {
-              this.rotatePiece(index);
-            } else if (kind === 'toggable') {
-              console.log('here');
+            console.log('Piece left clicked!');
+            if (kind === 'toggable') {
               this.togglePiece(index);
             } else if (kind === 'dice') {
               this.rollDice(index);
             } else if (kind === 'card') {
-              this.handleCardClick(index);
+              // this.handleCardClick(index);
             }
             this.toggleTooltip('canvasImage' + index, index);
           }}
