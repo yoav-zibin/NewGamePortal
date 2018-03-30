@@ -1,9 +1,10 @@
 import { IdIndexer } from './types';
 
-export function checkCondition(desc: string, cond: any) {
+export function checkCondition<T>(desc: string, cond: T): T {
   if (!cond) {
     throw new Error('Condition check failed for: ' + desc);
   }
+  return cond;
 }
 
 export function checkNotNull<T>(val: T): T {
