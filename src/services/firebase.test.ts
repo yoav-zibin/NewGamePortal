@@ -250,38 +250,3 @@ it('fetch signal list from firebase', done => {
   // send a signal
   ourFirebase.sendSignal(userId, 'candidate', 'hello');
 });
-
-it('addFcmTokens', () => {
-  const userObj: fbr.GamePortalUser = {
-    privateFields: {
-      createdOn: <any>firebase.database.ServerValue.TIMESTAMP,
-      phoneNumber: '',
-      fcmTokens: {},
-      countryCode: 'US',
-      contacts: {}
-    },
-    privateButAddable: {
-      matchMemberships: {},
-      signals: {}
-    }
-  };
-  const uid = firebase.auth().currentUser!.uid;
-  firebase
-    .database()
-    .ref(`gamePortal/gamePortalUsers/${uid}`)
-    .set(userObj);
-
-  const fcmToken: string = '1234';
-  const platform = 'ios';
-
-  const fcmTokenObj: fbr.FcmToken = {
-    lastTimeReceived: <any>firebase.database.ServerValue.TIMESTAMP,
-    platform: platform
-  };
-  firebase
-    .database()
-    .ref(
-      `gamePortal/gamePortalUsers/${uid}/privateFields/fcmTokens/${fcmToken}`
-    )
-    .set(fcmTokenObj);
-});
