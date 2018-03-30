@@ -1,7 +1,5 @@
 import * as React from 'react';
-import IconButton from 'material-ui/IconButton';
 import Subheader from 'material-ui/Subheader';
-import StarBorder from 'material-ui/svg-icons/toggle/star-border';
 import { GridList, GridTile } from 'material-ui/GridList';
 import { GameInfo } from '../types';
 
@@ -41,11 +39,6 @@ class GamesList extends React.Component<Props, {}> {
                   key={gameInfo.gameSpecId}
                   title={gameInfo.gameName}
                   subtitle={''}
-                  actionIcon={
-                    <IconButton>
-                      <StarBorder color="white" />
-                    </IconButton>
-                  }
                 >
                   <img src={gameInfo.screenShot.downloadURL} />
                 </GridTile>

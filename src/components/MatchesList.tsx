@@ -55,6 +55,7 @@ class MatchesList extends React.Component<Props, {}> {
           <List style={styles.list}>
             {this.props.matchesList.map(tile => (
               <ListItem
+                key={tile.toString()}
                 primaryText={tile.game.gameName}
                 secondaryText={
                   'Last played ' +
@@ -67,10 +68,14 @@ class MatchesList extends React.Component<Props, {}> {
                       const phone: string = this.props.userIdToPhoneNumber[
                         userId
                       ];
-                      const name: string = this.props.phoneNumberToContact[
-                        phone
-                      ].name;
-                      return (accum += name + ' ');
+                      if (phone) {
+                        const name: string = this.props.phoneNumberToContact[
+                          phone
+                        ].name;
+                        return (accum += name + ' ');
+                      } else {
+                        return (accum += 'Unidentified User ');
+                      }
                     },
                     ''
                   )
