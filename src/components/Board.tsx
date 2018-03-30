@@ -33,7 +33,7 @@ interface BoardState {
  * Should also add drag and drop functionality later on.
  */
 class Board extends React.Component<BoardProps, BoardState> {
-  cardIndex: number;
+  selectedPieceIndex: number;
   selfParticipantIndex: number;
   participantNames: string[];
   deckIndex: number;
@@ -42,7 +42,6 @@ class Board extends React.Component<BoardProps, BoardState> {
     y: number;
   };
   visibleTo: CardVisibility;
-  parentContainer: HTMLDivElement;
 
   constructor(props: BoardProps) {
     super(props);
@@ -113,20 +112,29 @@ class Board extends React.Component<BoardProps, BoardState> {
     // TODO:
   }
 
-  toggleTooltip(refString: string, index: number) {
-    let parentContainerPosition = this.parentContainer.getBoundingClientRect() as DOMRect;
-    let canvasImage = this.refs[refString] as CanvasImage;
-    let position = canvasImage.imageNode.getAbsolutePosition();
-    // let width = canvasImage.imageNode.width();
-    let width = 0;
+  toggleTooltip(refString: string | null, index: number | null) {
+    if (refString === null || index === null) {
+      this.selectedPieceIndex = -1;
+      this.setState({ showTooltip: false });
+      return;
+    } else if (this.selectedPieceIndex === index) {
+      this.selectedPieceIndex = -1;
+      this.setState({ showTooltip: false });
+      return;
+    }
+
+    this.selectedPieceIndex = index;
+    let position = (this.refs[
+      refString
+    ] as CanvasImage).imageNode.getAbsolutePosition();
     this.visibleTo = this.props.matchInfo.matchState[
       index
     ].cardVisibilityPerIndex;
     this.tooltipPosition = {
-      x: parentContainerPosition.x + position.x + width,
-      y: parentContainerPosition.y + position.y
+      x: position.x,
+      y: position.y
     };
-    this.setState({ showTooltip: !this.state.showTooltip });
+    this.setState({ showTooltip: true });
   }
 
   displayCardOptions(
@@ -135,7 +143,7 @@ class Board extends React.Component<BoardProps, BoardState> {
     participantNames: string[],
     deckIndex: number
   ) {
-    this.cardIndex = cardIndex;
+    this.selectedPieceIndex = cardIndex;
     this.selfParticipantIndex = selfParticipantIndex;
     this.participantNames = participantNames;
     this.deckIndex = deckIndex;
@@ -151,13 +159,6 @@ class Board extends React.Component<BoardProps, BoardState> {
     });
   }
 
-  //   componentWillUpdate() {
-  //     for (let i = 0; i < this.props.pieces.length; i++) {
-  //       this.refs['canvasImage' + i].refs['image'].cache();
-  //       this.refs['canvasImage' + i].refs['image'].drawHitFromCache();
-  //     }
-  //   }
-
   render() {
     const props = this.props;
     if (!props.gameSpec) {
@@ -169,7 +170,12 @@ class Board extends React.Component<BoardProps, BoardState> {
     let width = props.gameSpec.board.width;
     let height = props.gameSpec.board.height;
     let boardLayer = (
-      <CanvasImage height={height} width={width} src={boardImage} />
+      <CanvasImage
+        height={height}
+        width={width}
+        src={boardImage}
+        onClick={() => this.toggleTooltip(null, null)}
+      />
     );
 
     // // TODO: Complete layer for pieces
@@ -195,19 +201,6 @@ class Board extends React.Component<BoardProps, BoardState> {
             }
             this.toggleTooltip('canvasImage' + index, index);
           }}
-          onMouseOver={() => {
-            // this.props.hideCardOptions();
-            // if (piece.kind === 'card') {
-            //   this.showCardVisibility(index);
-            // }
-            console.log('Mouse over');
-          }}
-          onMouseOut={() => {
-            // if (piece.kind === 'card') {
-            //   this.hideCardVisibility();
-            // }
-            console.log('Mouse out!');
-          }}
           height={
             pieceSpec.element.height * height / this.props.gameSpec.board.height
           }
@@ -218,21 +211,10 @@ class Board extends React.Component<BoardProps, BoardState> {
           y={piece.y * height / 100}
           src={pieceSpec.element.images[piece.currentImageIndex].downloadURL}
           onDragStart={() => {
-            // if (piece.kind === 'card') {
-            //   thiz.hideCardVisibility();
-            //   thiz.props.hideCardOptions();
-            // }
-            // thiz.handleDragStart(index);
-            console.log('Drag Start');
+            this.toggleTooltip(null, null);
           }}
           onDragEnd={() => {
-            // if (piece.kind === 'card') {
-            //   thiz.showCardVisibility(index);
-            // }
-            // thiz.handleDragEnd(index)
             this.handleDragEnd(index);
-            // ourFirebase.updatePieceState(props.matchInfo, index);
-            console.log('Drag End');
           }}
         />
       );
@@ -258,7 +240,7 @@ class Board extends React.Component<BoardProps, BoardState> {
             }}
           >
             {Object.keys(this.visibleTo).length === 0 ? (
-              <MenuItem primaryText="Card is visible to no one." />
+              <MenuItem primaryText="Not a card." />
             ) : null}
             {Object.keys(this.visibleTo).map((name, index) => {
               return (
@@ -346,7 +328,7 @@ class Board extends React.Component<BoardProps, BoardState> {
           }
           title={<span>Match: {props.matchInfo.game.gameName}</span>}
         />
-        <div ref={(el: HTMLDivElement) => (this.parentContainer = el)}>
+        <div style={{ position: 'relative' }}>
           {toolTipLayer}
           <Stage width={width} height={height}>
             <Layer ref={() => 'boardLayer'}>{boardLayer}</Layer>
