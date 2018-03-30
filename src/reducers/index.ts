@@ -21,7 +21,6 @@ export interface Action {
   setGamesList?: GameInfo[];
   updateGameSpecs?: GameSpecs;
   setMatchesList?: MatchInfo[];
-  setCurrentMatchIndex?: number; // an index in matchesList
   updatePhoneNumberToContact?: PhoneNumberToContact;
   updateUserIdsAndPhoneNumbers?: UserIdsAndPhoneNumbers;
   setMyUser?: MyUser;
@@ -34,10 +33,6 @@ export function mergeMaps<T>(
   updateWithEntries: IdIndexer<T>
 ): IdIndexer<T> {
   return Object.assign(original, updateWithEntries);
-}
-
-function isInRange(currentMatchIndex: number, matchesList: MatchInfo[]) {
-  return currentMatchIndex >= -1 && currentMatchIndex < matchesList.length;
 }
 
 /*
@@ -70,10 +65,6 @@ function checkEqual(x: string[], y: string[]) {
 */
 
 function checkStoreInvariants(state: StoreState) {
-  checkCondition(
-    'currentMatchIndex is in range',
-    isInRange(state.currentMatchIndex, state.matchesList)
-  );
   state.matchesList.forEach(match => {
     checkCondition(
       'I play in match',
@@ -98,14 +89,10 @@ function reduce(state: StoreState, action: Action) {
   } else if (undefined !== action.resetStoreToDefaults) {
     return storeStateDefault;
   } else if (undefined !== action.setMatchesList) {
-    let { matchesList, currentMatchIndex, ...rest } = state;
-    if (!isInRange(state.currentMatchIndex, action.setMatchesList)) {
-      currentMatchIndex = -1;
-    }
+    let { matchesList, ...rest } = state;
     return {
       ...rest,
-      matchesList: action.setMatchesList,
-      currentMatchIndex: currentMatchIndex
+      matchesList: action.setMatchesList
     };
   } else if (undefined !== action.setSignals) {
     return { ...state, signals: action.setSignals };
@@ -135,8 +122,6 @@ function reduce(state: StoreState, action: Action) {
       },
       ...rest
     };
-  } else if (undefined !== action.setCurrentMatchIndex) {
-    return { ...state, currentMatchIndex: action.setCurrentMatchIndex };
   } else if (undefined !== action.updateGameSpecs) {
     let {
       imageIdToImage,

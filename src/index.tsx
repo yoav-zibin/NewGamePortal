@@ -86,7 +86,7 @@ ReactDOM.render(
           <Route path="/board" component={Board} />
           <Route path="/myMatches" component={MatchesList} />
           <Route path="/addMatch" component={AddMatch} />
-          <Route path="/addComponent" component={ContactsList} />
+          <Route path="/contactsList" component={ContactsList} />
           <Route path="/login" component={Login} />
         </div>
       </BrowserRouter>

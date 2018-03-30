@@ -16,75 +16,30 @@ const style = {
   marginRight: 20
 };
 
-/*interface Props {
-  users: Contact[];
-  notUsers: Contact[]
-}*/
+interface ContactWithUserId extends Contact {
+  userId: string;
+}
 
-const testUsers: Contact[] = [
-  {
-    phoneNumber: '9175730795',
-    name: 'Brendan Lim'
-  },
-  {
-    phoneNumber: '2016824408',
-    name: 'Eric Hoffman'
-  },
-  {
-    phoneNumber: '7326476905',
-    name: 'Grace Ng'
-  },
-  {
-    phoneNumber: '7187107933',
-    name: 'Chelsea Otakan'
-  }
-];
-const testNotUsers: Contact[] = [
-  {
-    phoneNumber: '7185525029',
-    name: 'Kerem Suer'
-  },
-  {
-    phoneNumber: '2038859211',
-    name: 'Raquel Parrado'
-  },
-  {
-    phoneNumber: '5513586613',
-    name: 'James Anderson'
-  }
-];
+interface Props {
+  users: ContactWithUserId[];
+  notUsers: Contact[];
+}
 
-// interface Props
-
-class ContactsList extends React.Component<{}, {}> {
+class ContactsList extends React.Component<Props, {}> {
   state = {
-    users: testUsers,
-    notUsers: testNotUsers,
-    value: ''
+    filterValue: ''
   };
 
   handleChange = (event: any) => {
     this.setState({
-      value: event.target.value
+      filterValue: event.target.value
     });
-    if (this.state.value.length > 0) {
-      let targetUser: Contact[] = [];
-      let targetNotUser: Contact[] = [];
-      this.state.users.map((user: Contact) => {
-        if (user.name.indexOf(this.state.value) !== -1) {
-          targetUser.push(user);
-        }
-      });
-      this.state.notUsers.map((user: Contact) => {
-        if (user.name.indexOf(this.state.value) !== -1) {
-          targetNotUser.push(user);
-        }
-      });
-      this.setState({ users: targetUser, notUsers: targetNotUser });
-    } else {
-      this.setState({ users: testUsers, notUsers: testNotUsers });
-    }
   };
+
+  filterContacts(contacts: Contact[]) {
+    return contacts.filter(
+        contact => contact.name.indexOf(this.state.filterValue) !== -1);
+  }
 
   render() {
     return (
@@ -96,8 +51,10 @@ class ContactsList extends React.Component<{}, {}> {
         />
         <List>
           <Subheader>Game User</Subheader>
-          {this.state.users.map((user: Contact) => (
+          {this.filterContacts(this.props.users)
+            .map((user: Contact) => (
             <ListItem
+              key={user.phoneNumber}
               primaryText={user.name}
               rightIconButton={
                 <FloatingActionButton mini={true} style={style}>
@@ -110,8 +67,10 @@ class ContactsList extends React.Component<{}, {}> {
         <Divider />
         <List>
           <Subheader>Not Game User</Subheader>
-          {this.state.notUsers.map((user: Contact) => (
+          {this.filterContacts(this.props.notUsers)
+            .map((user: Contact) => (
             <ListItem
+              key={user.phoneNumber}
               primaryText={user.name}
               rightIconButton={
                 <RaisedButton label="invite" primary={true} style={style} />
@@ -124,4 +83,29 @@ class ContactsList extends React.Component<{}, {}> {
   }
 }
 
-export default ContactsList;
+import { connect } from 'react-redux';
+import { StoreState } from '../types/index';
+
+const mapStateToProps = (state: StoreState) => {
+  const users: ContactWithUserId[] = [];
+  const notUsers: Contact[] = [];
+  const phoneNumbers = Object.keys(state.phoneNumberToContact);
+  for (let phoneNumber of phoneNumbers) {
+    const contact = state.phoneNumberToContact[phoneNumber];
+    const userId = state.userIdsAndPhoneNumbers.phoneNumberToUserId[phoneNumber];
+    if (userId) {
+      users.push({...contact, userId: userId});
+    } else {
+      notUsers.push(contact);
+    }
+  }
+  users.sort((c1, c2) => c1.name.localeCompare(c2.name));
+  notUsers.sort((c1, c2) => c1.name.localeCompare(c2.name));
+  return {
+    users, notUsers
+  };
+};
+// Later this will take dispatch: any as argument
+const mapDispatchToProps = () => ({});
+
+export default connect(mapStateToProps, mapDispatchToProps)(ContactsList);

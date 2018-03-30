@@ -51,8 +51,6 @@ const sigEntry: SignalEntry = {
   signalData: 'some String'
 };
 
-const currentMatchIndex: number = 1;
-
 const initialState: StoreState = {
   // This initial gamesList is just for debugging the components.
   gamesList: [
@@ -111,7 +109,6 @@ const initialState: StoreState = {
       matchState: []
     }
   ],
-  currentMatchIndex: 1,
   phoneNumberToContact: {
     phoneNumber: {
       phoneNumber: '+1234567890',
@@ -158,15 +155,14 @@ it('setGamesList', () => {
   expect(reduce(initialState, action)).toEqual(expectedState);
 });
 
-it('setMatchesList (and updates currentMatchIndex accordingly)', () => {
+it('setMatchesList', () => {
   let matchesList = [matchInfo];
   let action: Action = {
     setMatchesList: matchesList
   };
   const expectedState = {
     ...initialState,
-    matchesList: matchesList,
-    currentMatchIndex: -1
+    matchesList: matchesList
   };
   expect(reduce(initialState, action)).toEqual(expectedState);
 });
@@ -189,19 +185,7 @@ it('setMyUser', () => {
   expect(reduce(initialState, action)).toEqual(expectedState);
 });
 
-it('setCurrentMatchIndex', () => {
-  let currentIndex = currentMatchIndex;
-  let action: Action = {
-    setCurrentMatchIndex: currentIndex
-  };
-  const expectedState = {
-    ...initialState,
-    currentMatchIndex: currentIndex
-  };
-  expect(reduce(initialState, action)).toEqual(expectedState);
-});
-
-it('set matchesList to empty list (and updates currentMatchIndex accordingly)', () => {
+it('set matchesList to empty list', () => {
   let { matchesList, ...rest } = initialState;
 
   let newMatches: MatchInfo[] = [];
@@ -211,8 +195,7 @@ it('set matchesList to empty list (and updates currentMatchIndex accordingly)', 
 
   const expectedState = {
     ...rest,
-    matchesList: newMatches,
-    currentMatchIndex: -1
+    matchesList: newMatches
   };
 
   expect(reduce(initialState, action)).toEqual(expectedState);
