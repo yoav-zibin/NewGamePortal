@@ -117,7 +117,7 @@ function getAllPromisesForTests() {
 
 beforeAll(done => {
   ourFirebase
-    .signInAnonymously()
+    .signInAnonymously(ourFirebase.magicPhoneNumberForTest)
     .then(() => {
       getAllPromisesForTests().then(() => {
         fetchAllGameSpecs();
@@ -149,10 +149,14 @@ it('Should update the match state', () => {
   const match: MatchInfo = createMatch();
   const matchStateHelper = new MatchStateHelper(match);
   const spec = matchStateHelper.spec;
+  matchStateHelper.resetMatch();
+  ourFirebase.updateMatchState(match);
+
   const piece = spec.pieces.find(p => p.element.elementKind === 'card')!;
   const pieceIndex = spec.pieces.indexOf(piece);
   matchStateHelper.showMe(pieceIndex);
   ourFirebase.updateMatchState(match);
+
   matchStateHelper.showEveryone(pieceIndex);
   ourFirebase.updatePieceState(match, pieceIndex);
 });

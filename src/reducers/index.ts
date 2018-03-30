@@ -64,8 +64,9 @@ function checkStoreInvariants(state: StoreState) {
     );
     checkCondition(
       'matchState',
-      match.matchState.length ===
-        state.gameSpecs.gameSpecIdToGameSpec[match.gameSpecId].pieces.length
+      match.matchState.length === 0 ||
+        match.matchState.length ===
+          state.gameSpecs.gameSpecIdToGameSpec[match.gameSpecId].pieces.length
     );
   });
 

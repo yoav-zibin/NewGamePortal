@@ -4,7 +4,7 @@ import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import { Provider } from 'react-redux';
 import { Route, BrowserRouter } from 'react-router-dom';
 
-import { store, dispatch } from './stores/index';
+import { store } from './stores/index';
 import App from './App';
 import ContactsList from './components/ContactsList';
 import PlayingScreen from './components/PlayingScreen';
@@ -15,8 +15,7 @@ import Login from './components/Login';
 import './index.css';
 import Board from './components/Board';
 import { ourFirebase } from './services/firebase';
-import { MatchStateHelper } from './services/matchStateHelper';
-import { Contact } from './types';
+import { Contact, PhoneNumberToContact } from './types';
 
 document.getElementById('loadingSpinner')!.style.display = 'none';
 
@@ -57,9 +56,18 @@ const testUsers: Contact[] = [
 ];
 ourFirebase.allPromisesForTests = [];
 ourFirebase.init();
-ourFirebase.signInAnonymously().then(() => {
+const myUserIndex = window.location.search
+  ? Number(window.location.search.substr(1))
+  : 0;
+const myUser = testUsers[myUserIndex] || testUsers[0];
+ourFirebase.signInAnonymously(myUser.phoneNumber).then(() => {
   const userId = ourFirebase.getUserId();
   console.warn('Signed in anonymously, userId=', userId);
+  let currentContacts: PhoneNumberToContact = {};
+  for (let contact of testUsers) {
+    currentContacts[contact.phoneNumber] = contact;
+  }
+  ourFirebase.storeContacts(currentContacts);
 });
 
 ReactDOM.render(

@@ -80,12 +80,12 @@ export namespace ourFirebase {
     return <number>firebase.database.ServerValue.TIMESTAMP;
   }
 
-  export function signInAnonymously() {
+  export function signInAnonymously(phoneNumberForTest: string) {
     return firebase
       .auth()
       .signInAnonymously()
       .then(() => {
-        writeUser(magicPhoneNumberForTest);
+        writeUser(phoneNumberForTest);
       });
   }
 
@@ -132,9 +132,16 @@ export namespace ourFirebase {
         myPhoneNumber: phoneNumber
       }
     });
-    // I can only listen to matches after I got the match list (because I convert gameSpecId to gameInfo).
-    listenToMyMatchesList();
-    fetchGamesList();
+    // I can only listen to matches after I got the games list (because I convert gameSpecId to gameInfo).
+    const canListToMatches = store.getState().gamesList.length > 0;
+    if (canListToMatches) {
+      listenToMyMatchesList();
+    }
+    fetchGamesList().then(() => {
+      if (!canListToMatches) {
+        listenToMyMatchesList();
+      }
+    });
     listenToSignals();
   }
 
@@ -147,7 +154,7 @@ export namespace ourFirebase {
   // Eventually dispatches the action setGamesList.
   function fetchGamesList() {
     assertLoggedIn();
-    addPromiseForTests(
+    return addPromiseForTests(
       getRef('/gamePortal/gamesInfoAndSpec/gameInfos').once(
         'value',
         snapshot => {
@@ -169,7 +176,6 @@ export namespace ourFirebase {
           });
           gameList.sort((g1, g2) => g1.gameName.localeCompare(g2.gameName));
           dispatch({ setGamesList: gameList });
-          dispatchSetMatchesList();
         }
       )
     );
@@ -180,7 +186,6 @@ export namespace ourFirebase {
     const gameSpecId = game.gameSpecId;
     assertLoggedIn();
     if (store.getState().gameSpecs.gameSpecIdToGameSpec[gameSpecId]) {
-      console.log('Game spec already exists', game);
       return;
     }
     addPromiseForTests(
@@ -292,6 +297,7 @@ export namespace ourFirebase {
   // every time this field is updated:
   //  /gamePortal/gamePortalUsers/$myUserId/privateButAddable/matchMemberships
   function listenToMyMatchesList() {
+    checkFunctionIsCalledOnce('listenToMyMatchesList');
     getMatchMembershipsRef().on('value', snap => {
       getMatchMemberships(snap ? snap.val() : {});
     });
@@ -361,13 +367,12 @@ export namespace ourFirebase {
       const match: MatchInfo = {
         matchId: matchId,
         gameSpecId: gameSpecId,
-        game: findGameInfo(gameSpecId),
+        game: checkCondition('gameInfo missing', findGameInfo(gameSpecId)),
         participantsUserIds: participantsUserIds,
         lastUpdatedOn: matchFb.lastUpdatedOn,
         matchState: newMatchStates
       };
 
-      console.log('listenToMatch update');
       receivedMatches[matchId] = match;
       dispatchSetMatchesList();
     });
@@ -377,13 +382,6 @@ export namespace ourFirebase {
     const matches = getValues(receivedMatches);
     // Sort by lastUpdatedOn (descending lastUpdatedOn order).
     matches.sort((a, b) => b.lastUpdatedOn - a.lastUpdatedOn);
-    // If a match doesn't have a gameInfo (we didn't get the games list yet),
-    // then we'll dispatch setMatchesList after getting the gamesList.
-    matches.forEach(m => {
-      if (!m.game) {
-        m.game = findGameInfo(m.gameSpecId);
-      }
-    });
     dispatch({ setMatchesList: matches });
   }
 
@@ -719,6 +717,7 @@ export namespace ourFirebase {
     if (allPromisesForTests) {
       allPromisesForTests.push(promise);
     }
+    return promise;
   }
 
   function refSet(ref: firebase.database.Reference, val: any) {

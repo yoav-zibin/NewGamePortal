@@ -108,7 +108,7 @@ export interface PieceState {
 export interface MatchInfo {
   matchId: string;
   gameSpecId: string;
-  game: GameInfo | null; // in rare cases it can be null (if the games list arrived before the match list)
+  game: GameInfo;
   participantsUserIds: string[]; // including myself
   lastUpdatedOn: number /*firebase.database.ServerValue.TIMESTAMP*/;
   matchState: MatchState;
