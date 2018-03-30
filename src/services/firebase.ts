@@ -169,16 +169,20 @@ export namespace ourFirebase {
           });
           gameList.sort((g1, g2) => g1.gameName.localeCompare(g2.gameName));
           dispatch({ setGamesList: gameList });
-          maybeDispatchSetMatchesList();
+          dispatchSetMatchesList();
         }
       )
     );
   }
 
   // Eventually dispatches the action updateGameSpecs.
-  export function fetchGameSpec(game: GameInfo) {
+  function fetchGameSpec(game: GameInfo) {
     const gameSpecId = game.gameSpecId;
     assertLoggedIn();
+    if (store.getState().gameSpecs.gameSpecIdToGameSpec[gameSpecId]) {
+      console.log('Game spec already exists', game);
+      return;
+    }
     addPromiseForTests(
       getRef(
         `/gamePortal/gamesInfoAndSpec/gameSpecsForPortal/${gameSpecId}`
@@ -365,33 +369,25 @@ export namespace ourFirebase {
 
       console.log('listenToMatch update');
       receivedMatches[matchId] = match;
-      maybeDispatchSetMatchesList();
+      dispatchSetMatchesList();
     });
   }
 
-  function maybeDispatchSetMatchesList() {
+  function dispatchSetMatchesList() {
     const matches = getValues(receivedMatches);
-    if (matches.length >= listeningToMatchIds.length) {
-      // We got all the matches.
-      // Sort by lastUpdatedOn (descending lastUpdatedOn order).
-      matches.sort((a, b) => b.lastUpdatedOn - a.lastUpdatedOn);
-      // If a match doesn't have a gameInfo (we didn't get the games list yet),
-      // then we'll dispatch setMatchesList after getting the gamesList.
-      matches.forEach(m => {
-        if (!m.game) {
-          m.game = findGameInfo(m.gameSpecId);
-        }
-      });
-      if (matches.every(m => !!m.game)) {
-        dispatch({ setMatchesList: matches });
+    // Sort by lastUpdatedOn (descending lastUpdatedOn order).
+    matches.sort((a, b) => b.lastUpdatedOn - a.lastUpdatedOn);
+    // If a match doesn't have a gameInfo (we didn't get the games list yet),
+    // then we'll dispatch setMatchesList after getting the gamesList.
+    matches.forEach(m => {
+      if (!m.game) {
+        m.game = findGameInfo(m.gameSpecId);
       }
-    }
+    });
+    dispatch({ setMatchesList: matches });
   }
 
-  export function createMatch(
-    game: GameInfo,
-    initialState: MatchState
-  ): MatchInfo {
+  export function createMatch(game: GameInfo) {
     const uid = getUserId();
     const matchRef = getRef('/gamePortal/matches').push();
     const matchId = matchRef.key!;
@@ -402,12 +398,14 @@ export namespace ourFirebase {
     };
 
     const gameSpecId = game.gameSpecId;
+    fetchGameSpec(game);
+
     const newFBMatch: fbr.Match = {
       gameSpecId: gameSpecId,
       participants: participants,
       createdOn: getTimestamp(),
       lastUpdatedOn: getTimestamp(),
-      pieces: convertMatchStateToPiecesState(initialState, gameSpecId)
+      pieces: {}
     };
     refSet(matchRef, newFBMatch);
     addMatchMembership(uid, matchId);
@@ -418,8 +416,14 @@ export namespace ourFirebase {
       game: game,
       participantsUserIds: [uid],
       lastUpdatedOn: newFBMatch.lastUpdatedOn,
-      matchState: initialState
+      matchState: []
     };
+
+    receivedMatches[newMatch.matchId] = newMatch;
+    dispatchSetMatchesList();
+    const matchIndex = store.getState().matchesList.indexOf(newMatch);
+    checkCondition('matchIndex', matchIndex >= 0);
+    dispatch({ setCurrentMatchIndex: matchIndex });
     return newMatch;
   }
 

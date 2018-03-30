@@ -38,12 +38,7 @@ function createMatch() {
   const gameInfo = gamesList.find(gameInList =>
     gameInList.gameName.includes('opoly')
   )!;
-  const gameSpec = state.gameSpecs.gameSpecIdToGameSpec[gameInfo.gameSpecId];
-  if (!gameSpec) {
-    throw new Error("Can't find gameInfo.gameSpecId=" + gameInfo.gameSpecId);
-  }
-  const initialState = MatchStateHelper.createInitialState(gameSpec);
-  return ourFirebase.createMatch(gameInfo, initialState);
+  return ourFirebase.createMatch(gameInfo);
 }
 
 function checkGameSpecs(gameSpecs: GameSpecs) {
@@ -113,7 +108,7 @@ function checkGameSpecs(gameSpecs: GameSpecs) {
 function fetchAllGameSpecs() {
   const gamesList = store.getState().gamesList;
   expect(gamesList.length).toEqual(183);
-  gamesList.forEach(g => ourFirebase.fetchGameSpec(g));
+  gamesList.forEach(g => ourFirebase.createMatch(g));
 }
 
 function getAllPromisesForTests() {
