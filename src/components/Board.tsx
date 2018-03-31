@@ -323,8 +323,9 @@ class Board extends React.Component<BoardProps, BoardState> {
       </>
     );
 
+    // TODO: Don't use AppBar here, there is only one appbar in app that is header.
     return (
-      <>
+      <div>
         <AppBar
           showMenuIconButton={false}
           iconElementRight={
@@ -347,7 +348,7 @@ class Board extends React.Component<BoardProps, BoardState> {
             <Layer ref={() => 'piecesLayer'}>{piecesLayer}</Layer>
           </Stage>
         </div>
-      </>
+      </div>
     );
   }
 }
