@@ -56,6 +56,14 @@ const allUsers: String[] = [
   'James Anderson'
 ];
 
+interface ContactWithUserId extends Contact {
+  userId: string;
+}
+
+interface Props {
+  users: ContactWithUserId[];
+  notUsers: Contact[];
+}
 
 class ContactsList extends React.Component<Props, {}> {
   state = {
