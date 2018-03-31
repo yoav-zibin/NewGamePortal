@@ -13,7 +13,7 @@ import AddMatch from './components/AddMatch';
 import registerServiceWorker from './registerServiceWorker';
 import Login from './components/Login';
 import './index.css';
-import Board from './components/Board';
+// import Board from './components/Board';
 import { ourFirebase } from './services/firebase';
 import { Contact, PhoneNumberToContact } from './types';
 
@@ -82,8 +82,8 @@ ReactDOM.render(
       >
         <div>
           <Route path="/" component={App} exact={true} />
-          <Route path="/PlayingScreen" component={PlayingScreen} />
-          <Route path="/matches/:matchId" component={Board} />
+          <Route path="/matches/:matchId" component={PlayingScreen} />
+          {/* <Route path="/matches/:matchId" component={Board} /> */}
           <Route path="/myMatches" component={MatchesList} />
           <Route path="/addMatch" component={AddMatch} />
           <Route path="/contactsList" component={ContactsList} />

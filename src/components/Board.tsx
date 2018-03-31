@@ -1,12 +1,6 @@
 import * as React from 'react';
 import { Layer, Stage } from 'react-konva';
-import {
-  MatchInfo,
-  GameSpecs,
-  GameSpec,
-  Piece,
-  CardVisibility
-} from '../types';
+import { MatchInfo, GameSpec, Piece, CardVisibility } from '../types';
 import CanvasImage from './CanvasImage';
 import {
   AppBar,
@@ -22,14 +16,9 @@ import { ourFirebase } from '../services/firebase';
 import { MatchStateHelper } from '../services/matchStateHelper';
 
 interface BoardProps {
-  matchesList: MatchInfo[];
-  gameSpecs: GameSpecs;
   myUserId: string;
-  match: {
-    params: {
-      matchId: string;
-    };
-  };
+  matchInfo: MatchInfo;
+  gameSpec: GameSpec;
 }
 
 interface BoardState {
@@ -62,23 +51,9 @@ class Board extends React.Component<BoardProps, BoardState> {
       showCardOptions: false,
       showTooltip: false
     };
-    for (let i = 0; i < this.props.matchesList.length; i++) {
-      if (
-        this.props.match.params.matchId === this.props.matchesList[i].matchId
-      ) {
-        this.matchInfo = this.props.matchesList[i];
-        this.gameSpec = this.props.gameSpecs.gameSpecIdToGameSpec[
-          this.matchInfo.gameSpecId
-        ];
-      }
-    }
+    this.matchInfo = this.props.matchInfo;
+    this.gameSpec = this.props.gameSpec;
   }
-
-  //   componentDidMount() {
-  //       const matchId = this.props.matchInfo.matchId;
-  //       ourFirebase.listenToMatch(matchId);
-  //       ourFirebase.addMatchMembership(this.props.myUserId, '-L8JTrbrFT46x-PcQ5EY');
-  //   }
 
   // cycles through the images of each piece
   togglePiece(index: number) {
@@ -379,8 +354,6 @@ class Board extends React.Component<BoardProps, BoardState> {
 
 const mapStateToProps = (state: StoreState) => {
   return {
-    gameSpecs: state.gameSpecs,
-    matchesList: state.matchesList,
     myUserId: state.myUser.myUserId
   };
 };
