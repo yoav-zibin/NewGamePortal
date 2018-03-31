@@ -6,14 +6,8 @@ import { Route, BrowserRouter } from 'react-router-dom';
 
 import { store } from './stores/index';
 import App from './App';
-import ContactsList from './components/ContactsList';
-import PlayingScreen from './components/PlayingScreen';
-import MatchesList from './components/MatchesList';
-import AddMatch from './components/AddMatch';
 import registerServiceWorker from './registerServiceWorker';
-import Login from './components/Login';
 import './index.css';
-import Board from './components/Board';
 import { ourFirebase } from './services/firebase';
 import { Contact, PhoneNumberToContact } from './types';
 
@@ -81,13 +75,7 @@ ReactDOM.render(
         }
       >
         <div>
-          <Route path="/" component={App} exact={true} />
-          <Route path="/PlayingScreen" component={PlayingScreen} />
-          <Route path="/board" component={Board} />
-          <Route path="/myMatches" component={MatchesList} />
-          <Route path="/addMatch" component={AddMatch} />
-          <Route path="/addComponent" component={ContactsList} />
-          <Route path="/login" component={Login} />
+          <Route path="/" component={App} />
         </div>
       </BrowserRouter>
     </Provider>
