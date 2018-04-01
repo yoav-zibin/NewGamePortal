@@ -10,12 +10,26 @@ import registerServiceWorker from './registerServiceWorker';
 import './index.css';
 import { ourFirebase } from './services/firebase';
 import { Contact, PhoneNumberToContact } from './types';
+import * as Raven from 'raven-js';
+
+// See SDK documentation for language specific usage.
+Raven.config('https://efc65f7e50c14bd9a3482e2ad2ae3b9d@sentry.io/939406', {
+  release: 'v0.1'
+}).install();
 
 document.getElementById('loadingSpinner')!.style.display = 'none';
 
 if (window.location.search.length > 0) {
   // These phone numbers are also in our firebase rules (so we can do testing).
-  const testUsers: Contact[] = [
+  const testUsers: Contact[] = [];
+  for (let i = 0; i < 10; i++) {
+    testUsers.push({
+      phoneNumber: '+1111111111' + i,
+      name: 'Test user ' + i
+    });
+  }
+  // For faking our contacts on web.
+  const realUsers: Contact[] = [
     {
       phoneNumber: '+19175730795',
       name: 'Yoav Zibin'
@@ -49,7 +63,6 @@ if (window.location.search.length > 0) {
       name: 'Yiwei Wu'
     }
   ];
-  ourFirebase.allPromisesForTests = [];
   ourFirebase.init();
   const myUserIndex = window.location.search
     ? Number(window.location.search.substr(1))
@@ -60,7 +73,7 @@ if (window.location.search.length > 0) {
     const userId = ourFirebase.getUserId();
     console.warn('Signed in anonymously, userId=', userId, ' myUser=', myUser);
     let currentContacts: PhoneNumberToContact = {};
-    for (let contact of testUsers) {
+    for (let contact of testUsers.concat(realUsers)) {
       currentContacts[contact.phoneNumber] = contact;
     }
     ourFirebase.storeContacts(currentContacts);

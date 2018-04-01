@@ -1,5 +1,6 @@
 import { store, dispatch } from '../stores';
 import * as firebase from 'firebase';
+import * as Raven from 'raven-js';
 import {
   checkCondition,
   getValues,
@@ -30,12 +31,6 @@ import { Action } from '../reducers';
 
 // All interactions with firebase must be in this module.
 export namespace ourFirebase {
-  // Since our test use anonymous login
-  // and the rules only allow you to write there if you have auth.token.phone_number
-  // we can not add in gamePortal/PhoneNumberToUserId/${phoneNumber}
-  // So firebase rules add "123456789" for test
-  export const magicPhoneNumberForTest = '123456789';
-
   // We're using redux, so all state must be stored in the store.
   // I.e., we can't have any state/variables/etc that is used externally.
   let calledFunctions: BooleanIndexer = {};
@@ -92,12 +87,19 @@ export namespace ourFirebase {
   export function writeUser(overridePhoneNumberForTest: string = '') {
     checkFunctionIsCalledOnce('writeUser');
     const user = assertLoggedIn();
-    if (user.uid !== store.getState().myUser.myUserId) {
+    const uid = user.uid;
+    if (uid !== store.getState().myUser.myUserId) {
       dispatch({ resetStoreToDefaults: null });
     }
     const phoneNumber = user.phoneNumber
       ? user.phoneNumber
       : overridePhoneNumberForTest;
+    if (!user.phoneNumber) {
+      user.updateProfile({
+        displayName: 'Anonymous Test user',
+        photoURL: null
+      });
+    }
     const userFbr: fbr.PrivateFields = {
       createdOn: getTimestamp(), // It's actually "last logged in on timestamp"
       fcmTokens: {},
@@ -105,16 +107,21 @@ export namespace ourFirebase {
       phoneNumber: phoneNumber,
       countryCode: myCountryCode
     };
+    Raven.setUserContext({
+      phoneNumber: phoneNumber,
+      countryCode: myCountryCode,
+      userId: uid
+    });
     // I don't want to update these.
     delete userFbr.fcmTokens;
     delete userFbr.contacts;
     refUpdate(
-      getRef(`/gamePortal/gamePortalUsers/${user.uid}/privateFields`),
+      getRef(`/gamePortal/gamePortalUsers/${uid}/privateFields`),
       userFbr
     );
 
     const phoneNumberFbr: fbr.PhoneNumber = {
-      userId: user.uid,
+      userId: uid,
       timestamp: getTimestamp()
     };
     if (phoneNumber) {
@@ -127,7 +134,7 @@ export namespace ourFirebase {
 
     dispatch({
       setMyUser: {
-        myUserId: user.uid,
+        myUserId: uid,
         myCountryCode: myCountryCode,
         myPhoneNumber: phoneNumber
       }
@@ -146,8 +153,7 @@ export namespace ourFirebase {
   }
 
   export function checkPhoneNum(phoneNum: string) {
-    const isValidNum =
-      /^[+][0-9]{5,20}$/.test(phoneNum) || phoneNum === magicPhoneNumberForTest;
+    const isValidNum = /^[+][0-9]{5,20}$/.test(phoneNum);
     checkCondition('phone num', isValidNum);
   }
 
@@ -635,6 +641,8 @@ export namespace ourFirebase {
           return;
         }
         const userId = phoneNumberFbrObj.userId;
+        // Note that users may have their own number in their contacts.
+        // I don't want to exclude it here because then that number will show up in contactsList under "Invite".
         userIdsAndPhoneNumbers.userIdToPhoneNumber[userId] = phoneNumber;
         userIdsAndPhoneNumbers.phoneNumberToUserId[phoneNumber] = userId;
       });
