@@ -16,10 +16,9 @@ import { ourFirebase } from '../services/firebase';
 import { MatchStateHelper } from '../services/matchStateHelper';
 
 interface BoardProps {
-  pieces: Piece[];
+  myUserId: string;
   matchInfo: MatchInfo;
   gameSpec: GameSpec;
-  myUserId: string;
 }
 
 interface BoardState {
@@ -42,6 +41,9 @@ class Board extends React.Component<BoardProps, BoardState> {
     y: number;
   };
   visibleTo: CardVisibility;
+  matchInfo: MatchInfo;
+  pieces: Piece[];
+  gameSpec: GameSpec;
 
   constructor(props: BoardProps) {
     super(props);
@@ -49,17 +51,13 @@ class Board extends React.Component<BoardProps, BoardState> {
       showCardOptions: false,
       showTooltip: false
     };
+    this.matchInfo = this.props.matchInfo;
+    this.gameSpec = this.props.gameSpec;
   }
-
-  //   componentDidMount() {
-  //       const matchId = this.props.matchInfo.matchId;
-  //       ourFirebase.listenToMatch(matchId);
-  //       ourFirebase.addMatchMembership(this.props.myUserId, '-L8JTrbrFT46x-PcQ5EY');
-  //   }
 
   // cycles through the images of each piece
   togglePiece(index: number) {
-    const match: MatchInfo = this.props.matchInfo;
+    const match: MatchInfo = this.matchInfo;
     const helper: MatchStateHelper = new MatchStateHelper(match);
     helper.toggleImage(index);
     ourFirebase.updatePieceState(match, index);
@@ -73,7 +71,7 @@ class Board extends React.Component<BoardProps, BoardState> {
 
   rollDice(index: number) {
     console.log('Roll Dice for index:', index);
-    const match: MatchInfo = this.props.matchInfo;
+    const match: MatchInfo = this.matchInfo;
     const helper: MatchStateHelper = new MatchStateHelper(match);
     helper.rollDice(index);
     ourFirebase.updatePieceState(match, index);
@@ -85,12 +83,14 @@ class Board extends React.Component<BoardProps, BoardState> {
   }
 
   handleCardClick(index: number) {
-    // const prop = this.props;
-    // if (prop.matchInfo.matchState[index].cardVisibilityPerIndex[prop.myUserId]) {
-    //     prop.matchInfo.matchState[index].currentImageIndex = 1;
-    // } else {
-    //     prop.matchInfo.matchState[index].currentImageIndex = 0;
-    // }
+    const prop = this.props;
+    if (
+      this.matchInfo.matchState[index].cardVisibilityPerIndex[prop.myUserId]
+    ) {
+      this.matchInfo.matchState[index].currentImageIndex = 1;
+    } else {
+      this.matchInfo.matchState[index].currentImageIndex = 0;
+    }
     console.log('Handle Card right Click for index:', index);
   }
 
@@ -102,13 +102,13 @@ class Board extends React.Component<BoardProps, BoardState> {
     ] as CanvasImage).imageNode.getAbsolutePosition();
     console.log(position);
 
-    let width = this.props.gameSpec.board.width;
-    let height = this.props.gameSpec.board.height;
+    let width = this.gameSpec.board.width;
+    let height = this.gameSpec.board.height;
     let x = position.x / width * 100;
     let y = position.y / height * 100;
     console.log(x, y);
 
-    const match: MatchInfo = this.props.matchInfo;
+    const match: MatchInfo = this.matchInfo;
     const helper: MatchStateHelper = new MatchStateHelper(match);
     helper.dragTo(index, x, y);
     ourFirebase.updatePieceState(match, index);
@@ -141,9 +141,7 @@ class Board extends React.Component<BoardProps, BoardState> {
     let position = (this.refs[
       refString
     ] as CanvasImage).imageNode.getAbsolutePosition();
-    this.visibleTo = this.props.matchInfo.matchState[
-      index
-    ].cardVisibilityPerIndex;
+    this.visibleTo = this.matchInfo.matchState[index].cardVisibilityPerIndex;
     this.tooltipPosition = {
       x: position.x,
       y: position.y
@@ -174,15 +172,14 @@ class Board extends React.Component<BoardProps, BoardState> {
   }
 
   render() {
-    const props = this.props;
-    if (!props.gameSpec) {
+    if (!this.gameSpec) {
       return <div>No game spec</div>;
     }
 
     // TODO: Complete layer for board
-    let boardImage = props.gameSpec.board.downloadURL;
-    let width = props.gameSpec.board.width;
-    let height = props.gameSpec.board.height;
+    let boardImage = this.gameSpec.board.downloadURL;
+    let width = this.gameSpec.board.width;
+    let height = this.gameSpec.board.height;
     let boardLayer = (
       <CanvasImage
         height={height}
@@ -193,8 +190,8 @@ class Board extends React.Component<BoardProps, BoardState> {
     );
 
     // // TODO: Complete layer for pieces
-    let piecesLayer = props.matchInfo.matchState.map((piece, index) => {
-      const pieceSpec = props.gameSpec.pieces[index];
+    let piecesLayer = this.matchInfo.matchState.map((piece, index) => {
+      const pieceSpec = this.gameSpec.pieces[index];
       let kind = pieceSpec.element.elementKind;
       return (
         <CanvasImage
@@ -219,11 +216,9 @@ class Board extends React.Component<BoardProps, BoardState> {
             this.toggleTooltip('canvasImage' + index, index);
           }}
           height={
-            pieceSpec.element.height * height / this.props.gameSpec.board.height
+            pieceSpec.element.height * height / this.gameSpec.board.height
           }
-          width={
-            pieceSpec.element.width * width / this.props.gameSpec.board.width
-          }
+          width={pieceSpec.element.width * width / this.gameSpec.board.width}
           x={piece.x * width / 100}
           y={piece.y * height / 100}
           src={pieceSpec.element.images[piece.currentImageIndex].downloadURL}
@@ -328,8 +323,9 @@ class Board extends React.Component<BoardProps, BoardState> {
       </>
     );
 
+    // TODO: Don't use AppBar here, there is only one appbar in app that is header.
     return (
-      <>
+      <div>
         <AppBar
           showMenuIconButton={false}
           iconElementRight={
@@ -337,13 +333,13 @@ class Board extends React.Component<BoardProps, BoardState> {
               label="Reset"
               onClick={e => {
                 e.preventDefault();
-                const helper = new MatchStateHelper(props.matchInfo);
+                const helper = new MatchStateHelper(this.matchInfo);
                 helper.resetMatch();
-                ourFirebase.updateMatchState(props.matchInfo);
+                ourFirebase.updateMatchState(this.matchInfo);
               }}
             />
           }
-          title={<span>Match: {props.matchInfo.game.gameName}</span>}
+          title={<span>Match: {this.matchInfo.game.gameName}</span>}
         />
         <div style={{ position: 'relative' }}>
           {toolTipLayer}
@@ -352,25 +348,13 @@ class Board extends React.Component<BoardProps, BoardState> {
             <Layer ref={() => 'piecesLayer'}>{piecesLayer}</Layer>
           </Stage>
         </div>
-      </>
+      </div>
     );
   }
 }
 
 const mapStateToProps = (state: StoreState) => {
-  if (state.currentMatchIndex === -1) {
-    return {};
-  }
   return {
-    pieces:
-      state.gameSpecs.gameSpecIdToGameSpec[
-        state.matchesList[state.currentMatchIndex].game.gameSpecId
-      ].pieces,
-    matchInfo: state.matchesList[state.currentMatchIndex],
-    gameSpec:
-      state.gameSpecs.gameSpecIdToGameSpec[
-        state.matchesList[state.currentMatchIndex].game.gameSpecId
-      ],
     myUserId: state.myUser.myUserId
   };
 };

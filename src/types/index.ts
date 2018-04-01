@@ -6,7 +6,6 @@ export interface StoreState {
   gameSpecs: GameSpecs;
 
   matchesList: MatchInfo[];
-  currentMatchIndex: number; // an index in matchesList
 
   phoneNumberToContact: PhoneNumberToContact; // Coming from the phone contacts
   userIdsAndPhoneNumbers: UserIdsAndPhoneNumbers; // Coming from firebase.

@@ -1,6 +1,4 @@
 import * as React from 'react';
-// import Contacts from './Contacts';
-// import SearchBar from './SearchBar';
 // import {PhoneNumberToUserId, PhoneNumberToContact, Contact} from '../types';
 import { Contact } from '../types';
 import { List, ListItem } from 'material-ui/List';
@@ -9,17 +7,11 @@ import Subheader from 'material-ui/Subheader';
 import FloatingActionButton from 'material-ui/FloatingActionButton';
 import RaisedButton from 'material-ui/RaisedButton';
 import ContentAdd from 'material-ui/svg-icons/content/add';
-import TextField from 'material-ui/TextField';
-// import TextField from 'material-ui/TextField';
+import AutoComplete from 'material-ui/AutoComplete';
 
 const style = {
   marginRight: 20
 };
-
-/*interface Props {
-  users: Contact[];
-  notUsers: Contact[]
-}*/
 
 const testUsers: Contact[] = [
   {
@@ -54,50 +46,88 @@ const testNotUsers: Contact[] = [
   }
 ];
 
-// interface Props
+const allUsers: String[] = [
+  'Brendan Lim',
+  'Eric Hoffman',
+  'Grace Ng',
+  'Chelsea Otakan',
+  'Kerem Suer',
+  'Raquel Parrado',
+  'James Anderson'
+];
 
-class ContactsList extends React.Component<{}, {}> {
+interface ContactWithUserId extends Contact {
+  userId: string;
+}
+
+interface Props {
+  users: ContactWithUserId[];
+  notUsers: Contact[];
+}
+
+class ContactsList extends React.Component<Props, {}> {
   state = {
-    users: testUsers,
-    notUsers: testNotUsers,
-    value: ''
+    filterValue: ''
   };
 
-  handleChange = (event: any) => {
-    this.setState({
-      value: event.target.value
-    });
-    if (this.state.value.length > 0) {
+  handleRequest = (chosenRequest: string, index: number) => {
+    if (chosenRequest.length > 0) {
       let targetUser: Contact[] = [];
       let targetNotUser: Contact[] = [];
-      this.state.users.map((user: Contact) => {
-        if (user.name.indexOf(this.state.value) !== -1) {
+      let flag: number = 0;
+
+      testUsers.map((user: Contact) => {
+        if (user.name === chosenRequest) {
           targetUser.push(user);
+          flag = 1;
         }
       });
-      this.state.notUsers.map((user: Contact) => {
-        if (user.name.indexOf(this.state.value) !== -1) {
-          targetNotUser.push(user);
-        }
-      });
+
+      if (flag !== 1) {
+        testNotUsers.map((user: Contact) => {
+          if (user.name === chosenRequest) {
+            targetNotUser.push(user);
+          }
+        });
+      }
       this.setState({ users: targetUser, notUsers: targetNotUser });
     } else {
       this.setState({ users: testUsers, notUsers: testNotUsers });
     }
+    console.log(chosenRequest.length);
+    return index;
   };
+
+  handleUpdate = (searchText: string, dataSource: any[]) => {
+    if (searchText.length === 0) {
+      this.setState({ users: testUsers, notUsers: testNotUsers });
+    }
+    console.log(dataSource.length);
+  };
+
+  filterContacts(contacts: Contact[]) {
+    return contacts.filter(
+        contact => contact.name.indexOf(this.state.filterValue) !== -1);
+  }
 
   render() {
     return (
       <div>
-        <TextField
-          hintText="Search"
-          fullWidth={true}
-          onChange={this.handleChange}
+        <br />
+        <AutoComplete
+          floatingLabelText="Search"
+          filter={AutoComplete.fuzzyFilter}
+          dataSource={allUsers}
+          maxSearchResults={5}
+          onNewRequest={this.handleRequest}
+          onUpdateInput={this.handleUpdate}
         />
         <List>
           <Subheader>Game User</Subheader>
-          {this.state.users.map((user: Contact) => (
+          {this.filterContacts(this.props.users)
+            .map((user: Contact) => (
             <ListItem
+              key={user.phoneNumber}
               primaryText={user.name}
               rightIconButton={
                 <FloatingActionButton mini={true} style={style}>
@@ -110,8 +140,10 @@ class ContactsList extends React.Component<{}, {}> {
         <Divider />
         <List>
           <Subheader>Not Game User</Subheader>
-          {this.state.notUsers.map((user: Contact) => (
+          {this.filterContacts(this.props.notUsers)
+            .map((user: Contact) => (
             <ListItem
+              key={user.phoneNumber}
               primaryText={user.name}
               rightIconButton={
                 <RaisedButton label="invite" primary={true} style={style} />
@@ -124,4 +156,29 @@ class ContactsList extends React.Component<{}, {}> {
   }
 }
 
-export default ContactsList;
+import { connect } from 'react-redux';
+import { StoreState } from '../types/index';
+
+const mapStateToProps = (state: StoreState) => {
+  const users: ContactWithUserId[] = [];
+  const notUsers: Contact[] = [];
+  const phoneNumbers = Object.keys(state.phoneNumberToContact);
+  for (let phoneNumber of phoneNumbers) {
+    const contact = state.phoneNumberToContact[phoneNumber];
+    const userId = state.userIdsAndPhoneNumbers.phoneNumberToUserId[phoneNumber];
+    if (userId) {
+      users.push({...contact, userId: userId});
+    } else {
+      notUsers.push(contact);
+    }
+  }
+  users.sort((c1, c2) => c1.name.localeCompare(c2.name));
+  notUsers.sort((c1, c2) => c1.name.localeCompare(c2.name));
+  return {
+    users, notUsers
+  };
+};
+// Later this will take dispatch: any as argument
+const mapDispatchToProps = () => ({});
+
+export default connect(mapStateToProps, mapDispatchToProps)(ContactsList);
