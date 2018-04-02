@@ -14,7 +14,6 @@ const style = {
   marginRight: 20
 };
 
-// interface Props
 interface ContactWithUserId extends Contact {
   userId: string;
 }
@@ -57,9 +56,7 @@ class ContactsList extends React.Component<Props, {}> {
         ourFirebase.addParticipant(currentMatch, this.props.myUserId);
       }
     });
-    console.log('1');
     window.location.href = '/matches/' + currentMatchId;
-    console.log('3');
   };
 
   handleAddNotUser = () => {
@@ -137,7 +134,9 @@ const mapStateToProps = (state: StoreState) => {
     const contact = state.phoneNumberToContact[phoneNumber];
     const userId =
       state.userIdsAndPhoneNumbers.phoneNumberToUserId[phoneNumber];
-    if (userId) {
+    if (userId === state.myUser.myUserId) {
+      // Ignore my user (in case I have my own phone number in my contacts)
+    } else if (userId) {
       users.push({ ...contact, userId: userId });
       allUsers.push(contact.name);
     } else {
