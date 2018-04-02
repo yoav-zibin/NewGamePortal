@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { Contact } from '../types';
+import { MatchInfo } from '../types';
 import { List, ListItem } from 'material-ui/List';
 import Divider from 'material-ui/Divider';
 import Subheader from 'material-ui/Subheader';
@@ -7,6 +8,7 @@ import FloatingActionButton from 'material-ui/FloatingActionButton';
 import RaisedButton from 'material-ui/RaisedButton';
 import ContentAdd from 'material-ui/svg-icons/content/add';
 import AutoComplete from 'material-ui/AutoComplete';
+import { ourFirebase } from '../services/firebase';
 
 const style = {
   marginRight: 20
@@ -18,9 +20,12 @@ interface ContactWithUserId extends Contact {
 }
 
 interface Props {
+  matchesList: MatchInfo[];
   users: ContactWithUserId[];
   notUsers: Contact[];
   allUsers: String[];
+  match: any;
+  myUserId: string;
 }
 
 class ContactsList extends React.Component<Props, {}> {
@@ -41,6 +46,24 @@ class ContactsList extends React.Component<Props, {}> {
       this.setState({ filterValue: '' });
     }
     console.log(dataSource.length);
+  };
+
+  handleAddUser = () => {
+    let currentMatchId: String = this.props.match.params.matchId;
+    let currentMatch: MatchInfo;
+    this.props.matchesList.map((match: MatchInfo) => {
+      if (match.matchId === currentMatchId) {
+        currentMatch = match;
+        ourFirebase.addParticipant(currentMatch, this.props.myUserId);
+      }
+    });
+    console.log('1');
+    window.location.href = '/matches/' + currentMatchId;
+    console.log('3');
+  };
+
+  handleAddNotUser = () => {
+    console.log(this.props.matchesList);
   };
 
   filterContacts(contacts: Contact[]) {
@@ -68,7 +91,11 @@ class ContactsList extends React.Component<Props, {}> {
               key={user.phoneNumber}
               primaryText={user.name}
               rightIconButton={
-                <FloatingActionButton mini={true} style={style}>
+                <FloatingActionButton
+                  mini={true}
+                  style={style}
+                  onClick={this.handleAddUser}
+                >
                   <ContentAdd />
                 </FloatingActionButton>
               }
@@ -83,7 +110,12 @@ class ContactsList extends React.Component<Props, {}> {
               key={user.phoneNumber}
               primaryText={user.name}
               rightIconButton={
-                <RaisedButton label="invite" primary={true} style={style} />
+                <RaisedButton
+                  label="invite"
+                  primary={true}
+                  style={style}
+                  onClick={this.handleAddNotUser}
+                />
               }
             />
           ))}
@@ -119,7 +151,9 @@ const mapStateToProps = (state: StoreState) => {
   return {
     users,
     notUsers,
-    allUsers
+    allUsers,
+    matchesList: state.matchesList,
+    myUserId: state.myUser.myUserId
   };
 };
 // Later this will take dispatch: any as argument

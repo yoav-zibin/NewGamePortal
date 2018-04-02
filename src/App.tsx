@@ -22,7 +22,11 @@ class App extends React.Component {
         <Route exact={true} path="/matches/:matchId" component={Board} />
         <Route exact={true} path="/myMatches" component={MatchesList} />
         <Route exact={true} path="/addMatch" component={AddMatch} />
-        <Route exact={true} path="/contactsList" component={ContactsList} />
+        <Route
+          exact={true}
+          path="/contactsList/:matchId"
+          component={ContactsList}
+        />
         <Route exact={true} path="/login" component={Login} />
         <Route exact={true} path="/" component={GamesList} />
       </div>
