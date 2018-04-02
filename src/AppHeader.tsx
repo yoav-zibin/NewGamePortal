@@ -19,10 +19,12 @@ class AppHeader extends React.Component {
     let result = this.routes[pathname];
     if (result) {
       return result;
-    } else {
+    } else if (pathname.includes('/matches')) {
       // On specific match page, render match ID
       let matchId = pathname.split('/')[2];
       return 'Match ' + matchId;
+    } else {
+      return '';
     }
   };
 
