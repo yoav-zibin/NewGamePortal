@@ -4,6 +4,7 @@ import './App.css';
 import AppHeader from './AppHeader';
 import GamesList from './components/GamesList';
 import { Route } from 'react-router';
+import PrivateRoute from './components/PrivateRoute';
 import PlayingScreen from './components/PlayingScreen';
 import Board from './components/Board';
 import MatchesList from './components/MatchesList';
@@ -24,7 +25,7 @@ class App extends React.Component {
         <Route exact={true} path="/addMatch" component={AddMatch} />
         <Route exact={true} path="/contactsList" component={ContactsList} />
         <Route exact={true} path="/login" component={Login} />
-        <Route exact={true} path="/" component={GamesList} />
+        <PrivateRoute component={GamesList} exact={true} path="/" />
       </div>
     );
   }
