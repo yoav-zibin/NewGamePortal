@@ -8,7 +8,6 @@ export const storeStateDefault: StoreState = {
     gameSpecIdToGameSpec: {}
   },
   matchesList: [],
-  currentMatchIndex: -1,
   phoneNumberToContact: {},
   userIdsAndPhoneNumbers: {
     phoneNumberToUserId: {},

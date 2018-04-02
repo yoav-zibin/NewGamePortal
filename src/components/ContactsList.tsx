@@ -58,11 +58,9 @@ const allUsers: String[] = [
 
 // interface Props
 
-class ContactsList extends React.Component<{}, {}> {
+class ContactsList extends React.Component<Props, {}> {
   state = {
-    users: testUsers,
-    notUsers: testNotUsers,
-    value: ''
+    filterValue: ''
   };
 
   handleRequest = (chosenRequest: string, index: number) => {
@@ -100,6 +98,12 @@ class ContactsList extends React.Component<{}, {}> {
     console.log(dataSource.length);
   };
 
+  filterContacts(contacts: Contact[]) {
+    return contacts.filter(
+      contact => contact.name.indexOf(this.state.filterValue) !== -1
+    );
+  }
+
   render() {
     return (
       <div>
@@ -114,8 +118,9 @@ class ContactsList extends React.Component<{}, {}> {
         />
         <List>
           <Subheader>Game User</Subheader>
-          {this.state.users.map((user: Contact) => (
+          {this.filterContacts(this.props.users).map((user: Contact) => (
             <ListItem
+              key={user.phoneNumber}
               primaryText={user.name}
               rightIconButton={
                 <FloatingActionButton mini={true} style={style}>
@@ -128,8 +133,9 @@ class ContactsList extends React.Component<{}, {}> {
         <Divider />
         <List>
           <Subheader>Not Game User</Subheader>
-          {this.state.notUsers.map((user: Contact) => (
+          {this.filterContacts(this.props.notUsers).map((user: Contact) => (
             <ListItem
+              key={user.phoneNumber}
               primaryText={user.name}
               rightIconButton={
                 <RaisedButton label="invite" primary={true} style={style} />
@@ -142,4 +148,31 @@ class ContactsList extends React.Component<{}, {}> {
   }
 }
 
-export default ContactsList;
+import { connect } from 'react-redux';
+import { StoreState } from '../types/index';
+
+const mapStateToProps = (state: StoreState) => {
+  const users: ContactWithUserId[] = [];
+  const notUsers: Contact[] = [];
+  const phoneNumbers = Object.keys(state.phoneNumberToContact);
+  for (let phoneNumber of phoneNumbers) {
+    const contact = state.phoneNumberToContact[phoneNumber];
+    const userId =
+      state.userIdsAndPhoneNumbers.phoneNumberToUserId[phoneNumber];
+    if (userId) {
+      users.push({ ...contact, userId: userId });
+    } else {
+      notUsers.push(contact);
+    }
+  }
+  users.sort((c1, c2) => c1.name.localeCompare(c2.name));
+  notUsers.sort((c1, c2) => c1.name.localeCompare(c2.name));
+  return {
+    users,
+    notUsers
+  };
+};
+// Later this will take dispatch: any as argument
+const mapDispatchToProps = () => ({});
+
+export default connect(mapStateToProps, mapDispatchToProps)(ContactsList);

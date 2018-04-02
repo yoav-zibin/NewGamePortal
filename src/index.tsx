@@ -83,10 +83,10 @@ ReactDOM.render(
         <div>
           <Route path="/" component={App} exact={true} />
           <Route path="/PlayingScreen" component={PlayingScreen} />
-          <Route path="/board" component={Board} />
+          <Route path="/matches/:matchId" component={Board} />
           <Route path="/myMatches" component={MatchesList} />
           <Route path="/addMatch" component={AddMatch} />
-          <Route path="/addComponent" component={ContactsList} />
+          <Route path="/contactsList" component={ContactsList} />
           <Route path="/login" component={Login} />
         </div>
       </BrowserRouter>

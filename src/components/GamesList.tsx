@@ -2,6 +2,7 @@ import * as React from 'react';
 import Subheader from 'material-ui/Subheader';
 import { GridList, GridTile } from 'material-ui/GridList';
 import { GameInfo } from '../types';
+import { ourFirebase } from '../services/firebase';
 
 const styles: any = {
   root: {
@@ -27,6 +28,16 @@ interface Props {
  * and reroutes to that game's route.
  */
 class GamesList extends React.Component<Props, {}> {
+  onClick = (chosenGameName: string) => {
+    console.log('CHOSEN GAME:', chosenGameName);
+    this.props.gamesList.forEach((game: GameInfo) => {
+      if (game.gameName === chosenGameName) {
+        let matchId = ourFirebase.createMatch(game).matchId;
+        window.location.href = '/matches/' + matchId;
+      }
+    });
+  };
+
   render() {
     return (
       <div>
@@ -39,6 +50,7 @@ class GamesList extends React.Component<Props, {}> {
                   key={gameInfo.gameSpecId}
                   title={gameInfo.gameName}
                   subtitle={''}
+                  onClick={this.onClick.bind(this, gameInfo.gameName)}
                 >
                   <img src={gameInfo.screenShot.downloadURL} />
                 </GridTile>
