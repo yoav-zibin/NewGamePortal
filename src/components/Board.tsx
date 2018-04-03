@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Layer, Stage } from 'react-konva';
-import { MatchInfo, GameSpec, Piece, CardVisibility } from '../types';
+import { MatchInfo, GameSpec, CardVisibility } from '../types';
 import CanvasImage from './CanvasImage';
 import {
   // AppBar,
@@ -35,14 +35,12 @@ class Board extends React.Component<BoardProps, BoardState> {
   selectedPieceIndex: number;
   selfParticipantIndex: number;
   participantNames: string[];
-  deckIndex: number;
   tooltipPosition: {
     x: number;
     y: number;
   };
   visibleTo: CardVisibility;
   matchInfo: MatchInfo;
-  pieces: Piece[];
   gameSpec: GameSpec;
 
   constructor(props: BoardProps) {
@@ -53,6 +51,12 @@ class Board extends React.Component<BoardProps, BoardState> {
     };
     this.matchInfo = this.props.matchInfo;
     this.gameSpec = this.props.gameSpec;
+    this.participantNames = this.matchInfo.participantsUserIds;
+    this.selfParticipantIndex = this.participantNames.indexOf(
+      this.props.myUserId
+    );
+    console.log(this.matchInfo);
+    console.log(this.gameSpec);
   }
 
   // cycles through the images of each piece
@@ -64,11 +68,6 @@ class Board extends React.Component<BoardProps, BoardState> {
     console.log('toggle Piece index:', index);
   }
 
-  rotatePiece(index: number) {
-    // TODO:
-    console.log('Rotate Piece index:', index);
-  }
-
   rollDice(index: number) {
     console.log('Roll Dice for index:', index);
     const match: MatchInfo = this.matchInfo;
@@ -78,20 +77,11 @@ class Board extends React.Component<BoardProps, BoardState> {
   }
 
   shuffleDeck(index: number) {
-    // TODO:
+    const match: MatchInfo = this.matchInfo;
+    const helper: MatchStateHelper = new MatchStateHelper(match);
+    helper.shuffleDeck(index);
+    ourFirebase.updatePieceState(match, index);
     console.log('Shufle Deck for index:', index);
-  }
-
-  handleCardClick(index: number) {
-    const prop = this.props;
-    if (
-      this.matchInfo.matchState[index].cardVisibilityPerIndex[prop.myUserId]
-    ) {
-      this.matchInfo.matchState[index].currentImageIndex = 1;
-    } else {
-      this.matchInfo.matchState[index].currentImageIndex = 0;
-    }
-    console.log('Handle Card right Click for index:', index);
   }
 
   handleDragEnd = (index: number) => {
@@ -114,16 +104,28 @@ class Board extends React.Component<BoardProps, BoardState> {
     ourFirebase.updatePieceState(match, index);
   };
 
-  makeCardVisibleToSelf() {
-    // TODO:
+  makeCardVisibleToSelf(index: number) {
+    const match: MatchInfo = this.matchInfo;
+    const helper: MatchStateHelper = new MatchStateHelper(match);
+    helper.showMe(index);
+    ourFirebase.updatePieceState(match, index);
+    console.log('card show to me:', index);
   }
 
-  makeCardVisibleToAll() {
-    // TODO:
+  makeCardVisibleToAll(index: number) {
+    const match: MatchInfo = this.matchInfo;
+    const helper: MatchStateHelper = new MatchStateHelper(match);
+    helper.showEveryone(index);
+    ourFirebase.updatePieceState(match, index);
+    console.log('card show to everyone:', index);
   }
 
-  makeCardHiddenToAll() {
-    // TODO:
+  makeCardHiddenToAll(index: number) {
+    const match: MatchInfo = this.matchInfo;
+    const helper: MatchStateHelper = new MatchStateHelper(match);
+    helper.hideFromEveryone(index);
+    ourFirebase.updatePieceState(match, index);
+    console.log('card hide to everyone:', index);
   }
 
   toggleTooltip(refString: string | null, index: number | null) {
@@ -152,13 +154,11 @@ class Board extends React.Component<BoardProps, BoardState> {
   displayCardOptions(
     cardIndex: number,
     selfParticipantIndex: number,
-    participantNames: string[],
-    deckIndex: number
+    participantNames: string[]
   ) {
     this.selectedPieceIndex = cardIndex;
     this.selfParticipantIndex = selfParticipantIndex;
     this.participantNames = participantNames;
-    this.deckIndex = deckIndex;
     this.setState({
       showTooltip: false,
       showCardOptions: true
@@ -185,7 +185,7 @@ class Board extends React.Component<BoardProps, BoardState> {
         height={height}
         width={width}
         src={boardImage}
-        onClick={() => this.toggleTooltip(null, null)}
+        // onClick={() => this.toggleTooltip(null, null)}
       />
     );
 
@@ -198,12 +198,6 @@ class Board extends React.Component<BoardProps, BoardState> {
           ref={'canvasImage' + index}
           key={index}
           draggable={pieceSpec.element.isDraggable || kind === 'standard'}
-          onContextMenu={() => {
-            console.log('Piece right clicked!');
-            if (kind === 'card') {
-              this.handleCardClick(index);
-            }
-          }}
           onClick={() => {
             console.log('Piece left clicked!');
             if (kind === 'toggable') {
@@ -212,8 +206,8 @@ class Board extends React.Component<BoardProps, BoardState> {
               this.rollDice(index);
             } else if (kind === 'card') {
               // this.handleCardClick(index);
+              this.toggleTooltip('canvasImage' + index, index);
             }
-            this.toggleTooltip('canvasImage' + index, index);
           }}
           height={
             pieceSpec.element.height * height / this.gameSpec.board.height
@@ -222,9 +216,9 @@ class Board extends React.Component<BoardProps, BoardState> {
           x={piece.x * width / 100}
           y={piece.y * height / 100}
           src={pieceSpec.element.images[piece.currentImageIndex].downloadURL}
-          onDragStart={() => {
-            this.toggleTooltip(null, null);
-          }}
+          //   onDragStart={() => {
+          //     this.toggleTooltip(null, null);
+          //   }}
           onDragEnd={() => {
             this.handleDragEnd(index);
           }}
@@ -288,7 +282,7 @@ class Board extends React.Component<BoardProps, BoardState> {
               <li
                 className="card-options-item"
                 onClick={() => {
-                  this.makeCardVisibleToSelf();
+                  this.makeCardVisibleToSelf(this.selectedPieceIndex);
                 }}
               >
                 Make Visible To me
@@ -296,7 +290,7 @@ class Board extends React.Component<BoardProps, BoardState> {
               <li
                 className="card-options-item"
                 onClick={() => {
-                  this.makeCardVisibleToAll();
+                  this.makeCardVisibleToAll(this.selectedPieceIndex);
                 }}
               >
                 Make Visible To Everyone
@@ -304,7 +298,7 @@ class Board extends React.Component<BoardProps, BoardState> {
               <li
                 className="card-options-item"
                 onClick={() => {
-                  this.makeCardHiddenToAll();
+                  this.makeCardHiddenToAll(this.selectedPieceIndex);
                 }}
               >
                 Hide From Everyone
@@ -312,7 +306,9 @@ class Board extends React.Component<BoardProps, BoardState> {
               <li
                 className="card-options-item"
                 onClick={() => {
-                  this.shuffleDeck(this.deckIndex);
+                  this.shuffleDeck(
+                    this.gameSpec.pieces[this.selectedPieceIndex].deckPieceIndex
+                  );
                 }}
               >
                 Shuffle Deck

@@ -1,6 +1,5 @@
 import * as React from 'react';
 import './App.css';
-
 import AppHeader from './AppHeader';
 import GamesList from './components/GamesList';
 import { Route } from 'react-router';
