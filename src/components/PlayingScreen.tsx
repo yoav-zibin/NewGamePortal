@@ -4,8 +4,10 @@ import VideoArea from './VideoArea';
 import { StoreState, MatchInfo, GameSpecs, GameSpec } from '../types/index';
 import { connect } from 'react-redux';
 import CanvasImage from './CanvasImage';
-import { AppBar } from 'material-ui';
+import { FloatingActionButton } from 'material-ui';
+import ContentAdd from 'material-ui/svg-icons/content/add';
 import { Layer, Stage } from 'react-konva';
+import { History } from 'history';
 
 interface PlayingScreenProps {
   // pieces: Piece[];
@@ -16,12 +18,13 @@ interface PlayingScreenProps {
       matchId: string;
     };
   };
-  myUserId: string;
+  history: History;
 }
 
 class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
   matchInfo: MatchInfo;
   gameSpec: GameSpec;
+
   constructor(props: PlayingScreenProps) {
     super(props);
     for (let i = 0; i < this.props.matchesList.length; i++) {
@@ -35,6 +38,7 @@ class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
       }
     }
   }
+
   render() {
     if (!this.matchInfo) {
       return <div>The matchId doesn't exist.</div>;
@@ -47,12 +51,13 @@ class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
       );
       return (
         <>
-          <AppBar
+          {/* <AppBar
             showMenuIconButton={false}
             title={
               <span>Match: {this.matchInfo.game.gameName} (No game spec)</span>
             }
-          />
+          /> */}
+          <div>The Gamespec has not been loaded.</div>
           <Stage width={width} height={height}>
             <Layer ref={() => 'screenShotLayer'}>{screenShotLayer}</Layer>
           </Stage>
@@ -64,6 +69,14 @@ class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
       <div>
         <Board matchInfo={this.matchInfo} gameSpec={this.gameSpec} />
         <VideoArea />
+        <FloatingActionButton
+          style={{ marginRight: 20 }}
+          onClick={() =>
+            this.props.history.push('/contactsList/' + this.matchInfo.matchId)
+          }
+        >
+          <ContentAdd />
+        </FloatingActionButton>
       </div>
     );
   }
@@ -72,8 +85,7 @@ class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
 const mapStateToProps = (state: StoreState) => {
   return {
     matchesList: state.matchesList,
-    gameSpecs: state.gameSpecs,
-    myUserId: state.myUser.myUserId
+    gameSpecs: state.gameSpecs
   };
 };
 
