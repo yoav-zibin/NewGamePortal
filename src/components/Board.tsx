@@ -3,8 +3,8 @@ import { Layer, Stage } from 'react-konva';
 import { MatchInfo, GameSpec, Piece, CardVisibility } from '../types';
 import CanvasImage from './CanvasImage';
 import {
-  AppBar,
-  FlatButton,
+  // AppBar,
+  // FlatButton,
   IconButton,
   IconMenu,
   MenuItem
@@ -326,7 +326,7 @@ class Board extends React.Component<BoardProps, BoardState> {
     // TODO: Don't use AppBar here, there is only one appbar in app that is header.
     return (
       <div>
-        <AppBar
+        {/* <AppBar
           showMenuIconButton={false}
           iconElementRight={
             <FlatButton
@@ -340,7 +340,7 @@ class Board extends React.Component<BoardProps, BoardState> {
             />
           }
           title={<span>Match: {this.matchInfo.game.gameName}</span>}
-        />
+        /> */}
         <div style={{ position: 'relative' }}>
           {toolTipLayer}
           <Stage width={width} height={height}>
