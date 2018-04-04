@@ -47,9 +47,12 @@ interface Props {
 class MatchesList extends React.Component<Props, {}> {
   onClick = (matchId: string) => {
     console.log('CLICKED MATCH');
-    ourFirebase.listenToMatch(matchId);
-    window.location.href = '/matches/' + matchId;
-    console.log(matchId);
+    this.props.matchesList.forEach((match: MatchInfo) => {
+      if (matchId === match.matchId) {
+        ourFirebase.fetchGameSpec(match.game);
+        window.location.href = '/matches/' + matchId;
+      }
+    });
   };
   render() {
     return (

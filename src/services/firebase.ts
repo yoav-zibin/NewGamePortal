@@ -189,7 +189,7 @@ export namespace ourFirebase {
 
   // Eventually dispatches the action updateGameSpecs.
   const isFetchingGameSpec: BooleanIndexer = {};
-  function fetchGameSpec(game: GameInfo) {
+  export function fetchGameSpec(game: GameInfo) {
     console.log('fetchGameSpec:', game);
     const gameSpecId = game.gameSpecId;
     assertLoggedIn();
@@ -352,11 +352,10 @@ export namespace ourFirebase {
   }
 
   export function listenToMatch(matchId: string) {
-    // console.log("LISTENING MATCHES:", listeningToMatchIds);
-    // checkCondition(
-    //   'listeningToMatchIds',
-    //   listeningToMatchIds.indexOf(matchId) === -1
-    // );
+    checkCondition(
+      'listeningToMatchIds',
+      listeningToMatchIds.indexOf(matchId) === -1
+    );
     listeningToMatchIds.push(matchId);
     return getRef('/gamePortal/matches/' + matchId).on('value', snap => {
       if (!snap) {
