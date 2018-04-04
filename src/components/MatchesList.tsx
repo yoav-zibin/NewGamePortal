@@ -2,7 +2,7 @@ import * as React from 'react';
 import AppBar from 'material-ui/AppBar';
 import { connect } from 'react-redux';
 import { StoreState } from '../types/index';
-import { ourFirebase } from '../services/firebase';
+// import { ourFirebase } from '../services/firebase';
 
 import { MatchInfo, UserIdToPhoneNumber, PhoneNumberToContact } from '../types';
 // import { GridList, GridTile } from 'material-ui/GridList';
@@ -49,7 +49,6 @@ class MatchesList extends React.Component<Props, {}> {
     console.log('CLICKED MATCH');
     this.props.matchesList.forEach((match: MatchInfo) => {
       if (matchId === match.matchId) {
-        ourFirebase.fetchGameSpec(match.game);
         window.location.href = '/matches/' + matchId;
       }
     });
