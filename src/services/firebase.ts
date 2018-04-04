@@ -352,10 +352,11 @@ export namespace ourFirebase {
   }
 
   export function listenToMatch(matchId: string) {
-    checkCondition(
-      'listeningToMatchIds',
-      listeningToMatchIds.indexOf(matchId) === -1
-    );
+    // console.log("LISTENING MATCHES:", listeningToMatchIds);
+    // checkCondition(
+    //   'listeningToMatchIds',
+    //   listeningToMatchIds.indexOf(matchId) === -1
+    // );
     listeningToMatchIds.push(matchId);
     return getRef('/gamePortal/matches/' + matchId).on('value', snap => {
       if (!snap) {

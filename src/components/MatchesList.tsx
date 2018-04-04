@@ -2,6 +2,7 @@ import * as React from 'react';
 import AppBar from 'material-ui/AppBar';
 import { connect } from 'react-redux';
 import { StoreState } from '../types/index';
+import { ourFirebase } from '../services/firebase';
 
 import { MatchInfo, UserIdToPhoneNumber, PhoneNumberToContact } from '../types';
 // import { GridList, GridTile } from 'material-ui/GridList';
@@ -44,6 +45,12 @@ interface Props {
 }
 
 class MatchesList extends React.Component<Props, {}> {
+  onClick = (matchId: string) => {
+    console.log('CLICKED MATCH');
+    ourFirebase.listenToMatch(matchId);
+    window.location.href = '/matches/' + matchId;
+    console.log(matchId);
+  };
   render() {
     return (
       <div>
@@ -59,6 +66,7 @@ class MatchesList extends React.Component<Props, {}> {
                 // will cause warning with just tile.matchId
                 key={tile.matchId + index}
                 primaryText={tile.game.gameName}
+                onClick={this.onClick.bind(this, tile.matchId)}
                 secondaryText={
                   'Last played ' +
                   timeSince(tile.lastUpdatedOn) +
