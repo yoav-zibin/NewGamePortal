@@ -188,7 +188,7 @@ export namespace ourFirebase {
   }
 
   // Eventually dispatches the action updateGameSpecs.
-  function fetchGameSpec(game: GameInfo) {
+  export function fetchGameSpec(game: GameInfo) {
     console.log('fetchGameSpec:', game);
     const gameSpecId = game.gameSpecId;
     assertLoggedIn();
