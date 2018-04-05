@@ -203,7 +203,6 @@ class Board extends React.Component<BoardProps, BoardState> {
 
   render() {
     if (!this.gameSpec) {
-      ourFirebase.fetchGameSpec(this.matchInfo.game);
       let gameSpecScreenShot = this.matchInfo.game.screenShot.downloadURL;
       let screenShotWidth = this.matchInfo.game.screenShot.width;
       let screenShotHeight = this.matchInfo.game.screenShot.height;
