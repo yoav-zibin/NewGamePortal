@@ -115,9 +115,15 @@ function getAllPromisesForTests() {
   return Promise.all(ourFirebase.allPromisesForTests!);
 }
 
+// Since our test use anonymous login
+// and the rules only allow you to write there if you have auth.token.phone_number
+// we can not add in gamePortal/PhoneNumberToUserId/${phoneNumber}
+// So firebase rules add "+1111111111[0-9]" for test
+const magicPhoneNumberForTest = '+11111111111';
+
 beforeAll(done => {
   ourFirebase
-    .signInAnonymously(ourFirebase.magicPhoneNumberForTest)
+    .signInAnonymously(magicPhoneNumberForTest)
     .then(() => {
       getAllPromisesForTests().then(() => {
         fetchAllGameSpecs();
@@ -195,7 +201,6 @@ it('fetch match list from firebase', done => {
 it('Should update the phone numbers', done => {
   // write something to gameportal/phoneNumberToUserId
   // get string from contact and convert them to string
-  const magicPhoneNumberForTest = ourFirebase.magicPhoneNumberForTest;
   const phoneNumbers: PhoneNumberToContact = {
     [magicPhoneNumberForTest]: {
       phoneNumber: magicPhoneNumberForTest,

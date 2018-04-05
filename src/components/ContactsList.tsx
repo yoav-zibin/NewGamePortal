@@ -107,7 +107,8 @@ class ContactsList extends React.Component<Props, {}> {
 
   filterContacts(contacts: Contact[]) {
     return contacts.filter(
-        contact => contact.name.indexOf(this.state.filterValue) !== -1);
+      contact => contact.name.indexOf(this.state.filterValue) !== -1
+    );
   }
 
   render() {
@@ -124,8 +125,7 @@ class ContactsList extends React.Component<Props, {}> {
         />
         <List>
           <Subheader>Game User</Subheader>
-          {this.filterContacts(this.props.users)
-            .map((user: Contact) => (
+          {this.filterContacts(this.props.users).map((user: Contact) => (
             <ListItem
               key={user.phoneNumber}
               primaryText={user.name}
@@ -140,8 +140,7 @@ class ContactsList extends React.Component<Props, {}> {
         <Divider />
         <List>
           <Subheader>Not Game User</Subheader>
-          {this.filterContacts(this.props.notUsers)
-            .map((user: Contact) => (
+          {this.filterContacts(this.props.notUsers).map((user: Contact) => (
             <ListItem
               key={user.phoneNumber}
               primaryText={user.name}
@@ -165,9 +164,12 @@ const mapStateToProps = (state: StoreState) => {
   const phoneNumbers = Object.keys(state.phoneNumberToContact);
   for (let phoneNumber of phoneNumbers) {
     const contact = state.phoneNumberToContact[phoneNumber];
-    const userId = state.userIdsAndPhoneNumbers.phoneNumberToUserId[phoneNumber];
-    if (userId) {
-      users.push({...contact, userId: userId});
+    const userId =
+      state.userIdsAndPhoneNumbers.phoneNumberToUserId[phoneNumber];
+    if (userId === state.myUser.myUserId) {
+      // Ignore my user (in case I have my own phone number in my contacts)
+    } else if (userId) {
+      users.push({ ...contact, userId: userId });
     } else {
       notUsers.push(contact);
     }
@@ -175,7 +177,8 @@ const mapStateToProps = (state: StoreState) => {
   users.sort((c1, c2) => c1.name.localeCompare(c2.name));
   notUsers.sort((c1, c2) => c1.name.localeCompare(c2.name));
   return {
-    users, notUsers
+    users,
+    notUsers
   };
 };
 // Later this will take dispatch: any as argument

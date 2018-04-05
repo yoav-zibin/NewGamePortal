@@ -2,7 +2,11 @@ import * as React from 'react';
 
 class VideoArea extends React.Component<{}, {}> {
   render() {
-    return <div>Video Area</div>;
+    return (
+      <>
+        <div>Video Area</div>
+      </>
+    );
   }
 }
 
