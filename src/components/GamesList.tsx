@@ -3,7 +3,7 @@ import Subheader from 'material-ui/Subheader';
 import { GridList, GridTile } from 'material-ui/GridList';
 import { GameInfo } from '../types';
 import { ourFirebase } from '../services/firebase';
-import { Link } from 'react-router-dom';
+import { withRouter } from 'react-router-dom';
 
 const styles: any = {
   root: {
@@ -21,6 +21,9 @@ const styles: any = {
 
 interface Props {
   gamesList: GameInfo[];
+  match: any;
+  location: any;
+  history: any;
 }
 
 /**
@@ -29,18 +32,10 @@ interface Props {
  * and reroutes to that game's route.
  */
 class GamesList extends React.Component<Props, {}> {
-  onClick = (chosenGameName: string) => {
-
-    for(let i = 0; i < this.props.gamesList.length; i++){
-      let game: GameInfo = this.props.gamesList[i];
-
-      if (game.gameName === chosenGameName) {
-        let matchId = ourFirebase.createMatch(game).matchId;
-        console.log("MATCH ID: ", matchId);
-        return '/matches/' + matchId;
-      }
-    } // for loop
-    return '/addMatch';
+  createMatch = (game: GameInfo) => {
+    let matchId = ourFirebase.createMatch(game).matchId;
+    console.log("MATCH ID: ", matchId);
+    this.props.history.push('/matches/' + matchId);
   };
 
   render() {
@@ -51,11 +46,9 @@ class GamesList extends React.Component<Props, {}> {
             <GridList cellHeight={180} style={styles.gridList}>
               <Subheader>Card games</Subheader>
               {this.props.gamesList.map((gameInfo: GameInfo) => (
-                <Link
+                <div
                   key={gameInfo.gameSpecId}
-                  to={{
-                    pathname: this.onClick(gameInfo.gameName)
-                  }}
+                  onClick={() => this.createMatch(gameInfo)}
                 >
                   <GridTile
                     title={gameInfo.gameName}
@@ -63,7 +56,7 @@ class GamesList extends React.Component<Props, {}> {
                   >
                     <img src={gameInfo.screenShot.downloadURL} />
                   </GridTile>
-                </Link>
+                </div>
               ))}
             </GridList>
           </div>
@@ -82,4 +75,4 @@ const mapStateToProps = (state: StoreState) => ({
 // Later this will take dispatch: any as argument
 const mapDispatchToProps = () => ({});
 
-export default connect(mapStateToProps, mapDispatchToProps)(GamesList);
+export default connect(mapStateToProps, mapDispatchToProps)(withRouter(GamesList));
