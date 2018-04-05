@@ -25,11 +25,13 @@ interface Props {
   allUsers: String[];
   match: any;
   myUserId: string;
+  history: any;
 }
 
 class ContactsList extends React.Component<Props, {}> {
   state = {
-    filterValue: ''
+    filterValue: '',
+    userAdded: false
   };
 
   handleRequest = (chosenRequest: string, index: number) => {
@@ -56,7 +58,7 @@ class ContactsList extends React.Component<Props, {}> {
         ourFirebase.addParticipant(currentMatch, this.props.myUserId);
       }
     });
-    window.location.href = '/matches/' + currentMatchId;
+    this.props.history.push('/matches/' + currentMatchId);
   };
 
   handleAddNotUser = () => {
