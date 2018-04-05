@@ -63,7 +63,10 @@ class Board extends React.Component<BoardProps, BoardState> {
         this.gameSpec = this.props.gameSpecs.gameSpecIdToGameSpec[
           this.matchInfo.gameSpecId
         ];
-        this.helper = new MatchStateHelper(this.matchInfo);
+
+        if (this.gameSpec) {
+          this.helper = new MatchStateHelper(this.matchInfo);
+        }
       }
     }
     this.participantNames = this.matchInfo.participantsUserIds;
