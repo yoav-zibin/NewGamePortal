@@ -12,6 +12,7 @@ import ContentAdd from 'material-ui/svg-icons/content/add';
 import { List, ListItem } from 'material-ui/List';
 // import ActionGrade from 'material-ui/svg-icons/action/grade';
 import Avatar from 'material-ui/Avatar';
+import { Link } from 'react-router-dom';
 
 const styles: any = {
   root: {
@@ -45,14 +46,9 @@ interface Props {
 }
 
 class MatchesList extends React.Component<Props, {}> {
-  onClick = (matchId: string) => {
-    console.log('CLICKED MATCH');
-    this.props.matchesList.forEach((match: MatchInfo) => {
-      if (matchId === match.matchId) {
-        window.location.href = '/matches/' + matchId;
-      }
-    });
-  };
+  style = {
+    textDecoration: 'None'
+  }
   render() {
     return (
       <div>
@@ -63,42 +59,48 @@ class MatchesList extends React.Component<Props, {}> {
         <div style={styles.root}>
           <List style={styles.list}>
             {this.props.matchesList.map((tile, index) => (
-              <ListItem
-                // test implementation has the same match repeating,
-                // will cause warning with just tile.matchId
-                key={tile.matchId + index}
-                primaryText={tile.game.gameName}
-                onClick={this.onClick.bind(this, tile.matchId)}
-                secondaryText={
-                  'Last played ' +
-                  timeSince(tile.lastUpdatedOn) +
-                  ' ago with ' +
-                  // FIXME: The store doesn't have values for phoneNumberToContact and
-                  // userIdToPhoneNumber, so it throws an undefined error.
-                  tile.participantsUserIds.reduce(
-                    (accum: string, userId: string) => {
-                      const phone: string = this.props.userIdToPhoneNumber[
-                        userId
-                      ];
-                      if (phone) {
-                        const name: string = this.props.phoneNumberToContact[
-                          phone
-                        ].name;
-                        return (accum += name + ' ');
-                      } else {
-                        return (accum += 'Unidentified User ');
-                      }
-                    },
-                    ''
-                  )
-                }
-                rightAvatar={
-                  <Avatar
-                    src={tile.game.screenShot.downloadURL}
-                    style={styles.icon}
-                  />
-                }
-              />
+              <Link
+                style={this.style}
+                to={{
+                  pathname: '/matches/' + tile.matchId,
+                }}
+              >
+                <ListItem
+                  // test implementation has the same match repeating,
+                  // will cause warning with just tile.matchId
+                  key={tile.matchId + index}
+                  primaryText={tile.game.gameName}
+                  secondaryText={
+                    'Last played ' +
+                    timeSince(tile.lastUpdatedOn) +
+                    ' ago with ' +
+                    // FIXME: The store doesn't have values for phoneNumberToContact and
+                    // userIdToPhoneNumber, so it throws an undefined error.
+                    tile.participantsUserIds.reduce(
+                      (accum: string, userId: string) => {
+                        const phone: string = this.props.userIdToPhoneNumber[
+                          userId
+                        ];
+                        if (phone) {
+                          const name: string = this.props.phoneNumberToContact[
+                            phone
+                          ].name;
+                          return (accum += name + ' ');
+                        } else {
+                          return (accum += 'Unidentified User ');
+                        }
+                      },
+                      ''
+                    )
+                  }
+                  rightAvatar={
+                    <Avatar
+                      src={tile.game.screenShot.downloadURL}
+                      style={styles.icon}
+                    />
+                  }
+                />
+              </Link>
             ))}
           </List>
         </div>
