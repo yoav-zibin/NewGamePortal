@@ -188,6 +188,7 @@ export namespace ourFirebase {
   }
 
   // Eventually dispatches the action updateGameSpecs.
+  const isFetchingGameSpec: BooleanIndexer = {};
   function fetchGameSpec(game: GameInfo) {
     console.log('fetchGameSpec:', game);
     const gameSpecId = game.gameSpecId;
@@ -196,6 +197,11 @@ export namespace ourFirebase {
       console.log('Game spec already exists');
       return;
     }
+    if (isFetchingGameSpec[gameSpecId]) {
+      console.log('Already fetching game spec');
+      return;
+    }
+    isFetchingGameSpec[gameSpecId] = true;
     addPromiseForTests(
       getRef(
         `/gamePortal/gamesInfoAndSpec/gameSpecsForPortal/${gameSpecId}`
@@ -372,10 +378,15 @@ export namespace ourFirebase {
           participants[uid2].participantIndex
       );
 
+      const gameInfo = checkCondition(
+        'gameInfo missing',
+        findGameInfo(gameSpecId)
+      );
+      fetchGameSpec(gameInfo);
       const match: MatchInfo = {
         matchId: matchId,
         gameSpecId: gameSpecId,
-        game: checkCondition('gameInfo missing', findGameInfo(gameSpecId)),
+        game: gameInfo,
         participantsUserIds: participantsUserIds,
         lastUpdatedOn: matchFb.lastUpdatedOn,
         matchState: newMatchStates

@@ -1,11 +1,9 @@
 import * as React from 'react';
 import './App.css';
-
 import AppHeader from './AppHeader';
 import GamesList from './components/GamesList';
 import { Route } from 'react-router';
 import PlayingScreen from './components/PlayingScreen';
-import Board from './components/Board';
 import MatchesList from './components/MatchesList';
 import AddMatch from './components/AddMatch';
 import ContactsList from './components/ContactsList';
@@ -18,8 +16,11 @@ class App extends React.Component {
     return (
       <div>
         <AppHeader />
-        <Route exact={true} path="/PlayingScreen" component={PlayingScreen} />
-        <Route exact={true} path="/matches/:matchId" component={Board} />
+        <Route
+          exact={true}
+          path="/matches/:matchId"
+          component={PlayingScreen}
+        />
         <Route exact={true} path="/myMatches" component={MatchesList} />
         <Route exact={true} path="/addMatch" component={AddMatch} />
         <Route
