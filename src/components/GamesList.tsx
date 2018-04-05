@@ -3,6 +3,7 @@ import Subheader from 'material-ui/Subheader';
 import { GridList, GridTile } from 'material-ui/GridList';
 import { GameInfo } from '../types';
 import { ourFirebase } from '../services/firebase';
+import { Link } from 'react-router-dom';
 
 const styles: any = {
   root: {
@@ -29,13 +30,17 @@ interface Props {
  */
 class GamesList extends React.Component<Props, {}> {
   onClick = (chosenGameName: string) => {
-    console.log('CHOSEN GAME:', chosenGameName);
-    this.props.gamesList.forEach((game: GameInfo) => {
+
+    for(let i = 0; i < this.props.gamesList.length; i++){
+      let game: GameInfo = this.props.gamesList[i];
+
       if (game.gameName === chosenGameName) {
         let matchId = ourFirebase.createMatch(game).matchId;
-        window.location.href = '/matches/' + matchId;
+        console.log("MATCH ID: ", matchId);
+        return '/matches/' + matchId;
       }
-    });
+    } // for loop
+    return '/addMatch';
   };
 
   render() {
@@ -46,14 +51,19 @@ class GamesList extends React.Component<Props, {}> {
             <GridList cellHeight={180} style={styles.gridList}>
               <Subheader>Card games</Subheader>
               {this.props.gamesList.map((gameInfo: GameInfo) => (
-                <GridTile
+                <Link
                   key={gameInfo.gameSpecId}
-                  title={gameInfo.gameName}
-                  subtitle={''}
-                  onClick={this.onClick.bind(this, gameInfo.gameName)}
+                  to={{
+                    pathname: this.onClick(gameInfo.gameName)
+                  }}
                 >
-                  <img src={gameInfo.screenShot.downloadURL} />
-                </GridTile>
+                  <GridTile
+                    title={gameInfo.gameName}
+                    subtitle={''}
+                  >
+                    <img src={gameInfo.screenShot.downloadURL} />
+                  </GridTile>
+                </Link>
               ))}
             </GridList>
           </div>
