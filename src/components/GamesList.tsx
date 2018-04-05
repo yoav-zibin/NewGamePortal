@@ -3,6 +3,7 @@ import Subheader from 'material-ui/Subheader';
 import { GridList, GridTile } from 'material-ui/GridList';
 import { GameInfo } from '../types';
 import { ourFirebase } from '../services/firebase';
+import { History } from 'history';
 
 const styles: any = {
   root: {
@@ -19,6 +20,7 @@ const styles: any = {
 };
 
 interface Props {
+  history: History;
   gamesList: GameInfo[];
 }
 
@@ -33,7 +35,11 @@ class GamesList extends React.Component<Props, {}> {
     this.props.gamesList.forEach((game: GameInfo) => {
       if (game.gameName === chosenGameName) {
         let matchId = ourFirebase.createMatch(game).matchId;
-        window.location.href = '/matches/' + matchId;
+        let url = '/matches/' + matchId;
+        if (this.props.history.location.search) {
+          url += this.props.history.location.search;
+        }
+        window.location.href = url;
       }
     });
   };

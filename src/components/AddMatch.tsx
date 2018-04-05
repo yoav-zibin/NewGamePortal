@@ -6,6 +6,7 @@ import GamesList from './GamesList';
 import { connect } from 'react-redux';
 import { StoreState } from '../types/index';
 import { ourFirebase } from '../services/firebase';
+import { History } from 'history';
 
 const style: any = {
   display: 'block',
@@ -13,6 +14,7 @@ const style: any = {
 };
 
 interface Props {
+  history: History;
   gamesList: GameInfo[];
 }
 
@@ -23,7 +25,11 @@ class AddMatches extends React.Component<Props, {}> {
     this.props.gamesList.forEach((game: GameInfo) => {
       if (game.gameName === chosenGame) {
         let matchId = ourFirebase.createMatch(game).matchId;
-        window.location.href = '/matches/' + matchId;
+        let url = '/matches/' + matchId;
+        if (this.props.history.location.search) {
+          url += this.props.history.location.search;
+        }
+        window.location.href = url;
       }
     });
   };
@@ -39,7 +45,7 @@ class AddMatches extends React.Component<Props, {}> {
           style={style}
           onNewRequest={this.onNewRequest}
         />
-        <GamesList />
+        <GamesList history={this.props.history} />
       </div>
     );
   }
