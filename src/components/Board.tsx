@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Layer, Stage } from 'react-konva';
-import { MatchInfo, GameSpecs, GameSpec, CardVisibility } from '../types';
+import { MatchInfo, GameSpecs, GameSpec } from '../types';
 import CanvasImage from './CanvasImage';
 import {
   // AppBar,
@@ -44,10 +44,11 @@ class Board extends React.Component<BoardProps, BoardState> {
     x: number;
     y: number;
   };
-  visibleTo: CardVisibility;
+  // visibleTo: CardVisibility;
   matchInfo: MatchInfo;
   gameSpec: GameSpec;
   helper: MatchStateHelper;
+  isDeck: boolean[];
 
   constructor(props: BoardProps) {
     super(props);
@@ -70,6 +71,15 @@ class Board extends React.Component<BoardProps, BoardState> {
     this.selfParticipantIndex = this.participantNames.indexOf(
       this.props.myUserId
     );
+    let isDeckTemp: boolean[] = [];
+    for (let i = 0; i < this.gameSpec.pieces.length; i++) {
+      if (this.gameSpec.pieces[i].deckPieceIndex === -1) {
+        isDeckTemp[i] = false;
+      } else {
+        isDeckTemp[i] = true;
+      }
+    }
+    this.isDeck = isDeckTemp;
   }
 
   componentDidUpdate() {
@@ -127,6 +137,7 @@ class Board extends React.Component<BoardProps, BoardState> {
 
     const match: MatchInfo = this.matchInfo;
     this.helper.dragTo(index, x, y);
+    console.log(match);
     ourFirebase.updatePieceState(match, index);
   };
 
@@ -166,7 +177,7 @@ class Board extends React.Component<BoardProps, BoardState> {
     let position = (this.refs[
       refString
     ] as CanvasImage).imageNode.getAbsolutePosition();
-    this.visibleTo = this.matchInfo.matchState[index].cardVisibilityPerIndex;
+    // this.visibleTo = this.matchInfo.matchState[index].cardVisibilityPerIndex;
     this.tooltipPosition = {
       x: position.x,
       y: position.y
@@ -187,9 +198,9 @@ class Board extends React.Component<BoardProps, BoardState> {
       let position = (this.refs[
         refString
       ] as CanvasImage).imageNode.getAbsolutePosition();
-      this.visibleTo = this.matchInfo.matchState[
-        cardIndex
-      ].cardVisibilityPerIndex;
+      // this.visibleTo = this.matchInfo.matchState[
+      //     cardIndex
+      // ].cardVisibilityPerIndex;
       this.tooltipPosition = {
         x: position.x,
         y: position.y
@@ -253,13 +264,25 @@ class Board extends React.Component<BoardProps, BoardState> {
     let piecesLayer = this.matchInfo.matchState.map((piece, index) => {
       const pieceSpec = this.gameSpec.pieces[index];
       let kind = pieceSpec.element.elementKind;
+      let isVisible = piece.cardVisibilityPerIndex[this.selfParticipantIndex];
+      let imageSrc: string = '';
+      if (pieceSpec.element.elementKind === 'card') {
+        if (isVisible) {
+          imageSrc = pieceSpec.element.images[0].downloadURL;
+        } else {
+          imageSrc = pieceSpec.element.images[1].downloadURL;
+        }
+      } else {
+        imageSrc =
+          pieceSpec.element.images[piece.currentImageIndex].downloadURL;
+      }
       return (
         <CanvasImage
           ref={'canvasImage' + index}
           key={index}
           draggable={pieceSpec.element.isDraggable || kind === 'standard'}
           onClick={() => {
-            console.log('Piece left clicked!');
+            console.log('Piece left clicked!' + index);
             if (kind === 'toggable') {
               this.togglePiece(index);
             } else if (kind === 'dice') {
@@ -276,7 +299,7 @@ class Board extends React.Component<BoardProps, BoardState> {
           width={pieceSpec.element.width * width / this.gameSpec.board.width}
           x={piece.x * width / 100}
           y={piece.y * height / 100}
-          src={pieceSpec.element.images[piece.currentImageIndex].downloadURL}
+          src={imageSrc}
           //   onDragStart={() => {
           //     this.toggleTooltip(null, null);
           //   }}
@@ -306,10 +329,10 @@ class Board extends React.Component<BoardProps, BoardState> {
               zIndex: 100
             }}
           >
-            {Object.keys(this.visibleTo).length === 0 ? (
-              <MenuItem primaryText="Not visible to anyone." disabled={true} />
-            ) : null}
-            {Object.keys(this.visibleTo).map((name, index) => {
+            {/* {Object.keys(this.visibleTo).length === 0 ? (
+                            <MenuItem primaryText="Not visible to anyone." disabled={true} />
+                        ) : null} */}
+            {Object.keys(this.matchInfo.matchState).map((name, index) => {
               return (
                 <MenuItem
                   key={'tooltip' + index}
@@ -363,15 +386,17 @@ class Board extends React.Component<BoardProps, BoardState> {
                 this.makeCardHiddenToAll(this.selectedPieceIndex);
               }}
             />
-            <MenuItem
-              style={{ padding: '0', listStyle: 'none', margin: '0' }}
-              primaryText={'Shuffle Deck'}
-              onClick={() => {
-                this.shuffleDeck(
-                  this.gameSpec.pieces[this.selectedPieceIndex].deckPieceIndex
-                );
-              }}
-            />
+            {this.isDeck[this.selectedPieceIndex] ? (
+              <MenuItem
+                style={{ padding: '0', listStyle: 'none', margin: '0' }}
+                primaryText={'Shuffle Deck'}
+                onClick={() => {
+                  this.shuffleDeck(
+                    this.gameSpec.pieces[this.selectedPieceIndex].deckPieceIndex
+                  );
+                }}
+              />
+            ) : null}
           </IconMenu>
         ) : null}
       </>

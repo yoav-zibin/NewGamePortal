@@ -500,6 +500,7 @@ export namespace ourFirebase {
     const updates: any = {};
     updates[`pieces/${pieceIndex}`] = convertPieceState(pieceState);
     updates['lastUpdatedOn'] = getTimestamp();
+    console.log(match);
     refUpdate(getRef(`/gamePortal/matches/${match.matchId}`), updates);
   }
 
