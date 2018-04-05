@@ -151,7 +151,8 @@ class Login extends React.Component<Props, {}> {
       } else {
         alert('Login Timeout');
       }
-    }, 5000);
+    }, 
+               5000);
   };
 
   render() {
