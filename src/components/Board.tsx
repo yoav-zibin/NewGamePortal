@@ -44,7 +44,6 @@ class Board extends React.Component<BoardProps, BoardState> {
     x: number;
     y: number;
   };
-  // visibleTo: CardVisibility;
   matchInfo: MatchInfo;
   gameSpec: GameSpec;
   helper: MatchStateHelper;
@@ -177,7 +176,6 @@ class Board extends React.Component<BoardProps, BoardState> {
     let position = (this.refs[
       refString
     ] as CanvasImage).imageNode.getAbsolutePosition();
-    // this.visibleTo = this.matchInfo.matchState[index].cardVisibilityPerIndex;
     this.tooltipPosition = {
       x: position.x,
       y: position.y
@@ -198,9 +196,6 @@ class Board extends React.Component<BoardProps, BoardState> {
       let position = (this.refs[
         refString
       ] as CanvasImage).imageNode.getAbsolutePosition();
-      // this.visibleTo = this.matchInfo.matchState[
-      //     cardIndex
-      // ].cardVisibilityPerIndex;
       this.tooltipPosition = {
         x: position.x,
         y: position.y
@@ -329,9 +324,6 @@ class Board extends React.Component<BoardProps, BoardState> {
               zIndex: 100
             }}
           >
-            {/* {Object.keys(this.visibleTo).length === 0 ? (
-                            <MenuItem primaryText="Not visible to anyone." disabled={true} />
-                        ) : null} */}
             {Object.keys(this.matchInfo.matchState).map((name, index) => {
               return (
                 <MenuItem
