@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Layer, Stage } from 'react-konva';
-import { MatchInfo, GameSpecs, GameSpec } from '../types';
+import { MatchInfo, GameSpec } from '../types';
 import CanvasImage from './CanvasImage';
 import {
   // AppBar,
@@ -17,13 +17,8 @@ import { MatchStateHelper } from '../services/matchStateHelper';
 
 interface BoardProps {
   myUserId: string;
-  matchesList: MatchInfo[];
-  gameSpecs: GameSpecs;
-  match: {
-    params: {
-      matchId: string;
-    };
-  };
+  gameSpec: GameSpec;
+  matchInfo: MatchInfo;
 }
 
 interface BoardState {
@@ -41,8 +36,6 @@ class Board extends React.Component<BoardProps, BoardState> {
   // TODO CARD
   selectedPieceIndex: number;
   selfParticipantIndex: number;
-  // TODO MAYBE REMOVE?
-  participantNames: string[];
   tooltipPosition: {
     x: number;
     y: number;
@@ -50,8 +43,6 @@ class Board extends React.Component<BoardProps, BoardState> {
   matchInfo: MatchInfo;
   gameSpec: GameSpec;
   helper: MatchStateHelper;
-  // TODO change to function
-  isDeck: boolean[];
 
   constructor(props: BoardProps) {
     super(props);
@@ -59,53 +50,22 @@ class Board extends React.Component<BoardProps, BoardState> {
       showCardOptions: false,
       showTooltip: false
     };
-    // TODO change to new for loop
-    for (let i = 0; i < this.props.matchesList.length; i++) {
-      if (
-        this.props.match.params.matchId === this.props.matchesList[i].matchId
-      ) {
-        this.matchInfo = this.props.matchesList[i];
-        this.gameSpec = this.props.gameSpecs.gameSpecIdToGameSpec[
-          this.matchInfo.gameSpecId
-        ];
 
-        if (this.gameSpec) {
-          this.helper = new MatchStateHelper(this.matchInfo);
-        }
-      }
-    }
-    this.participantNames = this.matchInfo.participantsUserIds;
-    this.selfParticipantIndex = this.participantNames.indexOf(
+    this.matchInfo = this.props.matchInfo;
+    this.gameSpec = this.props.gameSpec;
+    this.selfParticipantIndex = this.matchInfo.participantsUserIds.indexOf(
       this.props.myUserId
     );
-    let isDeckTemp: boolean[] = [];
-    for (let i = 0; i < this.gameSpec.pieces.length; i++) {
-      if (this.gameSpec.pieces[i].deckPieceIndex === -1) {
-        isDeckTemp[i] = false;
-      } else {
-        isDeckTemp[i] = true;
-      }
-    }
-    this.isDeck = isDeckTemp;
+    this.helper = new MatchStateHelper(this.matchInfo);
   }
 
-  // TODO move this all to PlayingScreen
-  componentDidUpdate() {
-    for (let i = 0; i < this.props.matchesList.length; i++) {
-      if (
-        this.props.match.params.matchId === this.props.matchesList[i].matchId
-      ) {
-        this.matchInfo = this.props.matchesList[i];
-        this.gameSpec = this.props.gameSpecs.gameSpecIdToGameSpec[
-          this.matchInfo.gameSpecId
-        ];
-        this.helper = new MatchStateHelper(this.matchInfo);
-      }
+  // check if a card belongs to a deck
+  isDeck(index: number) {
+    if (this.gameSpec.pieces[index].deckPieceIndex === -1) {
+      return false;
+    } else {
+      return true;
     }
-    this.participantNames = this.matchInfo.participantsUserIds;
-    this.selfParticipantIndex = this.participantNames.indexOf(
-      this.props.myUserId
-    );
   }
 
   // cycles through the images of each piece
@@ -220,33 +180,6 @@ class Board extends React.Component<BoardProps, BoardState> {
   }
 
   render() {
-    if (!this.gameSpec) {
-      let gameSpecScreenShot = this.matchInfo.game.screenShot.downloadURL;
-      let screenShotWidth = this.matchInfo.game.screenShot.width;
-      let screenShotHeight = this.matchInfo.game.screenShot.height;
-      let screenShotLayer = (
-        <CanvasImage
-          height={screenShotHeight}
-          width={screenShotWidth}
-          src={gameSpecScreenShot}
-        />
-      );
-      // TODO show a spinner over the screenshot
-      return (
-        <>
-          {/* <AppBar
-            showMenuIconButton={false}
-            title={
-              <span>Match: {this.matchInfo.game.gameName} (No game spec)</span>
-            }
-          /> */}
-          <div>The Gamespec has not been loaded.</div>
-          <Stage width={screenShotWidth} height={screenShotHeight}>
-            <Layer ref={() => 'screenShotLayer'}>{screenShotLayer}</Layer>
-          </Stage>
-        </>
-      );
-    }
     // TODO: Complete layer for board
     let boardImage = this.gameSpec.board.downloadURL;
     // TODO: handle resizing so everything fits in the screen
@@ -392,7 +325,7 @@ class Board extends React.Component<BoardProps, BoardState> {
                 this.makeCardHiddenToAll(this.selectedPieceIndex);
               }}
             />
-            {this.isDeck[this.selectedPieceIndex] ? (
+            {this.isDeck(this.selectedPieceIndex) ? (
               <MenuItem
                 style={{ padding: '0', listStyle: 'none', margin: '0' }}
                 primaryText={'Shuffle Deck'}
@@ -440,9 +373,7 @@ class Board extends React.Component<BoardProps, BoardState> {
 
 const mapStateToProps = (state: StoreState) => {
   return {
-    myUserId: state.myUser.myUserId,
-    matchesList: state.matchesList,
-    gameSpecs: state.gameSpecs
+    myUserId: state.myUser.myUserId
   };
 };
 
