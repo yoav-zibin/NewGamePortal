@@ -158,7 +158,4 @@ const mapStateToProps = (state: StoreState) => {
     myUserId: state.myUser.myUserId
   };
 };
-// Later this will take dispatch: any as argument
-const mapDispatchToProps = () => ({});
-
-export default connect(mapStateToProps, mapDispatchToProps)(ContactsList);
+export default connect(mapStateToProps)(ContactsList);

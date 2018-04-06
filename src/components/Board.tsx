@@ -445,8 +445,4 @@ const mapStateToProps = (state: StoreState) => {
     gameSpecs: state.gameSpecs
   };
 };
-
-// Later this will take dispatch: any as argument
-const mapDispatchToProps = () => ({});
-
-export default connect(mapStateToProps, mapDispatchToProps)(Board);
+export default connect(mapStateToProps)(Board);

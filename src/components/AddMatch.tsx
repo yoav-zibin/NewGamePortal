@@ -55,8 +55,4 @@ class AddMatches extends React.Component<Props, {}> {
 const mapStateToProps = (state: StoreState) => ({
   gamesList: state.gamesList
 });
-
-// Later this will take dispatch: any as argument
-const mapDispatchToProps = () => ({});
-
-export default connect(mapStateToProps, mapDispatchToProps)(AddMatches);
+export default connect(mapStateToProps)(AddMatches);

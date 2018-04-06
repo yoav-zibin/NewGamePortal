@@ -57,6 +57,4 @@ const mapStateToProps = (state: StoreState) => {
     matchesList: state.matchesList
   };
 };
-
-const mapDispatchToProps = () => ({});
-export default connect(mapStateToProps, mapDispatchToProps)(PlayingScreen);
+export default connect(mapStateToProps)(PlayingScreen);

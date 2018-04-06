@@ -62,7 +62,4 @@ import { StoreState } from '../types/index';
 const mapStateToProps = (state: StoreState) => ({
   gamesList: state.gamesList
 });
-// Later this will take dispatch: any as argument
-const mapDispatchToProps = () => ({});
-
-export default connect(mapStateToProps, mapDispatchToProps)(GamesList);
+export default connect(mapStateToProps)(GamesList);
