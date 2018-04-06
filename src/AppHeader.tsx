@@ -2,10 +2,10 @@ import * as React from 'react';
 import AppBar from 'material-ui/AppBar';
 import FloatingActionButton from 'material-ui/FloatingActionButton';
 import NavigationArrowBack from 'material-ui/svg-icons/navigation/arrow-back';
+import { StringIndexer } from './types';
 
 class AppHeader extends React.Component {
-  routes: any = {
-    '/': 'Home',
+  routes: StringIndexer = {
     '/login': 'Login',
     '/contactsList': 'Contacts',
     '/addMatch': 'Create a new Match',
@@ -15,11 +15,11 @@ class AppHeader extends React.Component {
 
   // Header for AppBar
   getLocation = () => {
-    let pathname: string = new URL(window.location.href).pathname;
+    let pathname: string = window.location.pathname;
     let result = this.routes[pathname];
     if (result) {
       return result;
-    } else if (pathname.includes('/matches')) {
+    } else if (pathname.startsWith('/matches/')) {
       // On specific match page, render match ID
       let matchId = pathname.split('/')[2];
       return 'Match ' + matchId;

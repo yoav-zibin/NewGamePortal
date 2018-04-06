@@ -26,7 +26,7 @@ enum loadingType {
   loading = 'loading',
   hide = 'hide'
 }
-
+// Todo: add all countries
 const testCountries: Country[] = [
   {
     name: 'United States',
@@ -60,8 +60,6 @@ const style = {
   margin: 20,
   padding: 10
 };
-
-let isLogin = false;
 
 class Login extends React.Component<Props, {}> {
   state = {
@@ -124,35 +122,25 @@ class Login extends React.Component<Props, {}> {
 
     this.setState({ veriDisabled: false });
   };
-
+  // TODO:set time out remove
   sendCode = () => {
     let confirmationResult = (window as any).confirmationResult;
     confirmationResult
       .confirm(this.state.veriCode)
-      .then(function(result: any) {
+      .then((result: any) => {
         /// User signed in successfully.
-        isLogin = true;
         var user = result.user;
         ourFirebase.writeUser();
         ourFirebase.storeContacts(testContacts);
         console.log(user);
-        // window.location.href = "/";
+        this.props.history.push('/');
       })
-      .catch(function(error: any) {
+      .catch((error: any) => {
         // User couldn't sign in (bad verification code?)
         // ...
         console.log(error);
       });
     this.setState({ status: loadingType.loading });
-    setTimeout(() => {
-      console.log('isLogin:' + isLogin);
-      if (isLogin) {
-        this.props.history.push('/');
-      } else {
-        alert('Login Timeout');
-      }
-    }, 
-               5000);
   };
 
   render() {
