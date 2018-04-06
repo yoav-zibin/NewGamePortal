@@ -1,10 +1,10 @@
 import * as React from 'react';
 import { Layer, Stage } from 'react-konva';
-import { MatchInfo, GameSpec, Piece, CardVisibility } from '../types';
+import { MatchInfo, GameSpecs, GameSpec } from '../types';
 import CanvasImage from './CanvasImage';
 import {
-  AppBar,
-  FlatButton,
+  // AppBar,
+  // FlatButton,
   IconButton,
   IconMenu,
   MenuItem
@@ -17,8 +17,13 @@ import { MatchStateHelper } from '../services/matchStateHelper';
 
 interface BoardProps {
   myUserId: string;
-  matchInfo: MatchInfo;
-  gameSpec: GameSpec;
+  matchesList: MatchInfo[];
+  gameSpecs: GameSpecs;
+  match: {
+    params: {
+      matchId: string;
+    };
+  };
 }
 
 interface BoardState {
@@ -35,15 +40,14 @@ class Board extends React.Component<BoardProps, BoardState> {
   selectedPieceIndex: number;
   selfParticipantIndex: number;
   participantNames: string[];
-  deckIndex: number;
   tooltipPosition: {
     x: number;
     y: number;
   };
-  visibleTo: CardVisibility;
   matchInfo: MatchInfo;
-  pieces: Piece[];
   gameSpec: GameSpec;
+  helper: MatchStateHelper;
+  isDeck: boolean[];
 
   constructor(props: BoardProps) {
     super(props);
@@ -51,51 +55,77 @@ class Board extends React.Component<BoardProps, BoardState> {
       showCardOptions: false,
       showTooltip: false
     };
-    this.matchInfo = this.props.matchInfo;
-    this.gameSpec = this.props.gameSpec;
+    for (let i = 0; i < this.props.matchesList.length; i++) {
+      if (
+        this.props.match.params.matchId === this.props.matchesList[i].matchId
+      ) {
+        this.matchInfo = this.props.matchesList[i];
+        this.gameSpec = this.props.gameSpecs.gameSpecIdToGameSpec[
+          this.matchInfo.gameSpecId
+        ];
+
+        if (this.gameSpec) {
+          this.helper = new MatchStateHelper(this.matchInfo);
+        }
+      }
+    }
+    this.participantNames = this.matchInfo.participantsUserIds;
+    this.selfParticipantIndex = this.participantNames.indexOf(
+      this.props.myUserId
+    );
+    let isDeckTemp: boolean[] = [];
+    for (let i = 0; i < this.gameSpec.pieces.length; i++) {
+      if (this.gameSpec.pieces[i].deckPieceIndex === -1) {
+        isDeckTemp[i] = false;
+      } else {
+        isDeckTemp[i] = true;
+      }
+    }
+    this.isDeck = isDeckTemp;
+  }
+
+  componentDidUpdate() {
+    for (let i = 0; i < this.props.matchesList.length; i++) {
+      if (
+        this.props.match.params.matchId === this.props.matchesList[i].matchId
+      ) {
+        this.matchInfo = this.props.matchesList[i];
+        this.gameSpec = this.props.gameSpecs.gameSpecIdToGameSpec[
+          this.matchInfo.gameSpecId
+        ];
+        this.helper = new MatchStateHelper(this.matchInfo);
+      }
+    }
+    this.participantNames = this.matchInfo.participantsUserIds;
+    this.selfParticipantIndex = this.participantNames.indexOf(
+      this.props.myUserId
+    );
   }
 
   // cycles through the images of each piece
   togglePiece(index: number) {
     const match: MatchInfo = this.matchInfo;
-    const helper: MatchStateHelper = new MatchStateHelper(match);
-    helper.toggleImage(index);
+    this.helper.toggleImage(index);
     ourFirebase.updatePieceState(match, index);
     console.log('toggle Piece index:', index);
-  }
-
-  rotatePiece(index: number) {
-    // TODO:
-    console.log('Rotate Piece index:', index);
   }
 
   rollDice(index: number) {
     console.log('Roll Dice for index:', index);
     const match: MatchInfo = this.matchInfo;
-    const helper: MatchStateHelper = new MatchStateHelper(match);
-    helper.rollDice(index);
+    this.helper.rollDice(index);
     ourFirebase.updatePieceState(match, index);
   }
 
   shuffleDeck(index: number) {
-    // TODO:
+    const match: MatchInfo = this.matchInfo;
+    this.helper.shuffleDeck(index);
+    ourFirebase.updateMatchState(match);
     console.log('Shufle Deck for index:', index);
   }
 
-  handleCardClick(index: number) {
-    const prop = this.props;
-    if (
-      this.matchInfo.matchState[index].cardVisibilityPerIndex[prop.myUserId]
-    ) {
-      this.matchInfo.matchState[index].currentImageIndex = 1;
-    } else {
-      this.matchInfo.matchState[index].currentImageIndex = 0;
-    }
-    console.log('Handle Card right Click for index:', index);
-  }
-
   handleDragEnd = (index: number) => {
-    console.log('handleragEnd' + index);
+    console.log('handleDragEnd' + index);
 
     let position = (this.refs[
       'canvasImage' + index
@@ -106,24 +136,32 @@ class Board extends React.Component<BoardProps, BoardState> {
     let height = this.gameSpec.board.height;
     let x = position.x / width * 100;
     let y = position.y / height * 100;
-    console.log(x, y);
 
     const match: MatchInfo = this.matchInfo;
-    const helper: MatchStateHelper = new MatchStateHelper(match);
-    helper.dragTo(index, x, y);
+    this.helper.dragTo(index, x, y);
+    console.log(match);
     ourFirebase.updatePieceState(match, index);
   };
 
-  makeCardVisibleToSelf() {
-    // TODO:
+  makeCardVisibleToSelf(index: number) {
+    const match: MatchInfo = this.matchInfo;
+    this.helper.showMe(index);
+    ourFirebase.updatePieceState(match, index);
+    console.log('card show to me:', index);
   }
 
-  makeCardVisibleToAll() {
-    // TODO:
+  makeCardVisibleToAll(index: number) {
+    const match: MatchInfo = this.matchInfo;
+    this.helper.showEveryone(index);
+    ourFirebase.updatePieceState(match, index);
+    console.log('card show to everyone:', index);
   }
 
-  makeCardHiddenToAll() {
-    // TODO:
+  makeCardHiddenToAll(index: number) {
+    const match: MatchInfo = this.matchInfo;
+    this.helper.hideFromEveryone(index);
+    ourFirebase.updatePieceState(match, index);
+    console.log('card hide to everyone:', index);
   }
 
   toggleTooltip(refString: string | null, index: number | null) {
@@ -141,41 +179,65 @@ class Board extends React.Component<BoardProps, BoardState> {
     let position = (this.refs[
       refString
     ] as CanvasImage).imageNode.getAbsolutePosition();
-    this.visibleTo = this.matchInfo.matchState[index].cardVisibilityPerIndex;
     this.tooltipPosition = {
       x: position.x,
       y: position.y
     };
-    this.setState({ showTooltip: true });
-  }
-
-  displayCardOptions(
-    cardIndex: number,
-    selfParticipantIndex: number,
-    participantNames: string[],
-    deckIndex: number
-  ) {
-    this.selectedPieceIndex = cardIndex;
-    this.selfParticipantIndex = selfParticipantIndex;
-    this.participantNames = participantNames;
-    this.deckIndex = deckIndex;
     this.setState({
-      showTooltip: false,
-      showCardOptions: true
+      showCardOptions: false,
+      showTooltip: true
     });
   }
 
-  hideCardOptions() {
-    this.setState({
-      showCardOptions: false
-    });
+  toggleCardOptions(refString: string, cardIndex: number) {
+    if (this.selectedPieceIndex === cardIndex) {
+      this.setState({
+        showCardOptions: false
+      });
+    } else {
+      this.selectedPieceIndex = cardIndex;
+      let position = (this.refs[
+        refString
+      ] as CanvasImage).imageNode.getAbsolutePosition();
+      this.tooltipPosition = {
+        x: position.x,
+        y: position.y
+      };
+      this.setState({
+        showTooltip: false,
+        showCardOptions: true
+      });
+    }
   }
 
   render() {
     if (!this.gameSpec) {
-      return <div>No game spec</div>;
+      ourFirebase.fetchGameSpec(this.matchInfo.game);
+      let gameSpecScreenShot = this.matchInfo.game.screenShot.downloadURL;
+      let screenShotWidth = this.matchInfo.game.screenShot.width;
+      let screenShotHeight = this.matchInfo.game.screenShot.height;
+      let screenShotLayer = (
+        <CanvasImage
+          height={screenShotHeight}
+          width={screenShotWidth}
+          src={gameSpecScreenShot}
+        />
+      );
+      return (
+        <>
+          {/* <AppBar
+            showMenuIconButton={false}
+            title={
+              <span>Match: {this.matchInfo.game.gameName} (No game spec)</span>
+            }
+          /> */}
+          <div>The Gamespec has not been loaded.</div>
+          <Stage width={screenShotWidth} height={screenShotHeight}>
+            <Layer ref={() => 'screenShotLayer'}>{screenShotLayer}</Layer>
+          </Stage>
+        </>
+      );
     }
-
     // TODO: Complete layer for board
     let boardImage = this.gameSpec.board.downloadURL;
     let width = this.gameSpec.board.width;
@@ -185,35 +247,49 @@ class Board extends React.Component<BoardProps, BoardState> {
         height={height}
         width={width}
         src={boardImage}
-        onClick={() => this.toggleTooltip(null, null)}
+        // onClick={() => this.toggleTooltip(null, null)}
       />
     );
+
+    if (this.matchInfo.matchState.length !== this.gameSpec.pieces.length) {
+      this.matchInfo.matchState = MatchStateHelper.createInitialState(
+        this.gameSpec
+      );
+      ourFirebase.updateMatchState(this.matchInfo);
+    }
 
     // // TODO: Complete layer for pieces
     let piecesLayer = this.matchInfo.matchState.map((piece, index) => {
       const pieceSpec = this.gameSpec.pieces[index];
       let kind = pieceSpec.element.elementKind;
+      let isVisible = piece.cardVisibilityPerIndex[this.selfParticipantIndex];
+      let imageSrc: string = '';
+      if (pieceSpec.element.elementKind === 'card') {
+        if (isVisible) {
+          imageSrc = pieceSpec.element.images[0].downloadURL;
+        } else {
+          imageSrc = pieceSpec.element.images[1].downloadURL;
+        }
+      } else {
+        imageSrc =
+          pieceSpec.element.images[piece.currentImageIndex].downloadURL;
+      }
       return (
         <CanvasImage
           ref={'canvasImage' + index}
           key={index}
           draggable={pieceSpec.element.isDraggable || kind === 'standard'}
-          onContextMenu={() => {
-            console.log('Piece right clicked!');
-            if (kind === 'card') {
-              this.handleCardClick(index);
-            }
-          }}
           onClick={() => {
-            console.log('Piece left clicked!');
+            console.log('Piece left clicked!' + index);
             if (kind === 'toggable') {
               this.togglePiece(index);
             } else if (kind === 'dice') {
               this.rollDice(index);
             } else if (kind === 'card') {
-              // this.handleCardClick(index);
+              this.toggleCardOptions('canvasImage' + index, index);
+            } else {
+              this.toggleTooltip('canvasImage' + index, index);
             }
-            this.toggleTooltip('canvasImage' + index, index);
           }}
           height={
             pieceSpec.element.height * height / this.gameSpec.board.height
@@ -221,10 +297,10 @@ class Board extends React.Component<BoardProps, BoardState> {
           width={pieceSpec.element.width * width / this.gameSpec.board.width}
           x={piece.x * width / 100}
           y={piece.y * height / 100}
-          src={pieceSpec.element.images[piece.currentImageIndex].downloadURL}
-          onDragStart={() => {
-            this.toggleTooltip(null, null);
-          }}
+          src={imageSrc}
+          //   onDragStart={() => {
+          //     this.toggleTooltip(null, null);
+          //   }}
           onDragEnd={() => {
             this.handleDragEnd(index);
           }}
@@ -251,10 +327,7 @@ class Board extends React.Component<BoardProps, BoardState> {
               zIndex: 100
             }}
           >
-            {Object.keys(this.visibleTo).length === 0 ? (
-              <MenuItem primaryText="Not a card." />
-            ) : null}
-            {Object.keys(this.visibleTo).map((name, index) => {
+            {Object.keys(this.matchInfo.matchState).map((name, index) => {
               return (
                 <MenuItem
                   key={'tooltip' + index}
@@ -266,59 +339,60 @@ class Board extends React.Component<BoardProps, BoardState> {
           </IconMenu>
         ) : null}
         {this.state.showCardOptions ? (
-          <div
-            className="my-card-options"
+          <IconMenu
+            iconButtonElement={
+              <IconButton>
+                <MoreVertIcon />
+              </IconButton>
+            }
+            anchorOrigin={{ horizontal: 'left', vertical: 'top' }}
+            targetOrigin={{ horizontal: 'left', vertical: 'top' }}
+            className="my-tooltip"
             style={{
               left: this.tooltipPosition.x,
-              top: this.tooltipPosition.y
+              top: this.tooltipPosition.y,
+              position: 'absolute',
+              zIndex: 100
             }}
           >
-            <div
-              className="close-card-options"
+            <MenuItem
+              style={{ padding: '0', listStyle: 'none', margin: '0' }}
+              primaryText={'Options:'}
+              disabled={true}
+            />
+            <MenuItem
+              style={{ padding: '0', listStyle: 'none', margin: '0' }}
+              primaryText={'Make Visible To Me'}
               onClick={() => {
-                this.hideCardOptions();
+                this.makeCardVisibleToSelf(this.selectedPieceIndex);
               }}
-            >
-              x
-            </div>
-            <span style={{ textDecoration: 'underline', textAlign: 'center' }}>
-              OPTIONS:
-            </span>
-            <ul style={{ padding: '0', listStyle: 'none', margin: '0' }}>
-              <li
-                className="card-options-item"
+            />
+            <MenuItem
+              style={{ padding: '0', listStyle: 'none', margin: '0' }}
+              primaryText={'Make Visible To Everyone'}
+              onClick={() => {
+                this.makeCardVisibleToAll(this.selectedPieceIndex);
+              }}
+            />
+            <MenuItem
+              style={{ padding: '0', listStyle: 'none', margin: '0' }}
+              primaryText={'Hide From Everyone'}
+              onClick={() => {
+                this.makeCardHiddenToAll(this.selectedPieceIndex);
+              }}
+            />
+            {this.isDeck[this.selectedPieceIndex] ? (
+              <MenuItem
+                style={{ padding: '0', listStyle: 'none', margin: '0' }}
+                primaryText={'Shuffle Deck'}
                 onClick={() => {
-                  this.makeCardVisibleToSelf();
+                  this.shuffleDeck(
+                    this.gameSpec.pieces[this.selectedPieceIndex].deckPieceIndex
+                  );
                 }}
-              >
-                Make Visible To me
-              </li>
-              <li
-                className="card-options-item"
-                onClick={() => {
-                  this.makeCardVisibleToAll();
-                }}
-              >
-                Make Visible To Everyone
-              </li>
-              <li
-                className="card-options-item"
-                onClick={() => {
-                  this.makeCardHiddenToAll();
-                }}
-              >
-                Hide From Everyone
-              </li>
-              <li
-                className="card-options-item"
-                onClick={() => {
-                  this.shuffleDeck(this.deckIndex);
-                }}
-              >
-                Shuffle Deck
-              </li>
-            </ul>
-          </div>
+              />
+            ) : null}
+          </IconMenu>
         ) : null}
       </>
     );
@@ -326,7 +400,7 @@ class Board extends React.Component<BoardProps, BoardState> {
     // TODO: Don't use AppBar here, there is only one appbar in app that is header.
     return (
       <div>
-        <AppBar
+        {/* <AppBar
           showMenuIconButton={false}
           iconElementRight={
             <FlatButton
@@ -340,7 +414,7 @@ class Board extends React.Component<BoardProps, BoardState> {
             />
           }
           title={<span>Match: {this.matchInfo.game.gameName}</span>}
-        />
+        /> */}
         <div style={{ position: 'relative' }}>
           {toolTipLayer}
           <Stage width={width} height={height}>
@@ -355,7 +429,9 @@ class Board extends React.Component<BoardProps, BoardState> {
 
 const mapStateToProps = (state: StoreState) => {
   return {
-    myUserId: state.myUser.myUserId
+    myUserId: state.myUser.myUserId,
+    matchesList: state.matchesList,
+    gameSpecs: state.gameSpecs
   };
 };
 
