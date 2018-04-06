@@ -28,8 +28,6 @@ interface BoardProps {
 
 interface BoardState {
   showCardOptions: boolean;
-  // TODO REMOVE
-  showTooltip: boolean;
 }
 
 /**
@@ -56,8 +54,11 @@ class Board extends React.Component<BoardProps, BoardState> {
   constructor(props: BoardProps) {
     super(props);
     this.state = {
-      showCardOptions: false,
-      showTooltip: false
+      showCardOptions: false
+    };
+    this.tooltipPosition = {
+      x: 0,
+      y: 0
     };
     // TODO change to new for loop
     for (let i = 0; i < this.props.matchesList.length; i++) {
@@ -136,7 +137,6 @@ class Board extends React.Component<BoardProps, BoardState> {
     let position = (this.refs[
       'canvasImage' + index
     ] as CanvasImage).imageNode.getAbsolutePosition();
-    console.log(position);
 
     let width = this.gameSpec.board.width;
     let height = this.gameSpec.board.height;
@@ -145,7 +145,6 @@ class Board extends React.Component<BoardProps, BoardState> {
 
     const match: MatchInfo = this.matchInfo;
     this.helper.dragTo(index, x, y);
-    console.log(match);
     ourFirebase.updatePieceState(match, index);
   };
 
@@ -170,39 +169,10 @@ class Board extends React.Component<BoardProps, BoardState> {
     console.log('card hide to everyone:', index);
   }
 
-  toggleTooltip(refString: string | null, index: number | null) {
-    // TODO combine these conditions
-    if (refString === null || index === null) {
-      // clicked on the board
-      this.selectedPieceIndex = -1;
-      this.setState({ showTooltip: false });
-      return;
-    } else if (this.selectedPieceIndex === index) {
-      // clicked on the same card
-      this.selectedPieceIndex = -1;
-      this.setState({ showTooltip: false });
-      return;
-    }
-
-    this.selectedPieceIndex = index;
-    let position = (this.refs[
-      refString
-    ] as CanvasImage).imageNode.getAbsolutePosition();
-    this.tooltipPosition = {
-      x: position.x,
-      y: position.y
-    };
-    this.setState({
-      showCardOptions: false,
-      showTooltip: true
-    });
-  }
-
   toggleCardOptions(refString: string, cardIndex: number) {
     if (this.selectedPieceIndex === cardIndex) {
-      this.setState({
-        showCardOptions: false
-      });
+      // if we click on an already selected piece, hide the tooltip
+      this.hideCardOptions();
     } else {
       this.selectedPieceIndex = cardIndex;
       let position = (this.refs[
@@ -213,10 +183,16 @@ class Board extends React.Component<BoardProps, BoardState> {
         y: position.y
       };
       this.setState({
-        showTooltip: false,
         showCardOptions: true
       });
     }
+  }
+
+  hideCardOptions() {
+    this.selectedPieceIndex = -1;
+    this.setState({
+      showCardOptions: false
+    });
   }
 
   render() {
@@ -257,7 +233,7 @@ class Board extends React.Component<BoardProps, BoardState> {
         height={height}
         width={width}
         src={boardImage}
-        // onClick={() => this.toggleTooltip(null, null)}
+        onClick={() => this.hideCardOptions()}
       />
     );
 
@@ -290,15 +266,12 @@ class Board extends React.Component<BoardProps, BoardState> {
           key={index}
           draggable={pieceSpec.element.isDraggable || kind === 'standard'}
           onClick={() => {
-            console.log('Piece left clicked!' + index);
             if (kind === 'toggable') {
               this.togglePiece(index);
             } else if (kind === 'dice') {
               this.rollDice(index);
             } else if (kind === 'card') {
               this.toggleCardOptions('canvasImage' + index, index);
-            } else {
-              this.toggleTooltip('canvasImage' + index, index);
             }
           }}
           height={
@@ -308,9 +281,9 @@ class Board extends React.Component<BoardProps, BoardState> {
           x={piece.x * width / 100}
           y={piece.y * height / 100}
           src={imageSrc}
-          //   onDragStart={() => {
-          //     this.toggleTooltip(null, null);
-          //   }}
+          onDragStart={() => {
+            this.hideCardOptions();
+          }}
           onDragEnd={() => {
             this.handleDragEnd(index);
           }}
@@ -318,121 +291,74 @@ class Board extends React.Component<BoardProps, BoardState> {
       );
     });
 
-    // TODO make sure it's 40x40px and the background is white
     let toolTipLayer = (
-      <>
-        {this.state.showTooltip ? (
-          <IconMenu
-            iconButtonElement={
-              <IconButton>
-                <MoreVertIcon />
-              </IconButton>
-            }
-            anchorOrigin={{ horizontal: 'left', vertical: 'top' }}
-            targetOrigin={{ horizontal: 'left', vertical: 'top' }}
-            className="my-tooltip"
-            style={{
-              left: this.tooltipPosition.x,
-              top: this.tooltipPosition.y,
-              position: 'absolute',
-              zIndex: 100
-            }}
-          >
-            {Object.keys(this.matchInfo.matchState).map((name, index) => {
-              return (
-                <MenuItem
-                  key={'tooltip' + index}
-                  style={{ padding: '0', listStyle: 'none', margin: '0' }}
-                  primaryText={name}
-                />
+      <IconMenu
+        iconButtonElement={
+          <IconButton>
+            <MoreVertIcon />
+          </IconButton>
+        }
+        anchorOrigin={{ horizontal: 'left', vertical: 'top' }}
+        targetOrigin={{ horizontal: 'left', vertical: 'top' }}
+        className="my-tooltip"
+        style={{
+          left: this.tooltipPosition.x,
+          top: this.tooltipPosition.y,
+          position: 'absolute',
+          display: this.state.showCardOptions ? 'initial' : 'none',
+          zIndex: 100,
+          background: 'white',
+          width: '40px',
+          height: '40px'
+        }}
+      >
+        <MenuItem
+          style={{ padding: '0', listStyle: 'none', margin: '0' }}
+          primaryText={'Options:'}
+          disabled={true}
+        />
+        <MenuItem
+          style={{ padding: '0', listStyle: 'none', margin: '0' }}
+          primaryText={'Make Visible To Me'}
+          onClick={() => {
+            this.makeCardVisibleToSelf(this.selectedPieceIndex);
+          }}
+        />
+        <MenuItem
+          style={{ padding: '0', listStyle: 'none', margin: '0' }}
+          primaryText={'Make Visible To Everyone'}
+          onClick={() => {
+            this.makeCardVisibleToAll(this.selectedPieceIndex);
+          }}
+        />
+        <MenuItem
+          style={{ padding: '0', listStyle: 'none', margin: '0' }}
+          primaryText={'Hide From Everyone'}
+          onClick={() => {
+            this.makeCardHiddenToAll(this.selectedPieceIndex);
+          }}
+        />
+        {this.isDeck[this.selectedPieceIndex] ? (
+          <MenuItem
+            style={{ padding: '0', listStyle: 'none', margin: '0' }}
+            primaryText={'Shuffle Deck'}
+            onClick={() => {
+              this.shuffleDeck(
+                this.gameSpec.pieces[this.selectedPieceIndex].deckPieceIndex
               );
-            })}
-          </IconMenu>
-        ) : null}
-        {this.state.showCardOptions ? (
-          <IconMenu
-            iconButtonElement={
-              <IconButton>
-                <MoreVertIcon />
-              </IconButton>
-            }
-            anchorOrigin={{ horizontal: 'left', vertical: 'top' }}
-            targetOrigin={{ horizontal: 'left', vertical: 'top' }}
-            className="my-tooltip"
-            style={{
-              left: this.tooltipPosition.x,
-              top: this.tooltipPosition.y,
-              position: 'absolute',
-              zIndex: 100
             }}
-          >
-            <MenuItem
-              style={{ padding: '0', listStyle: 'none', margin: '0' }}
-              primaryText={'Options:'}
-              disabled={true}
-            />
-            <MenuItem
-              style={{ padding: '0', listStyle: 'none', margin: '0' }}
-              primaryText={'Make Visible To Me'}
-              onClick={() => {
-                this.makeCardVisibleToSelf(this.selectedPieceIndex);
-              }}
-            />
-            <MenuItem
-              style={{ padding: '0', listStyle: 'none', margin: '0' }}
-              primaryText={'Make Visible To Everyone'}
-              onClick={() => {
-                this.makeCardVisibleToAll(this.selectedPieceIndex);
-              }}
-            />
-            <MenuItem
-              style={{ padding: '0', listStyle: 'none', margin: '0' }}
-              primaryText={'Hide From Everyone'}
-              onClick={() => {
-                this.makeCardHiddenToAll(this.selectedPieceIndex);
-              }}
-            />
-            {this.isDeck[this.selectedPieceIndex] ? (
-              <MenuItem
-                style={{ padding: '0', listStyle: 'none', margin: '0' }}
-                primaryText={'Shuffle Deck'}
-                onClick={() => {
-                  this.shuffleDeck(
-                    this.gameSpec.pieces[this.selectedPieceIndex].deckPieceIndex
-                  );
-                }}
-              />
-            ) : null}
-          </IconMenu>
+          />
         ) : null}
-      </>
+      </IconMenu>
     );
 
-    // TODO: Don't use AppBar here, there is only one appbar in app that is header.
     return (
-      <div>
-        {/* <AppBar
-          showMenuIconButton={false}
-          iconElementRight={
-            <FlatButton
-              label="Reset"
-              onClick={e => {
-                e.preventDefault();
-                const helper = new MatchStateHelper(this.matchInfo);
-                helper.resetMatch();
-                ourFirebase.updateMatchState(this.matchInfo);
-              }}
-            />
-          }
-          title={<span>Match: {this.matchInfo.game.gameName}</span>}
-        /> */}
-        <div style={{ position: 'relative' }}>
-          {toolTipLayer}
-          <Stage width={width} height={height}>
-            <Layer ref={() => 'boardLayer'}>{boardLayer}</Layer>
-            <Layer ref={() => 'piecesLayer'}>{piecesLayer}</Layer>
-          </Stage>
-        </div>
+      <div style={{ position: 'relative' }}>
+        {toolTipLayer}
+        <Stage width={width} height={height}>
+          <Layer ref={() => 'boardLayer'}>{boardLayer}</Layer>
+          <Layer ref={() => 'piecesLayer'}>{piecesLayer}</Layer>
+        </Stage>
       </div>
     );
   }
