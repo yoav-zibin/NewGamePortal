@@ -1,16 +1,13 @@
 import * as React from 'react';
 
-// import { connect } from 'react-redux';
-// import { StoreState } from '../types/index';
 import * as firebase from 'firebase';
-import { PhoneNumberToContact } from '../types/index';
 import { ourFirebase } from '../services/firebase';
 import TextField from 'material-ui/TextField';
 import SelectField from 'material-ui/SelectField';
 import MenuItem from 'material-ui/MenuItem';
 import RaisedButton from 'material-ui/RaisedButton';
 import RefreshIndicator from 'material-ui/RefreshIndicator';
-// import AppBar from 'material-ui/AppBar';
+import { History } from 'history';
 
 interface Country {
   name: string;
@@ -19,7 +16,7 @@ interface Country {
 }
 
 interface Props {
-  history: any;
+  history: History;
 }
 
 enum loadingType {
@@ -50,12 +47,6 @@ const testCountries: Country[] = [
   }
 ];
 
-const testContacts: PhoneNumberToContact = {
-  ['+19174021465']: { phoneNumber: '+19174021465', name: 'vivian' },
-  ['+15162033600']: { phoneNumber: '+15162033600', name: 'apple' },
-  ['+13474529289']: { phoneNumber: '+13474529289', name: 'banana' }
-};
-
 const style = {
   margin: 20,
   padding: 10
@@ -73,13 +64,13 @@ class Login extends React.Component<Props, {}> {
     status: loadingType.hide
   };
 
-  handleChange = (event: any, index: number, value: any) => {
+  handleChange(event: any, index: number, value: any) {
     event = event;
     this.setState({ code: value });
     return index;
-  };
+  }
 
-  handleInput = (event: any) => {
+  handleInput(event: any) {
     if (!event.target.value) {
       this.setState({
         phoneNum: event.target.value,
@@ -88,9 +79,9 @@ class Login extends React.Component<Props, {}> {
     } else {
       this.setState({ phoneNum: event.target.value, errorText: '' });
     }
-  };
+  }
 
-  handleCodeInput = (event: any) => {
+  handleCodeInput(event: any) {
     if (!event.target.value) {
       this.setState({
         veriCode: event.target.value,
@@ -103,11 +94,9 @@ class Login extends React.Component<Props, {}> {
         veriErrorText: ''
       });
     }
-  };
+  }
 
-  onLogin = () => {
-    ourFirebase.init();
-
+  onLogin() {
     ourFirebase
       .signInWithPhoneNumber(
         this.state.phoneNum,
@@ -121,18 +110,15 @@ class Login extends React.Component<Props, {}> {
       });
 
     this.setState({ veriDisabled: false });
-  };
-  // TODO:set time out remove
-  sendCode = () => {
+  }
+
+  sendCode() {
     let confirmationResult = (window as any).confirmationResult;
     confirmationResult
       .confirm(this.state.veriCode)
       .then((result: any) => {
-        /// User signed in successfully.
-        var user = result.user;
+        console.log('User signed in successfully: ', result.user);
         ourFirebase.writeUser();
-        ourFirebase.storeContacts(testContacts);
-        console.log(user);
         this.props.history.push('/');
       })
       .catch((error: any) => {
@@ -141,7 +127,7 @@ class Login extends React.Component<Props, {}> {
         console.log(error);
       });
     this.setState({ status: loadingType.loading });
-  };
+  }
 
   render() {
     return (

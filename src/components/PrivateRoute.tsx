@@ -6,12 +6,12 @@ import {
 } from 'react-router-dom';
 import * as React from 'react';
 import { store } from '../stores/index';
+import { ourFirebase } from '../services/firebase';
 
 type RouteComponent =
   | React.StatelessComponent<RouteComponentProps<{}>>
   | React.ComponentClass<{}>;
 
-// TODO: Add a login route that shows login screen
 const PrivateRoute: React.StatelessComponent<RouteProps> = ({
   component,
   ...rest
@@ -21,7 +21,10 @@ const PrivateRoute: React.StatelessComponent<RouteProps> = ({
       return null;
     }
 
-    if (store.getState().myUser.myUserId.length > 0) {
+    if (
+      ourFirebase.isLoggedIn() &&
+      store.getState().myUser.myUserId.length > 0
+    ) {
       return <Component {...props} />;
     }
 

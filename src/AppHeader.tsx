@@ -7,14 +7,13 @@ import { StringIndexer } from './types';
 class AppHeader extends React.Component {
   routes: StringIndexer = {
     '/login': 'Login',
-    '/contactsList': 'Contacts',
-    '/addMatch': 'Create a new Match',
-    '/myMatches': 'Matches',
-    '/PlayingScreen': 'Playing Screen'
+    '/contactsList': 'Add an opponent',
+    '/addMatch': 'Create a new game',
+    '/': 'My games'
   };
 
   // Header for AppBar
-  getLocation = () => {
+  getLocation() {
     let pathname: string = window.location.pathname;
     let result = this.routes[pathname];
     if (result) {
@@ -22,16 +21,17 @@ class AppHeader extends React.Component {
     } else if (pathname.startsWith('/matches/')) {
       // On specific match page, render match ID
       let matchId = pathname.split('/')[2];
-      return 'Match ' + matchId;
+      // TODO: fix the name.
+      return 'GAME_NAME with OPPONENTS' + matchId;
     } else {
       return '';
     }
-  };
+  }
 
   // When back button is clicked
-  handleOnClick = () => {
+  handleOnClick() {
     window.history.go(-1);
-  };
+  }
 
   render() {
     return (

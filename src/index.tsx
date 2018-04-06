@@ -20,6 +20,8 @@ Raven.config('https://efc65f7e50c14bd9a3482e2ad2ae3b9d@sentry.io/939406', {
 document.getElementById('loadingSpinner')!.style.display = 'none';
 
 console.log('Page init with parameters:', window.location.search);
+ourFirebase.init();
+
 if (window.location.search.length > 0) {
   // These phone numbers are also in our firebase rules (so we can do testing).
   const testUsers: Contact[] = [];
@@ -64,7 +66,6 @@ if (window.location.search.length > 0) {
       name: 'Yiwei Wu'
     }
   ];
-  ourFirebase.init();
   const myUserIndex = window.location.search
     ? Number(window.location.search.substr(1))
     : 0;

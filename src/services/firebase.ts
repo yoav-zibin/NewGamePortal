@@ -779,6 +779,10 @@ export namespace ourFirebase {
     return assertLoggedIn().uid;
   }
 
+  export function isLoggedIn() {
+    return !!firebase.auth().currentUser;
+  }
+
   function currentUser() {
     return firebase.auth().currentUser;
   }
