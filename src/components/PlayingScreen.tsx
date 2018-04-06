@@ -40,13 +40,11 @@ class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
 
   // TODO move this all to PlayingScreen
   componentDidUpdate() {
-    for (let i = 0; i < this.props.matchesList.length; i++) {
-      if (
-        this.props.match.params.matchId === this.props.matchesList[i].matchId
-      ) {
-        this.matchInfo = this.props.matchesList[i];
+    for (let match of this.props.matchesList) {
+      if (this.props.match.params.matchId === match.matchId) {
+        this.matchInfo = match;
         this.gameSpec = this.props.gameSpecs.gameSpecIdToGameSpec[
-          this.matchInfo.gameSpecId
+          match.gameSpecId
         ];
       }
     }
@@ -106,6 +104,4 @@ const mapStateToProps = (state: StoreState) => {
     gameSpecs: state.gameSpecs
   };
 };
-
-const mapDispatchToProps = () => ({});
-export default connect(mapStateToProps, mapDispatchToProps)(PlayingScreen);
+export default connect(mapStateToProps)(PlayingScreen);

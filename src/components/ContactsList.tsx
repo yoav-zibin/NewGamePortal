@@ -17,7 +17,7 @@ const style = {
 interface ContactWithUserId extends Contact {
   userId: string;
 }
-
+// todo rename allusers to allUserNames, do not use any
 interface Props {
   matchesList: MatchInfo[];
   users: ContactWithUserId[];
@@ -62,6 +62,7 @@ class ContactsList extends React.Component<Props, {}> {
   };
 
   handleAddNotUser = () => {
+    // todo: sent Sms
     console.log(this.props.matchesList);
   };
 
@@ -157,7 +158,4 @@ const mapStateToProps = (state: StoreState) => {
     myUserId: state.myUser.myUserId
   };
 };
-// Later this will take dispatch: any as argument
-const mapDispatchToProps = () => ({});
-
-export default connect(mapStateToProps, mapDispatchToProps)(ContactsList);
+export default connect(mapStateToProps)(ContactsList);

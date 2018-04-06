@@ -48,23 +48,23 @@ interface Props {
 class MatchesList extends React.Component<Props, {}> {
   style = {
     textDecoration: 'None'
-  }
+  };
   render() {
     return (
       <div>
         <div style={styles.root}>
           <List style={styles.list}>
-            {this.props.matchesList.map((tile, index) => (
+            {this.props.matchesList.map(tile => (
               <Link
+                key={tile.matchId}
                 style={this.style}
                 to={{
-                  pathname: '/matches/' + tile.matchId,
+                  pathname: '/matches/' + tile.matchId
                 }}
               >
                 <ListItem
                   // test implementation has the same match repeating,
                   // will cause warning with just tile.matchId
-                  key={tile.matchId + index}
                   primaryText={tile.game.gameName}
                   secondaryText={
                     'Last played ' +
@@ -139,8 +139,4 @@ const mapStateToProps = (state: StoreState) => ({
   userIdToPhoneNumber: state.userIdsAndPhoneNumbers.userIdToPhoneNumber,
   phoneNumberToContact: state.phoneNumberToContact
 });
-
-// Later this will take dispatch: any as argument
-const mapDispatchToProps = () => ({});
-
-export default connect(mapStateToProps, mapDispatchToProps)(MatchesList);
+export default connect(mapStateToProps)(MatchesList);
