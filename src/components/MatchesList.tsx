@@ -1,7 +1,8 @@
 import * as React from 'react';
-import AppBar from 'material-ui/AppBar';
+// import AppBar from 'material-ui/AppBar';
 import { connect } from 'react-redux';
 import { StoreState } from '../types/index';
+// import { ourFirebase } from '../services/firebase';
 
 import { MatchInfo, UserIdToPhoneNumber, PhoneNumberToContact } from '../types';
 // import { GridList, GridTile } from 'material-ui/GridList';
@@ -11,6 +12,7 @@ import ContentAdd from 'material-ui/svg-icons/content/add';
 import { List, ListItem } from 'material-ui/List';
 // import ActionGrade from 'material-ui/svg-icons/action/grade';
 import Avatar from 'material-ui/Avatar';
+import { Link } from 'react-router-dom';
 
 const styles: any = {
   root: {
@@ -44,51 +46,57 @@ interface Props {
 }
 
 class MatchesList extends React.Component<Props, {}> {
+  style = {
+    textDecoration: 'None'
+  }
   render() {
     return (
       <div>
-        <AppBar
-          title="Game Portal"
-          iconClassNameRight="muidocs-icon-navigation-expand-more"
-        />
         <div style={styles.root}>
           <List style={styles.list}>
             {this.props.matchesList.map((tile, index) => (
-              <ListItem
-                // test implementation has the same match repeating,
-                // will cause warning with just tile.matchId
-                key={tile.matchId + index}
-                primaryText={tile.game.gameName}
-                secondaryText={
-                  'Last played ' +
-                  timeSince(tile.lastUpdatedOn) +
-                  ' ago with ' +
-                  // FIXME: The store doesn't have values for phoneNumberToContact and
-                  // userIdToPhoneNumber, so it throws an undefined error.
-                  tile.participantsUserIds.reduce(
-                    (accum: string, userId: string) => {
-                      const phone: string = this.props.userIdToPhoneNumber[
-                        userId
-                      ];
-                      if (phone) {
-                        const name: string = this.props.phoneNumberToContact[
-                          phone
-                        ].name;
-                        return (accum += name + ' ');
-                      } else {
-                        return (accum += 'Unidentified User ');
-                      }
-                    },
-                    ''
-                  )
-                }
-                rightAvatar={
-                  <Avatar
-                    src={tile.game.screenShot.downloadURL}
-                    style={styles.icon}
-                  />
-                }
-              />
+              <Link
+                style={this.style}
+                to={{
+                  pathname: '/matches/' + tile.matchId,
+                }}
+              >
+                <ListItem
+                  // test implementation has the same match repeating,
+                  // will cause warning with just tile.matchId
+                  key={tile.matchId + index}
+                  primaryText={tile.game.gameName}
+                  secondaryText={
+                    'Last played ' +
+                    timeSince(tile.lastUpdatedOn) +
+                    ' ago with ' +
+                    // FIXME: The store doesn't have values for phoneNumberToContact and
+                    // userIdToPhoneNumber, so it throws an undefined error.
+                    tile.participantsUserIds.reduce(
+                      (accum: string, userId: string) => {
+                        const phone: string = this.props.userIdToPhoneNumber[
+                          userId
+                        ];
+                        if (phone) {
+                          const name: string = this.props.phoneNumberToContact[
+                            phone
+                          ].name;
+                          return (accum += name + ' ');
+                        } else {
+                          return (accum += 'Unidentified User ');
+                        }
+                      },
+                      ''
+                    )
+                  }
+                  rightAvatar={
+                    <Avatar
+                      src={tile.game.screenShot.downloadURL}
+                      style={styles.icon}
+                    />
+                  }
+                />
+              </Link>
             ))}
           </List>
         </div>

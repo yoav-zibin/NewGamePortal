@@ -9,7 +9,6 @@ import TextField from 'material-ui/TextField';
 import SelectField from 'material-ui/SelectField';
 import MenuItem from 'material-ui/MenuItem';
 import RaisedButton from 'material-ui/RaisedButton';
-import AppBar from 'material-ui/AppBar';
 
 interface Country {
   name: string;
@@ -121,10 +120,6 @@ class Login extends React.Component {
   render() {
     return (
       <div>
-        <AppBar
-          title="Login"
-          iconClassNameRight="muidocs-icon-navigation-expand-more"
-        />
         <div style={style}>
           <div id="recaptcha-container" />
           <SelectField

@@ -26,6 +26,7 @@ export interface Action {
   setMyUser?: MyUser;
   setSignals?: SignalEntry[];
   resetStoreToDefaults?: null;
+  createMatch?: null;
 }
 
 export function mergeMaps<T>(
