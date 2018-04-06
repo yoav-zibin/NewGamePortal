@@ -234,7 +234,6 @@ it('updateUserIdsAndPhoneNumbers', () => {
     phoneNumberToUserId: { x: 'y', z: 'u' },
     userIdToPhoneNumber: { y: 'x', u: 'z' }
   };
-
   let action: Action = {
     updateUserIdsAndPhoneNumbers: newUserIdsAndPhoneNumbers
   };

@@ -3,6 +3,7 @@ import './App.css';
 import AppHeader from './AppHeader';
 import GamesList from './components/GamesList';
 import { Route } from 'react-router';
+import PrivateRoute from './components/PrivateRoute';
 import PlayingScreen from './components/PlayingScreen';
 import MatchesList from './components/MatchesList';
 import AddMatch from './components/AddMatch';
@@ -29,7 +30,7 @@ class App extends React.Component {
           component={ContactsList}
         />
         <Route exact={true} path="/login" component={Login} />
-        <Route exact={true} path="/" component={GamesList} />
+        <PrivateRoute component={GamesList} exact={true} path="/" />
       </div>
     );
   }

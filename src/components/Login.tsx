@@ -9,11 +9,22 @@ import TextField from 'material-ui/TextField';
 import SelectField from 'material-ui/SelectField';
 import MenuItem from 'material-ui/MenuItem';
 import RaisedButton from 'material-ui/RaisedButton';
+import RefreshIndicator from 'material-ui/RefreshIndicator';
+// import AppBar from 'material-ui/AppBar';
 
 interface Country {
   name: string;
   code: string;
   callingCode: string;
+}
+
+interface Props {
+  history: any;
+}
+
+enum loadingType {
+  loading = 'loading',
+  hide = 'hide'
 }
 
 const testCountries: Country[] = [
@@ -50,15 +61,18 @@ const style = {
   padding: 10
 };
 
-class Login extends React.Component {
+let isLogin = false;
+
+class Login extends React.Component<Props, {}> {
   state = {
     code: '',
     phoneNum: '',
     veriCode: '',
     errorText: '',
     veriErrorText: '',
-    confirmationResult: '',
-    veriDisabled: true
+    confirmationResult: null,
+    veriDisabled: true,
+    status: loadingType.hide
   };
 
   handleChange = (event: any, index: number, value: any) => {
@@ -85,36 +99,60 @@ class Login extends React.Component {
         veriErrorText: 'This field is required'
       });
     } else {
-      this.setState({ phoneNum: event.target.value, veriErrorText: '' });
+      this.setState({
+        veriCode: event.target.value,
+        phoneNum: event.target.value,
+        veriErrorText: ''
+      });
     }
   };
 
   onLogin = () => {
     ourFirebase.init();
 
-    ourFirebase.signInWithPhoneNumber(
-      this.state.phoneNum,
-      this.state.code,
-      new firebase.auth.RecaptchaVerifier('recaptcha-container', {
-        size: 'invisible'
-      })
-    );
+    ourFirebase
+      .signInWithPhoneNumber(
+        this.state.phoneNum,
+        this.state.code,
+        new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+          size: 'invisible'
+        })
+      )
+      .then(function(confirmationResult: any) {
+        (window as any).confirmationResult = confirmationResult;
+      });
 
     this.setState({ veriDisabled: false });
   };
 
   sendCode = () => {
-    //    var confirmationResult = this.state.confirmationResult;
-    //    confirmationResult.confirm(this.state.veriCode).then(function (result: any) {
-    // User signed in successfully.
-    //      var user = result.user;
-    //    }).catch(function (error:any) {
-    // User couldn't sign in (bad verification code?)
-    // ...
-    //      console.log(error);
-    //    });
-    ourFirebase.writeUser();
-    ourFirebase.storeContacts(testContacts);
+    let confirmationResult = (window as any).confirmationResult;
+    confirmationResult
+      .confirm(this.state.veriCode)
+      .then(function(result: any) {
+        /// User signed in successfully.
+        isLogin = true;
+        var user = result.user;
+        ourFirebase.writeUser();
+        ourFirebase.storeContacts(testContacts);
+        console.log(user);
+        // window.location.href = "/";
+      })
+      .catch(function(error: any) {
+        // User couldn't sign in (bad verification code?)
+        // ...
+        console.log(error);
+      });
+    this.setState({ status: loadingType.loading });
+    setTimeout(() => {
+      console.log('isLogin:' + isLogin);
+      if (isLogin) {
+        this.props.history.push('/');
+      } else {
+        alert('Login Timeout');
+      }
+    }, 
+               5000);
   };
 
   render() {
@@ -166,6 +204,13 @@ class Login extends React.Component {
             disabled={this.state.veriDisabled}
           />
         </div>
+        <RefreshIndicator
+          size={50}
+          left={window.screen.width / 2}
+          top={window.screen.height / 2}
+          loadingColor="#FF9800"
+          status={this.state.status}
+        />
       </div>
     );
   }
