@@ -23,11 +23,9 @@ class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
 
   constructor(props: PlayingScreenProps) {
     super(props);
-    for (let i = 0; i < this.props.matchesList.length; i++) {
-      if (
-        this.props.match.params.matchId === this.props.matchesList[i].matchId
-      ) {
-        this.matchInfo = this.props.matchesList[i];
+    for (let match of this.props.matchesList) {
+      if (this.props.match.params.matchId === match.matchId) {
+        this.matchInfo = match;
       }
     }
   }

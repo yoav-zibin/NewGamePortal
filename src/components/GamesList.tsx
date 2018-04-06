@@ -1,5 +1,4 @@
 import * as React from 'react';
-import Subheader from 'material-ui/Subheader';
 import { GridList, GridTile } from 'material-ui/GridList';
 import { GameInfo } from '../types';
 import { ourFirebase } from '../services/firebase';
@@ -25,6 +24,7 @@ const styles: any = {
 
 interface Props {
   gamesList: GameInfo[];
+  // TODO: Don't use any
   match: any;
   location: any;
   history: any;
@@ -48,7 +48,6 @@ class GamesList extends React.Component<Props, {}> {
         {
           <div style={styles.root}>
             <GridList cellHeight={100} style={styles.gridList}>
-              <Subheader>Card games</Subheader>
               {this.props.gamesList.map((gameInfo: GameInfo) => (
                 <div
                   style={styles.gridTile}
