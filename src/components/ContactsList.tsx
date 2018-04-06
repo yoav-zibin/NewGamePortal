@@ -17,7 +17,7 @@ const style = {
 interface ContactWithUserId extends Contact {
   userId: string;
 }
-
+// todo rename allusers to allUserNames, do not use any
 interface Props {
   matchesList: MatchInfo[];
   users: ContactWithUserId[];
@@ -62,6 +62,7 @@ class ContactsList extends React.Component<Props, {}> {
   };
 
   handleAddNotUser = () => {
+    // todo: sent Sms
     console.log(this.props.matchesList);
   };
 

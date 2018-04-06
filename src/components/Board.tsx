@@ -28,6 +28,7 @@ interface BoardProps {
 
 interface BoardState {
   showCardOptions: boolean;
+  // TODO REMOVE
   showTooltip: boolean;
 }
 
@@ -37,8 +38,10 @@ interface BoardState {
  * Should also add drag and drop functionality later on.
  */
 class Board extends React.Component<BoardProps, BoardState> {
+  // TODO CARD
   selectedPieceIndex: number;
   selfParticipantIndex: number;
+  // TODO MAYBE REMOVE?
   participantNames: string[];
   tooltipPosition: {
     x: number;
@@ -47,6 +50,7 @@ class Board extends React.Component<BoardProps, BoardState> {
   matchInfo: MatchInfo;
   gameSpec: GameSpec;
   helper: MatchStateHelper;
+  // TODO change to function
   isDeck: boolean[];
 
   constructor(props: BoardProps) {
@@ -55,6 +59,7 @@ class Board extends React.Component<BoardProps, BoardState> {
       showCardOptions: false,
       showTooltip: false
     };
+    // TODO change to new for loop
     for (let i = 0; i < this.props.matchesList.length; i++) {
       if (
         this.props.match.params.matchId === this.props.matchesList[i].matchId
@@ -84,6 +89,7 @@ class Board extends React.Component<BoardProps, BoardState> {
     this.isDeck = isDeckTemp;
   }
 
+  // TODO move this all to PlayingScreen
   componentDidUpdate() {
     for (let i = 0; i < this.props.matchesList.length; i++) {
       if (
@@ -165,11 +171,14 @@ class Board extends React.Component<BoardProps, BoardState> {
   }
 
   toggleTooltip(refString: string | null, index: number | null) {
+    // TODO combine these conditions
     if (refString === null || index === null) {
+      // clicked on the board
       this.selectedPieceIndex = -1;
       this.setState({ showTooltip: false });
       return;
     } else if (this.selectedPieceIndex === index) {
+      // clicked on the same card
       this.selectedPieceIndex = -1;
       this.setState({ showTooltip: false });
       return;
@@ -212,7 +221,6 @@ class Board extends React.Component<BoardProps, BoardState> {
 
   render() {
     if (!this.gameSpec) {
-      ourFirebase.fetchGameSpec(this.matchInfo.game);
       let gameSpecScreenShot = this.matchInfo.game.screenShot.downloadURL;
       let screenShotWidth = this.matchInfo.game.screenShot.width;
       let screenShotHeight = this.matchInfo.game.screenShot.height;
@@ -223,6 +231,7 @@ class Board extends React.Component<BoardProps, BoardState> {
           src={gameSpecScreenShot}
         />
       );
+      // TODO show a spinner over the screenshot
       return (
         <>
           {/* <AppBar
@@ -240,6 +249,7 @@ class Board extends React.Component<BoardProps, BoardState> {
     }
     // TODO: Complete layer for board
     let boardImage = this.gameSpec.board.downloadURL;
+    // TODO: handle resizing so everything fits in the screen
     let width = this.gameSpec.board.width;
     let height = this.gameSpec.board.height;
     let boardLayer = (
@@ -251,7 +261,7 @@ class Board extends React.Component<BoardProps, BoardState> {
       />
     );
 
-    if (this.matchInfo.matchState.length !== this.gameSpec.pieces.length) {
+    if (this.matchInfo.matchState.length === 0) {
       this.matchInfo.matchState = MatchStateHelper.createInitialState(
         this.gameSpec
       );
@@ -308,6 +318,7 @@ class Board extends React.Component<BoardProps, BoardState> {
       );
     });
 
+    // TODO make sure it's 40x40px and the background is white
     let toolTipLayer = (
       <>
         {this.state.showTooltip ? (
