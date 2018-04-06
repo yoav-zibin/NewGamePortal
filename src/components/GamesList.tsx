@@ -12,10 +12,14 @@ const styles: any = {
     justifyContent: 'space-around'
   },
   gridList: {
-    position: 'absolute',
+    // position: 'absolute',
     left: 0,
-    right: 0,
-    overflowY: 'auto'
+    right: 0
+    // overflowY: 'auto'
+  },
+  gridTile: {
+    height: '100%',
+    width: '100%'
   }
 };
 
@@ -34,7 +38,7 @@ interface Props {
 class GamesList extends React.Component<Props, {}> {
   createMatch = (game: GameInfo) => {
     let matchId = ourFirebase.createMatch(game).matchId;
-    console.log("MATCH ID: ", matchId);
+    console.log('MATCH ID: ', matchId);
     this.props.history.push('/matches/' + matchId);
   };
 
@@ -43,17 +47,15 @@ class GamesList extends React.Component<Props, {}> {
       <div>
         {
           <div style={styles.root}>
-            <GridList cellHeight={180} style={styles.gridList}>
+            <GridList cellHeight={100} style={styles.gridList}>
               <Subheader>Card games</Subheader>
               {this.props.gamesList.map((gameInfo: GameInfo) => (
                 <div
+                  style={styles.gridTile}
                   key={gameInfo.gameSpecId}
                   onClick={() => this.createMatch(gameInfo)}
                 >
-                  <GridTile
-                    title={gameInfo.gameName}
-                    subtitle={''}
-                  >
+                  <GridTile title={gameInfo.gameName} subtitle={''}>
                     <img src={gameInfo.screenShot.downloadURL} />
                   </GridTile>
                 </div>
@@ -75,4 +77,6 @@ const mapStateToProps = (state: StoreState) => ({
 // Later this will take dispatch: any as argument
 const mapDispatchToProps = () => ({});
 
-export default connect(mapStateToProps, mapDispatchToProps)(withRouter(GamesList));
+export default connect(mapStateToProps, mapDispatchToProps)(
+  withRouter(GamesList)
+);
