@@ -24,7 +24,11 @@ class App extends React.Component {
         />
         <Route exact={true} path="/myMatches" component={MatchesList} />
         <Route exact={true} path="/addMatch" component={AddMatch} />
-        <Route exact={true} path="/contactsList" component={ContactsList} />
+        <Route
+          exact={true}
+          path="/contactsList/:matchId"
+          component={ContactsList}
+        />
         <Route exact={true} path="/login" component={Login} />
         <PrivateRoute component={GamesList} exact={true} path="/" />
       </div>
