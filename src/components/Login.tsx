@@ -12,7 +12,6 @@ import RaisedButton from 'material-ui/RaisedButton';
 import RefreshIndicator from 'material-ui/RefreshIndicator';
 // import AppBar from 'material-ui/AppBar';
 
-
 interface Country {
   name: string;
   code: string;
@@ -152,8 +151,7 @@ class Login extends React.Component<Props, {}> {
       } else {
         alert('Login Timeout');
       }
-    }, 
-               5000);
+    }, 5000);
   };
 
   render() {
