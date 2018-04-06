@@ -20,20 +20,20 @@ interface Props {
 
 class AddMatches extends React.Component<Props, {}> {
   // Invoked when a list item is selected
-  onNewRequest(chosenGame: string, index: number) {
+  onNewRequest = (chosenGame: string, index: number) => {
     console.log('CHOSEN GAME:', chosenGame, index);
     this.props.gamesList.forEach((game: GameInfo) => {
       if (game.gameName === chosenGame) {
         this.createMatch(game);
       }
     });
-  }
+  };
 
-  createMatch(game: GameInfo) {
+  createMatch = (game: GameInfo) => {
     let matchId = ourFirebase.createMatch(game).matchId;
     console.log('createMatch matchId=', matchId);
     this.props.history.push('/matches/' + matchId);
-  }
+  };
 
   render() {
     console.log('this.props.gamesList=', this.props.gamesList);
