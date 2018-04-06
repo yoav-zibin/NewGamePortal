@@ -1,5 +1,5 @@
 import * as React from 'react';
-import AppBar from 'material-ui/AppBar';
+// import AppBar from 'material-ui/AppBar';
 import { connect } from 'react-redux';
 import { StoreState } from '../types/index';
 // import { ourFirebase } from '../services/firebase';
@@ -52,10 +52,6 @@ class MatchesList extends React.Component<Props, {}> {
   render() {
     return (
       <div>
-        <AppBar
-          title="Game Portal"
-          iconClassNameRight="muidocs-icon-navigation-expand-more"
-        />
         <div style={styles.root}>
           <List style={styles.list}>
             {this.props.matchesList.map((tile, index) => (
