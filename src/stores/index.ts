@@ -36,9 +36,10 @@ function restoreOldState() {
   return oldState;
 }
 
+export const persistedOldStore: StoreState = restoreOldState();
 export const store: Store<StoreState> = createStore(
   reducer,
-  restoreOldState(),
+  <any>undefined,
   enhancer
 );
 

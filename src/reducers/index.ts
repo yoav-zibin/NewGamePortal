@@ -8,7 +8,8 @@ import {
   UserIdsAndPhoneNumbers,
   SignalEntry,
   IdIndexer,
-  MyUser
+  MyUser,
+  MatchState
 } from '../types';
 import { storeStateDefault } from '../stores/defaults';
 import { checkCondition } from '../globals';
@@ -25,7 +26,7 @@ export interface Action {
   updateUserIdsAndPhoneNumbers?: UserIdsAndPhoneNumbers;
   setMyUser?: MyUser;
   setSignals?: SignalEntry[];
-  resetStoreToDefaults?: null;
+  restoreOldStore?: StoreState;
   createMatch?: null;
 }
 
@@ -65,18 +66,26 @@ function checkEqual(x: string[], y: string[]) {
 }
 */
 
+export function checkMatchStateInStore(
+  matchState: MatchState,
+  gameSpecId: string,
+  state: StoreState
+) {
+  // We load the matches, and then we load their game specs, so it's possible we don't have a spec yet.
+  const spec = state.gameSpecs.gameSpecIdToGameSpec[gameSpecId];
+  checkCondition(
+    '#pieces',
+    matchState.length === 0 || !spec || matchState.length === spec.pieces.length
+  );
+}
+
 function checkStoreInvariants(state: StoreState) {
   state.matchesList.forEach(match => {
     checkCondition(
       'I play in match',
       match.participantsUserIds.indexOf(state.myUser.myUserId) !== -1
     );
-    checkCondition(
-      'matchState',
-      match.matchState.length === 0 ||
-        match.matchState.length ===
-          state.gameSpecs.gameSpecIdToGameSpec[match.gameSpecId].pieces.length
-    );
+    checkMatchStateInStore(match.matchState, match.gameSpecId, state);
   });
 
   // This condition fails for us when we use fake phone numbers for testing
@@ -87,8 +96,8 @@ function checkStoreInvariants(state: StoreState) {
 function reduce(state: StoreState, action: Action) {
   if (undefined !== action.setGamesList) {
     return { ...state, gamesList: action.setGamesList };
-  } else if (undefined !== action.resetStoreToDefaults) {
-    return storeStateDefault;
+  } else if (undefined !== action.restoreOldStore) {
+    return action.restoreOldStore;
   } else if (undefined !== action.setMatchesList) {
     let { matchesList, ...rest } = state;
     return {

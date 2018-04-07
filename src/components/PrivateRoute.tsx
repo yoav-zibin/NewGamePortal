@@ -6,7 +6,6 @@ import {
 } from 'react-router-dom';
 import * as React from 'react';
 import { store } from '../stores/index';
-import { ourFirebase } from '../services/firebase';
 
 type RouteComponent =
   | React.StatelessComponent<RouteComponentProps<{}>>
@@ -21,10 +20,7 @@ const PrivateRoute: React.StatelessComponent<RouteProps> = ({
       return null;
     }
 
-    if (
-      ourFirebase.isLoggedIn() &&
-      store.getState().myUser.myUserId.length > 0
-    ) {
+    if (store.getState().myUser.myUserId.length > 0) {
       return <Component {...props} />;
     }
 
