@@ -7,7 +7,8 @@ import {
   GameSpecs,
   GameSpec,
   UserIdToPhoneNumber,
-  PhoneNumberToContact
+  PhoneNumberToContact,
+  CSSPropertiesIndexer
 } from '../types/index';
 import { connect } from 'react-redux';
 import { FloatingActionButton } from 'material-ui';
@@ -16,6 +17,7 @@ import { History } from 'history';
 import CanvasImage from './CanvasImage';
 import { Layer, Stage } from 'react-konva';
 import { getOpponents } from '../globals';
+import { videoChat } from '../services/videoChat';
 
 interface PlayingScreenProps {
   myUserId: string;
@@ -30,6 +32,23 @@ interface PlayingScreenProps {
   };
   history: History;
 }
+
+const styles: CSSPropertiesIndexer = {
+  videoChatContainer: {
+    padding: 0,
+    margin: 0,
+    bottom: 0,
+    left: 0,
+    width: '100%',
+    'min-height': '160px',
+    'overflow-y': 'scroll',
+    /* 
+      font-size is 0 to avoid spaces between the inline video elements after linebreak. 
+      see https://css-tricks.com/fighting-the-space-between-inline-block-elements/ 
+    */
+    'font-size': 0
+  }
+};
 
 class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
   matchInfo: MatchInfo;
@@ -98,10 +117,16 @@ class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
       this.props.userIdToPhoneNumber,
       this.props.phoneNumberToContact
     );
+    const showVideoArea = opponents.length > 1 && videoChat.isSupported();
+    const videoArea = !showVideoArea ? null : (
+      <div style={styles.videoChatContainer}>
+        <VideoArea opponents={opponents} />
+      </div>
+    );
     return (
       <div>
         <Board matchInfo={this.matchInfo} gameSpec={this.gameSpec} />
-        <VideoArea opponents={opponents} />
+        {videoArea}
         <FloatingActionButton
           style={{ marginRight: 20 }}
           onClick={() =>

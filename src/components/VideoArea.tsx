@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { CSSPropertiesIndexer, Opponent } from '../types/index';
 import { videoChat } from '../services/videoChat';
+import { checkCondition } from '../globals';
 
 const styles: CSSPropertiesIndexer = {
   displayInline: {
@@ -37,15 +38,7 @@ interface Props {
 }
 
 class VideoArea extends React.Component<Props, {}> {
-  isShown() {
-    const opponents = this.props.opponents;
-    return opponents.length > 1 && videoChat.isSupported();
-  }
-
   componentDidMount() {
-    if (!this.isShown()) {
-      return;
-    }
     videoChat.getUserMedia().then(() => {
       videoChat.updateOpponents(
         this.props.opponents.map(opponent => opponent.userId)
@@ -59,9 +52,10 @@ class VideoArea extends React.Component<Props, {}> {
 
   render() {
     const opponents = this.props.opponents;
-    if (!this.isShown()) {
-      return null;
-    }
+    checkCondition(
+      'VideoArea',
+      opponents.length > 1 && videoChat.isSupported()
+    );
     const participants = opponents.concat();
     participants.unshift({ userId: 'Me', name: 'Me' });
     return (
