@@ -1,3 +1,5 @@
+import { CSSProperties } from "react";
+
 export interface StoreState {
   gamesList: GameInfo[];
 
@@ -38,6 +40,7 @@ export interface IdIndexer<T> {
 }
 export type StringIndexer = IdIndexer<string>;
 export type BooleanIndexer = IdIndexer<boolean>;
+export type CSSPropertiesIndexer = IdIndexer<CSSProperties>;
 
 export interface PhoneNumberToContact extends IdIndexer<Contact> {
   [phoneNumber: string]: Contact;

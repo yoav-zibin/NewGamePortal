@@ -1,8 +1,8 @@
 import * as React from 'react';
 import { GridList, GridTile } from 'material-ui/GridList';
-import { GameInfo } from '../types';
+import { GameInfo, CSSPropertiesIndexer } from '../types';
 
-const styles: any = {
+const styles: CSSPropertiesIndexer = {
   root: {
     display: 'flex',
     flexWrap: 'wrap',

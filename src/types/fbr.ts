@@ -159,7 +159,6 @@ declare namespace fbr {
     gameName: string;
     screenShotImageId: string;
     screenShotImage: ScreenShotImage;
-    numberOfMatches: number;
   }
 
   interface GameInfos {
@@ -227,7 +226,7 @@ declare namespace fbr {
   interface SignalEntry {
     addedByUid: string;
     timestamp: number /*firebase.database.ServerValue.TIMESTAMP*/;
-    signalType: 'sdp' | 'candidate';
+    signalType: 'sdp1' | 'sdp2' | 'candidate';
     signalData: string;
   }
 

@@ -1,7 +1,7 @@
 import * as React from 'react';
 // import AppBar from 'material-ui/AppBar';
 import { connect } from 'react-redux';
-import { StoreState } from '../types/index';
+import { StoreState, CSSPropertiesIndexer } from '../types/index';
 // import { ourFirebase } from '../services/firebase';
 
 import { MatchInfo, UserIdToPhoneNumber, PhoneNumberToContact } from '../types';
@@ -14,7 +14,7 @@ import { List, ListItem } from 'material-ui/List';
 import Avatar from 'material-ui/Avatar';
 import { Link } from 'react-router-dom';
 
-const styles: any = {
+const styles: CSSPropertiesIndexer = {
   root: {
     display: 'flex',
     flexWrap: 'wrap',

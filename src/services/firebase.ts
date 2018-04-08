@@ -739,7 +739,7 @@ export namespace ourFirebase {
 
   export function sendSignal(
     toUserId: string,
-    signalType: 'sdp' | 'candidate',
+    signalType: 'sdp1' | 'sdp2' | 'candidate',
     signalData: string
   ) {
     checkCondition('sendSignal', signalData.length < 10000);
