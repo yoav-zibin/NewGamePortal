@@ -37,10 +37,6 @@ Raven.config('https://efc65f7e50c14bd9a3482e2ad2ae3b9d@sentry.io/939406', {
   release: 'v0.1'
 }).install();
 
-// Give 500ms for onAuthStateChanged in firebase.ts to load the cookies and log in the user
-// (so we won't see the login screen flashed and redirect to '/')
-setTimeout(reactRender, 500);
-
 console.log('Page init with parameters:', window.location.search);
 ourFirebase.init();
 registerServiceWorker();
@@ -100,3 +96,7 @@ if (window.location.search.match('^[?][0-9]$')) {
   }
   ourFirebase.storeContacts(currentContacts);
 }
+
+// Give 500ms for onAuthStateChanged in firebase.ts to load the cookies and log in the user
+// (so we won't see the login screen flashed and redirect to '/')
+setTimeout(reactRender, 500);

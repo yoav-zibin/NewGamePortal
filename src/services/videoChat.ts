@@ -18,7 +18,7 @@ interface VideoNameElement {
   name: HTMLDivElement;
 }
 
-namespace videoChat {
+export namespace videoChat {
   interface UserIdToSignals {
     [userId: string]: SignalMsg[];
   }
@@ -27,13 +27,39 @@ namespace videoChat {
   }
   const waitingSignals: UserIdToSignals = {};
 
-  export let localMediaStream: MediaStream | null = null;
+  let localMediaStream: MediaStream | null = null;
   let localVideoElement: VideoNameElement;
 
   let opponentUserIds: string[] = [];
   let remoteVideoElements: VideoNameElement[];
 
   const peerConnections: UserIdToPeerConnection = {};
+
+  const configuration = {
+    iceServers: [
+      {
+        urls: 'stun:stun.l.google.com:19302'
+      }
+    ]
+  };
+  if ('fetch' in window) {
+    console.log('Adding xirsys turn&ice servers');
+    fetch('https://global.xirsys.net/_turn/GamePortal/', {
+      method: 'PUT',
+      body: '',
+      headers: new Headers({
+        Authorization:
+          'Basic ' + btoa('yoavzibin:ffca05a6-372c-11e8-b68d-bdfb507d2f2f')
+      })
+    })
+      .then(res => res.json())
+      .catch(error => console.error('Error:', error))
+      .then(response => {
+        const iceServers = response.v.iceServers;
+        console.log('Success:', response, 'ICE List: ' + iceServers);
+        configuration.iceServers = configuration.iceServers.concat(iceServers);
+      });
+  }
 
   let _isSupported =
     !!(<any>window).RTCPeerConnection &&
@@ -43,9 +69,6 @@ namespace videoChat {
     return _isSupported;
   }
 
-  export function hasUserMedia() {
-    return !!localMediaStream;
-  }
   export function stopUserMedia() {
     if (!localMediaStream) {
       return;
@@ -53,10 +76,12 @@ namespace videoChat {
     localMediaStream.getVideoTracks()[0].stop();
   }
   export function getUserMedia() {
-    // get the local stream, show it in the local video element and send it
+    if (!_isSupported) {
+      return Promise.resolve();
+    }
     if (localMediaStream) {
       console.log('Already has localMediaStream.');
-      return;
+      return Promise.resolve();
     }
     console.log('Requesting getUserMedia...');
     return navigator.mediaDevices
@@ -73,15 +98,15 @@ namespace videoChat {
           console.log('getUserMedia response: ', stream);
           localMediaStream = stream;
         },
-        (err: any) => {
+        err => {
           _isSupported = false;
           console.error('Error in getUserMedia: ', err);
         }
       );
   }
 
-  export function updateOpponents(_myUserId: string, _opponentIds: string[]) {
-    console.log('updateOpponents:', _myUserId, _opponentIds);
+  export function updateOpponents(_opponentIds: string[]) {
+    console.log('updateOpponents:', _opponentIds);
     const oldOpponentIds = opponentUserIds;
     opponentUserIds = _opponentIds.slice();
     let index = 0;
@@ -127,6 +152,181 @@ namespace videoChat {
       peerConnections[userId].close();
     }
     delete peerConnections[userId];
+  }
+
+  // See:
+  // https://www.html5rocks.com/en/tutorials/webrtc/basics/
+  class MyPeerConnection {
+    private isCaller: boolean;
+    private gotSdp: boolean;
+    private isClosed: boolean = false;
+    private pc: RTCPeerConnection;
+    private remoteStream: MediaStream | null = null;
+
+    constructor(public targetUserId: string, initialSignals: SignalMsg[]) {
+      console.log('MyPeerConnection: initialSignals=', initialSignals);
+      const pc = new RTCPeerConnection(configuration);
+      this.pc = pc;
+      checkCondition('localMediaStream', localMediaStream);
+      pc.addStream(localMediaStream!);
+
+      // send any ice candidates to the other peer
+      pc.onicecandidate = evt => {
+        if (this.isClosed) {
+          console.warn('onicecandidate after close');
+          return;
+        }
+        console.log('onicecandidate: ', evt);
+        if (evt.candidate) {
+          this.sendSignal(CANDIDATE, evt.candidate);
+        }
+      };
+
+      // once remote stream arrives, show it in the remote video element
+      const addedStream = (stream: MediaStream) => {
+        if (this.isClosed) {
+          console.warn('onaddstream after close');
+          return;
+        }
+        this.remoteStream = stream;
+        receivedVideoStream(this.targetUserId, stream);
+      };
+      if ('ontrack' in pc) {
+        (<any>pc).ontrack = (event: any) => {
+          console.log('ontrack: ', event);
+          addedStream(event.streams[0]);
+        };
+      } else {
+        pc.onaddstream = event => {
+          console.log('onaddstream: ', event);
+          if (event.stream) {
+            addedStream(event.stream);
+          }
+        };
+      }
+
+      const stateChangeHandler = (connectionState: string) => {
+        if (this.isClosed) {
+          return;
+        }
+        if (
+          connectionState === 'failed' ||
+          connectionState === 'disconnected' ||
+          connectionState === 'closed'
+        ) {
+          this.close();
+          restartPeerConnection(this.targetUserId);
+        }
+      };
+      pc.oniceconnectionstatechange = evt => {
+        console.log('oniceconnectionstatechange: ', evt);
+        stateChangeHandler(pc.iceConnectionState);
+      };
+      if ('onconnectionstatechange' in pc) {
+        const anyPc = <any>pc;
+        anyPc.onconnectionstatechange = (evt: any) => {
+          console.log('onconnectionstatechange: ', evt);
+          stateChangeHandler(anyPc.connectionState);
+        };
+      }
+
+      const isCaller = !initialSignals || initialSignals.length === 0;
+      this.isCaller = isCaller;
+      if (isCaller) {
+        pc.createOffer().then(this.gotDescription.bind(this), err => {
+          console.error('Error in createOffer: ', err);
+        });
+      } else {
+        checkCondition(SDP1, initialSignals[0].signalType === SDP1);
+        // DOMException: CreateAnswer can't be called before SetRemoteDescription.
+        for (let signal of initialSignals) {
+          this.receivedMessage(signal);
+        }
+        pc.createAnswer().then(this.gotDescription.bind(this), err => {
+          console.error('Error in createAnswer: ', err);
+        });
+      }
+    }
+
+    sendSignal(signalType: SignalType, signal: any) {
+      ourFirebase.sendSignal(
+        this.targetUserId,
+        signalType,
+        JSON.stringify(signal)
+      );
+    }
+
+    didGetSdp() {
+      return this.gotSdp;
+    }
+    getIsCaller() {
+      return this.isCaller;
+    }
+    getRemoteStream() {
+      return this.remoteStream;
+    }
+    close() {
+      this.isClosed = true;
+      this.remoteStream = null;
+      this.pc.close();
+    }
+
+    gotDescription(desc: any) {
+      console.log('gotDescription: ', desc);
+      this.pc.setLocalDescription(desc).then(
+        () => {
+          console.log('setLocalDescription success');
+        },
+        err => {
+          console.error('Error in setLocalDescription: ', err);
+        }
+      );
+      this.sendSignal(this.isCaller ? SDP1 : SDP2, desc);
+    }
+
+    canReceiveMessage(signalType: SignalType) {
+      switch (signalType) {
+        case SDP2:
+        case SDP1:
+          return !this.gotSdp && signalType === (this.isCaller ? SDP2 : SDP1);
+        case CANDIDATE:
+          return this.gotSdp;
+        default:
+          throw new Error('signalType2=' + signalType);
+      }
+    }
+    receivedMessage(signalMsg: SignalMsg) {
+      console.log('receivedMessage signalMsg=', signalMsg);
+      const signalType: SignalType = signalMsg.signalType;
+      checkCondition('canReceiveMessage', this.canReceiveMessage(signalType));
+      const signalData: any = JSON.parse(signalMsg.signalData);
+      switch (signalType) {
+        case SDP2:
+        case SDP1:
+          this.gotSdp = true;
+          this.pc.setRemoteDescription(signalData).then(
+            () => {
+              console.log('setRemoteDescription success');
+            },
+            err => {
+              console.error('Error in setRemoteDescription: ', err);
+            }
+          );
+          break;
+        case CANDIDATE:
+          this.pc.addIceCandidate(new RTCIceCandidate(signalData)).then(
+            () => {
+              console.log('addIceCandidate success');
+            },
+            err => {
+              console.error('Error in addIceCandidate: ', err);
+            }
+          );
+          break;
+        default:
+          throw new Error('signalType3=' + signalType);
+      }
+    }
   }
 
   function createMyPeerConnection(userId: string, signals: SignalMsg[]) {
@@ -202,7 +402,11 @@ namespace videoChat {
   }
 
   store.subscribe(() => {
-    for (let signal of store.getState().signals) {
+    const signals = store.getState().signals;
+    if (signals.length === 0) {
+      return;
+    }
+    for (let signal of signals) {
       receivedMessage(signal);
     }
     dispatch({ setSignals: [] });
@@ -213,6 +417,8 @@ namespace videoChat {
   }
   function getVideoElement(index: number): VideoNameElement {
     const video = <HTMLVideoElement>getElementById('videoElement' + index);
+    // TODO: add phonegap ios stuff
+    (<any>video).autoplay = 'true';
     const div = <HTMLDivElement>getElementById('videoParticipantName' + index);
     return { video: video, name: div };
   }
@@ -261,208 +467,5 @@ namespace videoChat {
     style.minHeight = height;
     style.maxWidth = width;
     style.maxHeight = height;
-  }
-
-  const configuration = {
-    iceServers: [
-      {
-        urls: 'stun:stun.l.google.com:19302'
-      }
-    ]
-  };
-  if ('fetch' in window) {
-    console.log('Adding xirsys turn&ice servers');
-    fetch('https://global.xirsys.net/_turn/GamePortal/', {
-      method: 'PUT',
-      body: '',
-      headers: new Headers({
-        Authorization:
-          'Basic ' + btoa('yoavzibin:ffca05a6-372c-11e8-b68d-bdfb507d2f2f')
-      })
-    })
-      .then(res => res.json())
-      .catch(error => console.error('Error:', error))
-      .then(response => {
-        const iceServers = response.v.iceServers;
-        console.log('Success:', response, 'ICE List: ' + iceServers);
-        configuration.iceServers = configuration.iceServers.concat(iceServers);
-      });
-  }
-
-  // See:
-  // https://www.html5rocks.com/en/tutorials/webrtc/basics/
-  class MyPeerConnection {
-    private isCaller: boolean;
-    private gotSdp: boolean;
-    private isClosed: boolean = false;
-    private pc: RTCPeerConnection;
-    private remoteStream: MediaStream | null = null;
-
-    constructor(public targetUserId: string, initialSignals: SignalMsg[]) {
-      console.log('MyPeerConnection: initialSignals=', initialSignals);
-      const pc = new RTCPeerConnection(configuration);
-      this.pc = pc;
-      checkCondition('localMediaStream', localMediaStream);
-      pc.addStream(localMediaStream!);
-
-      // send any ice candidates to the other peer
-      pc.onicecandidate = evt => {
-        if (this.isClosed) {
-          console.warn('onicecandidate after close');
-          return;
-        }
-        console.log('onicecandidate: ', evt);
-        if (evt.candidate) {
-          this.sendSignal(CANDIDATE, evt.candidate);
-        }
-      };
-
-      // once remote stream arrives, show it in the remote video element
-      const addedStream = (stream: MediaStream) => {
-        if (this.isClosed) {
-          console.warn('onaddstream after close');
-          return;
-        }
-        this.remoteStream = stream;
-        receivedVideoStream(this.targetUserId, stream);
-      };
-      if ('ontrack' in pc) {
-        (<any>pc).ontrack = (event: any) => {
-          console.log('ontrack: ', event);
-          addedStream(event.streams[0]);
-        };
-      } else {
-        pc.onaddstream = event => {
-          console.log('onaddstream: ', event);
-          if (event.stream) {
-            addedStream(event.stream);
-          }
-        };
-      }
-
-      const stateChangeHandler = (connectionState: string) => {
-        if (this.isClosed) {
-          return;
-        }
-        if (
-          connectionState === 'failed' ||
-          connectionState === 'disconnected' ||
-          connectionState === 'closed'
-        ) {
-          this.close();
-          restartPeerConnection(this.targetUserId);
-        }
-      };
-      pc.oniceconnectionstatechange = (evt: any) => {
-        console.log('oniceconnectionstatechange: ', evt);
-        stateChangeHandler(pc.iceConnectionState);
-      };
-      if ('onconnectionstatechange' in pc) {
-        const anyPc = <any>pc;
-        anyPc.onconnectionstatechange = (evt: any) => {
-          console.log('onconnectionstatechange: ', evt);
-          stateChangeHandler(anyPc.connectionState);
-        };
-      }
-
-      const isCaller = !initialSignals || initialSignals.length === 0;
-      this.isCaller = isCaller;
-      if (isCaller) {
-        pc.createOffer().then(this.gotDescription.bind(this), (err: any) => {
-          console.error('Error in createOffer: ', err);
-        });
-      } else {
-        checkCondition(SDP1, initialSignals[0].signalType === SDP1);
-        // DOMException: CreateAnswer can't be called before SetRemoteDescription.
-        for (let signal of initialSignals) {
-          this.receivedMessage(signal);
-        }
-        pc.createAnswer().then(this.gotDescription.bind(this), (err: any) => {
-          console.error('Error in createAnswer: ', err);
-        });
-      }
-    }
-
-    sendSignal(signalType: SignalType, signal: any) {
-      ourFirebase.sendSignal(
-        this.targetUserId,
-        signalType,
-        JSON.stringify(signal)
-      );
-    }
-
-    didGetSdp() {
-      return this.gotSdp;
-    }
-    getIsCaller() {
-      return this.isCaller;
-    }
-    getRemoteStream() {
-      return this.remoteStream;
-    }
-    close() {
-      this.isClosed = true;
-      this.remoteStream = null;
-      this.pc.close();
-    }
-
-    gotDescription(desc: any) {
-      console.log('gotDescription: ', desc);
-      this.pc.setLocalDescription(desc).then(
-        () => {
-          console.log('setLocalDescription success');
-        },
-        (err: any) => {
-          console.error('Error in setLocalDescription: ', err);
-        }
-      );
-      this.sendSignal(this.isCaller ? SDP1 : SDP2, desc);
-    }
-
-    canReceiveMessage(signalType: SignalType) {
-      switch (signalType) {
-        case SDP2:
-        case SDP1:
-          return !this.gotSdp && signalType === (this.isCaller ? SDP2 : SDP1);
-        case CANDIDATE:
-          return this.gotSdp;
-        default:
-          throw new Error('signalType2=' + signalType);
-      }
-    }
-    receivedMessage(signalMsg: SignalMsg) {
-      console.log('receivedMessage signalMsg=', signalMsg);
-      const signalType: SignalType = signalMsg.signalType;
-      checkCondition('canReceiveMessage', this.canReceiveMessage(signalType));
-      const signalData: any = JSON.parse(signalMsg.signalData);
-      switch (signalType) {
-        case SDP2:
-        case SDP1:
-          this.gotSdp = true;
-          this.pc
-            .setRemoteDescription(new RTCSessionDescription(signalData))
-            .then(
-              () => {
-                console.log('setRemoteDescription success');
-              },
-              (err: any) => {
-                console.error('Error in setRemoteDescription: ', err);
-              }
-            );
-          break;
-        case CANDIDATE:
-          this.pc.addIceCandidate(new RTCIceCandidate(signalData)).then(
-            () => {
-              console.log('addIceCandidate success');
-            },
-            (err: any) => {
-              console.error('Error in addIceCandidate: ', err);
-            }
-          );
-          break;
-        default:
-          throw new Error('signalType3=' + signalType);
-      }
-    }
   }
 }

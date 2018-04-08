@@ -25,8 +25,8 @@ function checkIfLocalStorageWorks(): boolean {
 const REDUX_STATE_LOCAL_STORAGE_KEY = 'reduxState';
 const hasLocalStorage = checkIfLocalStorageWorks();
 
-function restoreOldState() {
-  let oldState: any = undefined;
+function restoreOldState(): StoreState | undefined {
+  let oldState: StoreState | undefined = undefined;
   if (hasLocalStorage) {
     const oldStateStr = localStorage.getItem(REDUX_STATE_LOCAL_STORAGE_KEY);
     if (oldStateStr) {
@@ -36,7 +36,7 @@ function restoreOldState() {
   return oldState;
 }
 
-export const persistedOldStore: StoreState = restoreOldState();
+export const persistedOldStore: StoreState | undefined = restoreOldState();
 export const store: Store<StoreState> = createStore(
   reducer,
   <any>undefined,

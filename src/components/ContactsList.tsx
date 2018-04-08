@@ -10,7 +10,7 @@ import ContentAdd from 'material-ui/svg-icons/content/add';
 import AutoComplete from 'material-ui/AutoComplete';
 import { ourFirebase } from '../services/firebase';
 
-const style = {
+const style: React.CSSProperties = {
   marginRight: 20
 };
 

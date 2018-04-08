@@ -1,16 +1,26 @@
 import * as React from 'react';
 import Board from './Board';
 import VideoArea from './VideoArea';
-import { StoreState, MatchInfo, GameSpecs, GameSpec } from '../types/index';
+import {
+  StoreState,
+  MatchInfo,
+  GameSpecs,
+  GameSpec,
+  UserIdToPhoneNumber,
+  PhoneNumberToContact
+} from '../types/index';
 import { connect } from 'react-redux';
 import { FloatingActionButton } from 'material-ui';
 import ContentAdd from 'material-ui/svg-icons/content/add';
 import { History } from 'history';
 import CanvasImage from './CanvasImage';
 import { Layer, Stage } from 'react-konva';
+import { getOpponents } from '../globals';
 
 interface PlayingScreenProps {
-  // pieces: Piece[];
+  myUserId: string;
+  userIdToPhoneNumber: UserIdToPhoneNumber;
+  phoneNumberToContact: PhoneNumberToContact;
   matchesList: MatchInfo[];
   gameSpecs: GameSpecs;
   match: {
@@ -81,10 +91,17 @@ class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
         </>
       );
     }
+    const participantsUserIds = this.matchInfo.participantsUserIds;
+    const opponents = getOpponents(
+      participantsUserIds,
+      this.props.myUserId,
+      this.props.userIdToPhoneNumber,
+      this.props.phoneNumberToContact
+    );
     return (
       <div>
         <Board matchInfo={this.matchInfo} gameSpec={this.gameSpec} />
-        <VideoArea />
+        <VideoArea opponents={opponents} />
         <FloatingActionButton
           style={{ marginRight: 20 }}
           onClick={() =>
@@ -101,7 +118,10 @@ class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
 const mapStateToProps = (state: StoreState) => {
   return {
     matchesList: state.matchesList,
-    gameSpecs: state.gameSpecs
+    gameSpecs: state.gameSpecs,
+    myUserId: state.myUser.myUserId,
+    userIdToPhoneNumber: state.userIdsAndPhoneNumbers.userIdToPhoneNumber,
+    phoneNumberToContact: state.phoneNumberToContact
   };
 };
 export default connect(mapStateToProps)(PlayingScreen);
