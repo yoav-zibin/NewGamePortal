@@ -34,22 +34,22 @@ class ContactsList extends React.Component<Props, {}> {
     userAdded: false
   };
 
-  handleRequest = (chosenRequest: string, index: number) => {
+  handleRequest(chosenRequest: string, index: number) {
     if (chosenRequest.length > 0) {
       this.setState({ filterValue: chosenRequest });
     }
     console.log(chosenRequest.length);
     return index;
-  };
+  }
 
-  handleUpdate = (searchText: string, dataSource: any[]) => {
+  handleUpdate(searchText: string, dataSource: any[]) {
     if (searchText.length === 0) {
       this.setState({ filterValue: '' });
     }
     console.log(dataSource.length);
-  };
+  }
 
-  handleAddUser = () => {
+  handleAddUser() {
     let currentMatchId: String = this.props.match.params.matchId;
     let currentMatch: MatchInfo;
     this.props.matchesList.map((match: MatchInfo) => {
@@ -59,12 +59,12 @@ class ContactsList extends React.Component<Props, {}> {
       }
     });
     this.props.history.push('/matches/' + currentMatchId);
-  };
+  }
 
-  handleAddNotUser = () => {
+  handleAddNotUser() {
     // todo: sent Sms
     console.log(this.props.matchesList);
-  };
+  }
 
   filterContacts(contacts: Contact[]) {
     return contacts.filter(
@@ -158,7 +158,4 @@ const mapStateToProps = (state: StoreState) => {
     myUserId: state.myUser.myUserId
   };
 };
-// Later this will take dispatch: any as argument
-const mapDispatchToProps = () => ({});
-
-export default connect(mapStateToProps, mapDispatchToProps)(ContactsList);
+export default connect(mapStateToProps)(ContactsList);

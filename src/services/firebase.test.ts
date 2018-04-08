@@ -20,8 +20,8 @@ const testConfig = {
   storageBucket: 'testproject-a6dce.appspot.com',
   messagingSenderId: '957323548528'
 };
-ourFirebase.init(testConfig);
 ourFirebase.allPromisesForTests = [];
+ourFirebase.init(testConfig);
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 (<any>jasmine).getEnv().addReporter({
   specStarted: function(result: any) {
@@ -122,25 +122,22 @@ function getAllPromisesForTests() {
 const magicPhoneNumberForTest = '+11111111111';
 
 beforeAll(done => {
-  ourFirebase
-    .signInAnonymously(magicPhoneNumberForTest)
-    .then(() => {
+  console.log('beforeAll: call signInAnonymously');
+  ourFirebase.signInAnonymously(magicPhoneNumberForTest);
+  getAllPromisesForTests().then(() => {
+    // We need to do it twice because after all our promises resolved, we created some more.
+    getAllPromisesForTests().then(() => {
+      fetchAllGameSpecs();
       getAllPromisesForTests().then(() => {
-        fetchAllGameSpecs();
-        getAllPromisesForTests().then(() => {
-          const state = store.getState();
-          checkGameSpecs(state.gameSpecs);
-          expect(state.gamesList.length).toEqual(
-            Object.keys(state.gameSpecs.gameSpecIdToGameSpec).length
-          );
-          done();
-        });
+        const state = store.getState();
+        checkGameSpecs(state.gameSpecs);
+        expect(state.gamesList.length).toEqual(
+          Object.keys(state.gameSpecs.gameSpecIdToGameSpec).length
+        );
+        done();
       });
-    })
-    .catch(err => {
-      console.error('error in signInAnonymously with err=', err);
-      throw new Error('error in signInAnonymously err=' + err);
     });
+  });
 });
 
 afterEach(done => {

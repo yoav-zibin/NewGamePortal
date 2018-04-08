@@ -1,16 +1,14 @@
 import * as React from 'react';
 
-// import { connect } from 'react-redux';
-// import { StoreState } from '../types/index';
 import * as firebase from 'firebase';
-import { PhoneNumberToContact } from '../types/index';
 import { ourFirebase } from '../services/firebase';
 import TextField from 'material-ui/TextField';
 import SelectField from 'material-ui/SelectField';
 import MenuItem from 'material-ui/MenuItem';
 import RaisedButton from 'material-ui/RaisedButton';
 import RefreshIndicator from 'material-ui/RefreshIndicator';
-// import AppBar from 'material-ui/AppBar';
+import { History } from 'history';
+import { Redirect } from 'react-router';
 
 interface Country {
   name: string;
@@ -19,7 +17,8 @@ interface Country {
 }
 
 interface Props {
-  history: any;
+  myUserId: string;
+  history: History;
 }
 
 enum loadingType {
@@ -50,18 +49,13 @@ const testCountries: Country[] = [
   }
 ];
 
-const testContacts: PhoneNumberToContact = {
-  ['+19174021465']: { phoneNumber: '+19174021465', name: 'vivian' },
-  ['+15162033600']: { phoneNumber: '+15162033600', name: 'apple' },
-  ['+13474529289']: { phoneNumber: '+13474529289', name: 'banana' }
-};
-
 const style = {
   margin: 20,
   padding: 10
 };
 
 class Login extends React.Component<Props, {}> {
+  confirmationResult: any = null;
   state = {
     code: '',
     phoneNum: '',
@@ -73,13 +67,13 @@ class Login extends React.Component<Props, {}> {
     status: loadingType.hide
   };
 
-  handleChange = (event: any, index: number, value: any) => {
+  handleChange(event: any, index: number, value: any) {
     event = event;
     this.setState({ code: value });
     return index;
-  };
+  }
 
-  handleInput = (event: any) => {
+  handleInput(event: any) {
     if (!event.target.value) {
       this.setState({
         phoneNum: event.target.value,
@@ -88,9 +82,9 @@ class Login extends React.Component<Props, {}> {
     } else {
       this.setState({ phoneNum: event.target.value, errorText: '' });
     }
-  };
+  }
 
-  handleCodeInput = (event: any) => {
+  handleCodeInput(event: any) {
     if (!event.target.value) {
       this.setState({
         veriCode: event.target.value,
@@ -103,11 +97,9 @@ class Login extends React.Component<Props, {}> {
         veriErrorText: ''
       });
     }
-  };
+  }
 
-  onLogin = () => {
-    ourFirebase.init();
-
+  onLogin() {
     ourFirebase
       .signInWithPhoneNumber(
         this.state.phoneNum,
@@ -116,24 +108,19 @@ class Login extends React.Component<Props, {}> {
           size: 'invisible'
         })
       )
-      .then(function(confirmationResult: any) {
-        (window as any).confirmationResult = confirmationResult;
+      .then((_confirmationResult: any) => {
+        this.confirmationResult = _confirmationResult;
       });
 
     this.setState({ veriDisabled: false });
-  };
-  // TODO:set time out remove
-  sendCode = () => {
-    let confirmationResult = (window as any).confirmationResult;
-    confirmationResult
+  }
+
+  sendCode() {
+    this.confirmationResult
       .confirm(this.state.veriCode)
       .then((result: any) => {
-        /// User signed in successfully.
-        var user = result.user;
-        ourFirebase.writeUser();
-        ourFirebase.storeContacts(testContacts);
-        console.log(user);
-        this.props.history.push('/');
+        console.log('User signed in successfully: ', result.user);
+        this.goToMainPage();
       })
       .catch((error: any) => {
         // User couldn't sign in (bad verification code?)
@@ -141,9 +128,16 @@ class Login extends React.Component<Props, {}> {
         console.log(error);
       });
     this.setState({ status: loadingType.loading });
-  };
+  }
+
+  goToMainPage() {
+    this.props.history.push('/');
+  }
 
   render() {
+    if (this.props.myUserId) {
+      return <Redirect to="/" />;
+    }
     return (
       <div>
         <div style={style}>
@@ -155,6 +149,7 @@ class Login extends React.Component<Props, {}> {
           >
             {testCountries.map((country: Country) => (
               <MenuItem
+                key={country.code}
                 value={country.code}
                 primaryText={country.name + '(' + country.callingCode + ')'}
               />
@@ -203,4 +198,11 @@ class Login extends React.Component<Props, {}> {
     );
   }
 }
-export default Login;
+
+import { connect } from 'react-redux';
+import { StoreState } from '../types/index';
+
+const mapStateToProps = (state: StoreState) => ({
+  myUserId: state.myUser.myUserId
+});
+export default connect(mapStateToProps)(Login);

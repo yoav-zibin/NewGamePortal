@@ -78,13 +78,14 @@ class MatchesList extends React.Component<Props, {}> {
                           userId
                         ];
                         if (phone) {
-                          const name: string = this.props.phoneNumberToContact[
+                          const contact = this.props.phoneNumberToContact[
                             phone
-                          ].name;
-                          return (accum += name + ' ');
-                        } else {
-                          return (accum += 'Unidentified User ');
+                          ];
+                          if (contact) {
+                            return (accum += contact.name + ' ');
+                          }
                         }
+                        return (accum += 'Unidentified User ');
                       },
                       ''
                     )
@@ -139,8 +140,4 @@ const mapStateToProps = (state: StoreState) => ({
   userIdToPhoneNumber: state.userIdsAndPhoneNumbers.userIdToPhoneNumber,
   phoneNumberToContact: state.phoneNumberToContact
 });
-
-// Later this will take dispatch: any as argument
-const mapDispatchToProps = () => ({});
-
-export default connect(mapStateToProps, mapDispatchToProps)(MatchesList);
+export default connect(mapStateToProps)(MatchesList);
