@@ -1,5 +1,7 @@
 import { CSSProperties } from 'react';
 
+export type PlatformType = 'ios' | 'android' | 'web' | 'tests';
+
 export interface StoreState {
   gamesList: GameInfo[];
 

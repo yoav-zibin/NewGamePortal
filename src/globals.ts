@@ -2,8 +2,16 @@ import {
   IdIndexer,
   UserIdToPhoneNumber,
   PhoneNumberToContact,
-  Opponent
+  Opponent,
+  PlatformType
 } from './types';
+
+export const platform: PlatformType =
+  typeof window === 'undefined'
+    ? 'tests'
+    : window.location.search === '?platform=ios'
+      ? 'ios'
+      : window.location.search === '?platform=android' ? 'android' : 'web';
 
 export function checkCondition<T>(desc: string, cond: T): T {
   if (!cond) {
