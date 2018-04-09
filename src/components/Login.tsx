@@ -321,13 +321,13 @@ class Login extends React.Component<Props, {}> {
     status: loadingType.hide
   };
 
-  handleChange(event: any, index: number, value: any) {
+  handleChange = (event: any, index: number, value: any) => {
     event = event;
     this.setState({ code: value });
     return index;
-  }
+  };
 
-  handleInput(event: any) {
+  handleInput = (event: any) => {
     if (!event.target.value) {
       this.setState({
         phoneNum: event.target.value,
@@ -336,9 +336,9 @@ class Login extends React.Component<Props, {}> {
     } else {
       this.setState({ phoneNum: event.target.value, errorText: '' });
     }
-  }
+  };
 
-  handleCodeInput(event: any) {
+  handleCodeInput = (event: any) => {
     if (!event.target.value) {
       this.setState({
         veriCode: event.target.value,
@@ -351,9 +351,9 @@ class Login extends React.Component<Props, {}> {
         veriErrorText: ''
       });
     }
-  }
+  };
 
-  onLogin() {
+  onLogin = () => {
     ourFirebase
       .signInWithPhoneNumber(
         this.state.phoneNum,
@@ -367,9 +367,9 @@ class Login extends React.Component<Props, {}> {
       });
 
     this.setState({ veriDisabled: false });
-  }
+  };
 
-  sendCode() {
+  sendCode = () => {
     this.confirmationResult
       .confirm(this.state.veriCode)
       .then((result: any) => {
@@ -382,7 +382,7 @@ class Login extends React.Component<Props, {}> {
         console.log(error);
       });
     this.setState({ status: loadingType.loading });
-  }
+  };
 
   goToMainPage() {
     this.props.history.push('/');
