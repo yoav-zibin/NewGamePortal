@@ -9,7 +9,11 @@ import { History } from 'history';
 import { Redirect } from 'react-router';
 import Select from 'react-select';
 import 'react-select/dist/react-select.css';
+require('../js/trans-compiled');
 const data = require('../countrycode.json');
+
+declare function isValidNumber(phoneNumber:String,regionCode:String):boolean;
+declare function phoneNumberParser(phoneNumber:String,regionCode:String):string;
 
 interface Country {
   name: string;
@@ -280,30 +284,7 @@ const callingCodeToCountryCodes: CallingCodeToCountryCodes = {
   998: ['UZ']
 };
 */
-/*
-const testCountries: Country[] = [
-  {
-    name: 'United States',
-    code: 'US',
-    callingCode: '+1'
-  },
-  {
-    name: 'Brazil',
-    code: 'BR',
-    callingCode: '+55'
-  },
-  {
-    name: 'China',
-    code: 'CN',
-    callingCode: '+86'
-  },
-  {
-    name: 'Colombia',
-    code: 'CO',
-    callingCode: '+57'
-  }
-];
-*/
+
 const style: React.CSSProperties = {
   margin: 20,
   padding: 10
@@ -358,9 +339,11 @@ class Login extends React.Component<Props, {}> {
   };
 
   onLogin = () => {
-    ourFirebase
+    if(isValidNumber(this.state.phoneNum,this.state.code)){
+      let phoneNumber = phoneNumberParser(this.state.phoneNum,this.state.code);
+      ourFirebase
       .signInWithPhoneNumber(
-        this.state.phoneNum,
+        phoneNumber,
         this.state.code,
         new firebase.auth.RecaptchaVerifier('recaptcha-container', {
           size: 'invisible'
@@ -370,8 +353,11 @@ class Login extends React.Component<Props, {}> {
         this.confirmationResult = _confirmationResult;
       });
 
-    this.setState({ veriDisabled: false });
-  };
+      this.setState({ veriDisabled: false });
+    }else{
+      alert("invalid phone number")
+    }
+  }
 
   sendCode = () => {
     this.confirmationResult

@@ -29,6 +29,7 @@
     "webpack",
     "jest",
     "public",
-    "src/setupTests.ts"
+    "src/setupTests.ts",
+    "src/js"
   ]
 }
