@@ -3,12 +3,13 @@ import * as React from 'react';
 import * as firebase from 'firebase';
 import { ourFirebase } from '../services/firebase';
 import TextField from 'material-ui/TextField';
-import SelectField from 'material-ui/SelectField';
-import MenuItem from 'material-ui/MenuItem';
 import RaisedButton from 'material-ui/RaisedButton';
 import RefreshIndicator from 'material-ui/RefreshIndicator';
 import { History } from 'history';
 import { Redirect } from 'react-router';
+import Select from 'react-select';
+import 'react-select/dist/react-select.css';
+const data = require('../countrycode.json');
 
 interface Country {
   name: string;
@@ -279,7 +280,7 @@ const callingCodeToCountryCodes: CallingCodeToCountryCodes = {
   998: ['UZ']
 };
 */
-
+/*
 const testCountries: Country[] = [
   {
     name: 'United States',
@@ -302,7 +303,7 @@ const testCountries: Country[] = [
     callingCode: '+57'
   }
 ];
-
+*/
 const style: React.CSSProperties = {
   margin: 20,
   padding: 10
@@ -311,6 +312,7 @@ const style: React.CSSProperties = {
 class Login extends React.Component<Props, {}> {
   confirmationResult: any = null;
   state = {
+    selectField: { value: '', label: '' },
     code: '',
     phoneNum: '',
     veriCode: '',
@@ -321,13 +323,15 @@ class Login extends React.Component<Props, {}> {
     status: loadingType.hide
   };
 
-  handleChange(event: any, index: number, value: any) {
-    event = event;
-    this.setState({ code: value });
-    return index;
-  }
+  handleChange = (selectedOption: any) => {
+    this.setState({
+      selectField: selectedOption,
+      code: selectedOption.value ? selectedOption.value : ''
+    });
+    console.log(`Selected: ${selectedOption.label}`);
+  };
 
-  handleInput(event: any) {
+  handleInput = (event: any) => {
     if (!event.target.value) {
       this.setState({
         phoneNum: event.target.value,
@@ -336,9 +340,9 @@ class Login extends React.Component<Props, {}> {
     } else {
       this.setState({ phoneNum: event.target.value, errorText: '' });
     }
-  }
+  };
 
-  handleCodeInput(event: any) {
+  handleCodeInput = (event: any) => {
     if (!event.target.value) {
       this.setState({
         veriCode: event.target.value,
@@ -351,9 +355,9 @@ class Login extends React.Component<Props, {}> {
         veriErrorText: ''
       });
     }
-  }
+  };
 
-  onLogin() {
+  onLogin = () => {
     ourFirebase
       .signInWithPhoneNumber(
         this.state.phoneNum,
@@ -367,9 +371,9 @@ class Login extends React.Component<Props, {}> {
       });
 
     this.setState({ veriDisabled: false });
-  }
+  };
 
-  sendCode() {
+  sendCode = () => {
     this.confirmationResult
       .confirm(this.state.veriCode)
       .then((result: any) => {
@@ -382,13 +386,15 @@ class Login extends React.Component<Props, {}> {
         console.log(error);
       });
     this.setState({ status: loadingType.loading });
-  }
+  };
 
   goToMainPage() {
     this.props.history.push('/');
   }
 
   render() {
+    const selectField = this.state.selectField;
+    const value = selectField && selectField.value;
     if (this.props.myUserId) {
       return <Redirect to="/" />;
     }
@@ -396,19 +402,17 @@ class Login extends React.Component<Props, {}> {
       <div>
         <div style={style}>
           <div id="recaptcha-container" />
-          <SelectField
-            floatingLabelText="Select Country"
-            value={this.state.code}
+
+          <Select
+            name="Select Country"
+            value={value}
             onChange={this.handleChange}
-          >
-            {testCountries.map((country: Country) => (
-              <MenuItem
-                key={country.code}
-                value={country.code}
-                primaryText={country.name + '(' + country.callingCode + ')'}
-              />
-            ))}
-          </SelectField>
+            options={data.map((country: Country) => ({
+              value: country.code,
+              label: country.name + '(+' + country.callingCode + ')'
+            }))}
+          />
+
           <br />
           <TextField
             id="phoneNum"
