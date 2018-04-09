@@ -1,8 +1,8 @@
 import * as React from 'react';
 import { GridList, GridTile } from 'material-ui/GridList';
-import { GameInfo } from '../types';
+import { GameInfo, CSSPropertiesIndexer } from '../types';
 
-const styles: any = {
+const styles: CSSPropertiesIndexer = {
   root: {
     display: 'flex',
     flexWrap: 'wrap',
@@ -25,11 +25,6 @@ interface Props {
   createMatch: (game: GameInfo) => void;
 }
 
-/**
- * TODOS:
- * 5. onClick of any of the grid tile dispatch an action which changes the currently selected game
- * and reroutes to that game's route.
- */
 class GamesList extends React.Component<Props, {}> {
   render() {
     return (

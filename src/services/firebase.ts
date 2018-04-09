@@ -25,7 +25,8 @@ import {
   Piece,
   GameSpecIdToGameSpec,
   GameSpecs,
-  PieceState
+  PieceState,
+  AnyIndexer
 } from '../types';
 import { Action, checkMatchStateInStore } from '../reducers';
 
@@ -527,7 +528,7 @@ export namespace ourFirebase {
   export function updateMatchState(match: MatchInfo) {
     const matchState: MatchState = match.matchState;
     checkCondition('updateMatchState', matchState.length > 0);
-    const updates: any = {};
+    const updates: AnyIndexer = {};
     updates['pieces'] = convertMatchStateToPiecesState(
       matchState,
       match.gameSpecId
@@ -540,7 +541,7 @@ export namespace ourFirebase {
   export function updatePieceState(match: MatchInfo, pieceIndex: number) {
     console.log('updatePieceState');
     const pieceState: PieceState = match.matchState[pieceIndex];
-    const updates: any = {};
+    const updates: AnyIndexer = {};
     updates[`pieces/${pieceIndex}`] = convertPieceState(pieceState);
     updates['lastUpdatedOn'] = getTimestamp();
     refUpdate(getRef(`/gamePortal/matches/${match.matchId}`), updates);
@@ -641,7 +642,7 @@ export namespace ourFirebase {
     );
     mapPhoneNumbersToUserIds(numbersWithoutUserId);
 
-    const updates: any = {};
+    const updates: AnyIndexer = {};
     const oldContacts = state.phoneNumberToContact;
     currentPhoneNumbers.forEach(phoneNumber => {
       const currentContact = currentContacts[phoneNumber];
@@ -714,7 +715,7 @@ export namespace ourFirebase {
       }
       // We start with the old signals and add to them.
       let signals: SignalEntry[] = store.getState().signals;
-      let updates: any = {};
+      let updates: AnyIndexer = {};
       Object.keys(signalsFbr).forEach(entryId => {
         updates[entryId] = null;
         const signalFbr: fbr.SignalEntry = signalsFbr[entryId];
@@ -739,7 +740,7 @@ export namespace ourFirebase {
 
   export function sendSignal(
     toUserId: string,
-    signalType: 'sdp' | 'candidate',
+    signalType: 'sdp1' | 'sdp2' | 'candidate',
     signalData: string
   ) {
     checkCondition('sendSignal', signalData.length < 10000);
@@ -784,7 +785,7 @@ export namespace ourFirebase {
     addPromiseForTests(ref.set(val, getOnComplete(ref, val)));
   }
 
-  function refUpdate(ref: firebase.database.Reference, val: any) {
+  function refUpdate(ref: firebase.database.Reference, val: AnyIndexer) {
     // console.log('refUpdate', ref.toString(), " val=", prettyJson(val));
     addPromiseForTests(ref.update(val, getOnComplete(ref, val)));
   }

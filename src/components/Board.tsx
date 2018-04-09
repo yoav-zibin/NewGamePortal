@@ -23,6 +23,8 @@ interface BoardProps {
 
 interface BoardState {
   showCardOptions: boolean;
+  innerWidth: number;
+  innerHeight: number;
 }
 
 /**
@@ -41,11 +43,15 @@ class Board extends React.Component<BoardProps, BoardState> {
   matchInfo: MatchInfo;
   gameSpec: GameSpec;
   helper: MatchStateHelper;
+  throttled: boolean;
+  delay: number;
 
   constructor(props: BoardProps) {
     super(props);
     this.state = {
-      showCardOptions: false
+      showCardOptions: false,
+      innerHeight: window.innerHeight,
+      innerWidth: window.innerWidth
     };
     this.tooltipPosition = {
       x: 0,
@@ -58,6 +64,37 @@ class Board extends React.Component<BoardProps, BoardState> {
       this.props.myUserId
     );
     this.helper = new MatchStateHelper(this.matchInfo);
+
+    // for throttling window resize event
+    this.throttled = false;
+  }
+
+  // resize the board (also for correctly displaying on mobile)
+  componentDidMount() {
+    window.addEventListener('resize', () => {
+      this.handleResize();
+    });
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('resize', () => {
+      this.handleResize();
+    });
+  }
+
+  handleResize() {
+    if (!this.throttled) {
+      this.getDimensions();
+      this.throttled = true;
+      setTimeout(() => (this.throttled = false), 250);
+    }
+  }
+
+  getDimensions() {
+    this.setState({
+      innerWidth: window.innerWidth,
+      innerHeight: window.innerHeight
+    });
   }
 
   // check if a card belongs to a deck
@@ -101,11 +138,17 @@ class Board extends React.Component<BoardProps, BoardState> {
       'canvasImage' + index
     ] as CanvasImage).imageNode.getAbsolutePosition();
 
-    let width = this.gameSpec.board.width;
-    let height = this.gameSpec.board.height;
-    let x = position.x / width * 100;
-    let y = position.y / height * 100;
+    const width = this.gameSpec.board.width;
+    const height = this.gameSpec.board.height;
+    const ratio = Math.min(
+      this.state.innerWidth / width,
+      this.state.innerHeight / height
+    );
 
+    const x = position.x / ratio / width * 100;
+    const y = position.y / ratio / height * 100;
+
+    console.log(x, y);
     const match: MatchInfo = this.matchInfo;
     this.helper.dragTo(index, x, y);
     ourFirebase.updatePieceState(match, index);
@@ -158,16 +201,31 @@ class Board extends React.Component<BoardProps, BoardState> {
     });
   }
 
+  // TODO: the UI should show cards that are visible to you always at higher z-indices than
+  // cards that aren't visible to you, i.e., have two layers for pieces: one that
+  // is for cards that aren't visible to you and one for everything else.
+  // E.g., suppose that card A isn't visible to you and it has zDepth=10, and card B
+  // that is visible to you with zDepth=9, and they are both with the same x & y.
+  // If there is just one layer for pieces, then if you drag the card from that x&y then it would drag the piece with
+  // the highest zDepth (so card A).
+  // But if we use two layers for pieces, then card A will be in one layer and card B
+  // in another layer (that is above the first layer), so dragging will correctly pick card A.
+
   render() {
     // TODO: Complete layer for board
     let boardImage = this.gameSpec.board.downloadURL;
     // TODO: handle resizing so everything fits in the screen
-    let width = this.gameSpec.board.width;
-    let height = this.gameSpec.board.height;
+    const width = this.gameSpec.board.width;
+    const height = this.gameSpec.board.height;
+    const ratio = Math.min(
+      this.state.innerWidth / width,
+      this.state.innerHeight / height
+    );
+
     let boardLayer = (
       <CanvasImage
-        height={height}
-        width={width}
+        height={height * ratio}
+        width={width * ratio}
         src={boardImage}
         onClick={() => this.hideCardOptions()}
       />
@@ -210,12 +268,10 @@ class Board extends React.Component<BoardProps, BoardState> {
               this.toggleCardOptions('canvasImage' + index, index);
             }
           }}
-          height={
-            pieceSpec.element.height * height / this.gameSpec.board.height
-          }
-          width={pieceSpec.element.width * width / this.gameSpec.board.width}
-          x={piece.x * width / 100}
-          y={piece.y * height / 100}
+          height={pieceSpec.element.height * ratio}
+          width={pieceSpec.element.width * ratio}
+          x={piece.x * width / 100 * ratio}
+          y={piece.y * height / 100 * ratio}
           src={imageSrc}
           onDragStart={() => {
             this.hideCardOptions();
@@ -292,7 +348,7 @@ class Board extends React.Component<BoardProps, BoardState> {
     return (
       <div style={{ position: 'relative' }}>
         {toolTipLayer}
-        <Stage width={width} height={height}>
+        <Stage width={width * ratio} height={height * ratio}>
           <Layer ref={() => 'boardLayer'}>{boardLayer}</Layer>
           <Layer ref={() => 'piecesLayer'}>{piecesLayer}</Layer>
         </Stage>

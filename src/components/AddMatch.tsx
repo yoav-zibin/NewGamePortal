@@ -8,7 +8,7 @@ import { StoreState } from '../types/index';
 import { ourFirebase } from '../services/firebase';
 import { History } from 'history';
 
-const style: any = {
+const style: React.CSSProperties = {
   display: 'block',
   margin: '0 auto'
 };

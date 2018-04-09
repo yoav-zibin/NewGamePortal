@@ -17,14 +17,14 @@ class App extends React.Component {
         <Route exact={true} path="/login" component={Login} />
         <PrivateRoute
           exact={true}
-          path="/matches/:matchId"
+          path="/matches/:matchIdInRoute"
           component={PlayingScreen}
         />
         <PrivateRoute exact={true} path="/" component={MatchesList} />
         <PrivateRoute exact={true} path="/addMatch" component={AddMatch} />
         <PrivateRoute
           exact={true}
-          path="/contactsList/:matchId"
+          path="/contactsList/:matchIdInRoute"
           component={ContactsList}
         />
       </div>

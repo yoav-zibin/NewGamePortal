@@ -27,7 +27,6 @@ export interface Action {
   setMyUser?: MyUser;
   setSignals?: SignalEntry[];
   restoreOldStore?: StoreState;
-  createMatch?: null;
 }
 
 export function mergeMaps<T>(
@@ -36,35 +35,6 @@ export function mergeMaps<T>(
 ): IdIndexer<T> {
   return Object.assign(original, updateWithEntries);
 }
-
-/*
-function checkUserIdsAndPhoneNumbers(state: StoreState) {
-  const userIdsAndPhoneNumbers = state.userIdsAndPhoneNumbers;
-  checkCondition(
-    'UserIdsAndPhoneNumbers',
-    // UserIdsAndPhoneNumbers have two mappings that are exactly the reverse of each other
-    checkEqual(
-      Object.keys(userIdsAndPhoneNumbers.phoneNumberToUserId),
-      getValues(userIdsAndPhoneNumbers.userIdToPhoneNumber)
-    ) &&
-      checkEqual(
-        Object.keys(userIdsAndPhoneNumbers.userIdToPhoneNumber),
-        getValues(userIdsAndPhoneNumbers.phoneNumberToUserId)
-      )
-  );
-}
-function checkEqual(x: string[], y: string[]) {
-  if (x.length !== y.length) {
-    return false;
-  }
-  for (var i = 0; i < x.length; i++) {
-    if (x[i] !== y[i]) {
-      return false;
-    }
-  }
-  return true;
-}
-*/
 
 export function checkMatchStateInStore(
   matchState: MatchState,
@@ -87,10 +57,6 @@ function checkStoreInvariants(state: StoreState) {
     );
     checkMatchStateInStore(match.matchState, match.gameSpecId, state);
   });
-
-  // This condition fails for us when we use fake phone numbers for testing
-  // (because the same phoneNumber can map to many userIds).
-  // checkUserIdsAndPhoneNumbers(state);
 }
 
 function reduce(state: StoreState, action: Action) {
