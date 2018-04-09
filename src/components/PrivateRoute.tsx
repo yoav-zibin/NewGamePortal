@@ -11,7 +11,6 @@ type RouteComponent =
   | React.StatelessComponent<RouteComponentProps<{}>>
   | React.ComponentClass<{}>;
 
-// TODO: Add a login route that shows login screen
 const PrivateRoute: React.StatelessComponent<RouteProps> = ({
   component,
   ...rest

@@ -1,4 +1,17 @@
-import { IdIndexer } from './types';
+import {
+  IdIndexer,
+  UserIdToPhoneNumber,
+  PhoneNumberToContact,
+  Opponent,
+  PlatformType
+} from './types';
+
+export const platform: PlatformType =
+  typeof window === 'undefined'
+    ? 'tests'
+    : window.location.search === '?platform=ios'
+      ? 'ios'
+      : window.location.search === '?platform=android' ? 'android' : 'web';
 
 export function checkCondition<T>(desc: string, cond: T): T {
   if (!cond) {
@@ -31,4 +44,42 @@ export function objectMap<T, U>(
 
 export function prettyJson(obj: any): string {
   return JSON.stringify(obj, null, '  ');
+}
+
+export function getOpponents(
+  participantsUserIds: string[],
+  myUserId: string,
+  userIdToPhoneNumber: UserIdToPhoneNumber,
+  phoneNumberToContact: PhoneNumberToContact
+): Opponent[] {
+  const opponentIds = getOpponentIds(participantsUserIds, myUserId);
+  return opponentIds.map(userId => ({
+    userId: userId,
+    name: mapUserIdToName(userId, userIdToPhoneNumber, phoneNumberToContact)
+  }));
+}
+
+export function getOpponentIds(
+  participantsUserIds: string[],
+  myUserId: string
+): string[] {
+  const opponentIds = participantsUserIds.concat();
+  const myIndex = participantsUserIds.indexOf(myUserId);
+  opponentIds.splice(myIndex, 1);
+  return opponentIds;
+}
+
+export function mapUserIdToName(
+  userId: string,
+  userIdToPhoneNumber: UserIdToPhoneNumber,
+  phoneNumberToContact: PhoneNumberToContact
+): string {
+  const phone: string = userIdToPhoneNumber[userId];
+  if (phone) {
+    const contact = phoneNumberToContact[phone];
+    if (contact) {
+      return contact.name;
+    }
+  }
+  return 'Unknown contact';
 }

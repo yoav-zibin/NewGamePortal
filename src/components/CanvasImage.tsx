@@ -25,6 +25,7 @@ interface CanvasImageProps extends KonvaNodeProps {
   rotation?: number;
   draggable?: boolean;
   onDragEnd?: (e: React.SyntheticEvent<{}>) => void;
+  // TODO: do not use ": any" anywhere.
   item?: any;
 }
 

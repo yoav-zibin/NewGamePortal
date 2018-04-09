@@ -47,7 +47,7 @@ const userInfo: MyUser = {
 const sigEntry: SignalEntry = {
   addedByUid: 'someId',
   timestamp: 1234,
-  signalType: 'sdp',
+  signalType: 'sdp1',
   signalData: 'some String'
 };
 
@@ -132,7 +132,7 @@ const initialState: StoreState = {
     {
       addedByUid: '7UbETkgeXxe0RId6KxYioSJdARs1',
       timestamp: 1234,
-      signalType: 'sdp',
+      signalType: 'sdp1',
       signalData: '3 Men Chess'
     }
   ]

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Contact } from '../types';
+import { Contact, RouterMatchParams } from '../types';
 import { MatchInfo } from '../types';
 import { List, ListItem } from 'material-ui/List';
 import Divider from 'material-ui/Divider';
@@ -9,9 +9,12 @@ import RaisedButton from 'material-ui/RaisedButton';
 import ContentAdd from 'material-ui/svg-icons/content/add';
 import AutoComplete from 'material-ui/AutoComplete';
 import { ourFirebase } from '../services/firebase';
+import { connect } from 'react-redux';
+import { StoreState } from '../types/index';
 import { History } from 'history';
+import { checkNotNull } from '../globals';
 
-const style = {
+const style: React.CSSProperties = {
   marginRight: 20
 };
 
@@ -24,11 +27,7 @@ interface Props {
   users: ContactWithUserId[];
   notUsers: Contact[];
   allUserNames: String[];
-  match: {
-    params: {
-      matchId: string;
-    };
-  };
+  match: RouterMatchParams;
   myUserId: string;
   history: History;
 }
@@ -54,24 +53,35 @@ class ContactsList extends React.Component<Props, {}> {
     console.log(dataSource.length);
   };
 
-  handleAddUser = () => {
-    let currentMatchId: String = this.props.match.params.matchId;
-    let currentMatch: MatchInfo;
-    this.props.matchesList.map((match: MatchInfo) => {
-      if (match.matchId === currentMatchId) {
-        currentMatch = match;
-        ourFirebase.addParticipant(currentMatch, this.props.myUserId);
-      }
-    });
-    this.props.history.push('/matches/' + currentMatchId);
+  getMatch = () => {
+    let currentMatchId: String = this.props.match.params.matchIdInRoute;
+    let currentMatch = this.props.matchesList.find(
+      match => match.matchId === currentMatchId
+    );
+    return checkNotNull(currentMatch)!;
   };
 
-  handleAddNotUser = () => {
+  handleAddUser = (userId: string) => {
+    console.log('Adding participant userId=', userId);
+    let currentMatch = this.getMatch();
+    ourFirebase.addParticipant(currentMatch, userId);
+    this.props.history.push('/matches/' + currentMatch.matchId);
+  };
+
+  handleAddNotUser = (contact: Contact) => {
     // todo: sent Sms
-    console.log(this.props.matchesList);
+    console.log('Sending SMS to ', contact);
   };
 
-  filterContacts(contacts: Contact[]) {
+  filterParticipants(contacts: ContactWithUserId[]): ContactWithUserId[] {
+    let participantsUserIds = this.getMatch().participantsUserIds;
+    // Filter out existing participants.
+    return contacts.filter(
+      contact => participantsUserIds.indexOf(contact.userId) === -1
+    );
+  }
+
+  filterContacts<T extends Contact>(contacts: T[]): T[] {
     return contacts.filter(
       contact => contact.name.indexOf(this.state.filterValue) !== -1
     );
@@ -91,35 +101,37 @@ class ContactsList extends React.Component<Props, {}> {
         />
         <List>
           <Subheader>Game User</Subheader>
-          {this.filterContacts(this.props.users).map((user: Contact) => (
-            <ListItem
-              key={user.phoneNumber}
-              primaryText={user.name}
-              rightIconButton={
-                <FloatingActionButton
-                  mini={true}
-                  style={style}
-                  onClick={this.handleAddUser}
-                >
-                  <ContentAdd />
-                </FloatingActionButton>
-              }
-            />
-          ))}
+          {this.filterParticipants(this.filterContacts(this.props.users)).map(
+            (user: ContactWithUserId) => (
+              <ListItem
+                key={user.phoneNumber}
+                primaryText={user.name}
+                rightIconButton={
+                  <FloatingActionButton
+                    mini={true}
+                    style={style}
+                    onClick={() => this.handleAddUser(user.userId)}
+                  >
+                    <ContentAdd />
+                  </FloatingActionButton>
+                }
+              />
+            )
+          )}
         </List>
         <Divider />
         <List>
           <Subheader>Not Game User</Subheader>
-          {this.filterContacts(this.props.notUsers).map((user: Contact) => (
+          {this.filterContacts(this.props.notUsers).map((contact: Contact) => (
             <ListItem
-              key={user.phoneNumber}
-              primaryText={user.name}
+              key={contact.phoneNumber}
+              primaryText={contact.name}
               rightIconButton={
                 <RaisedButton
                   label="invite"
                   primary={true}
                   style={style}
-                  onClick={this.handleAddNotUser}
+                  onClick={() => this.handleAddNotUser(contact)}
                 />
               }
             />
@@ -129,9 +141,6 @@ class ContactsList extends React.Component<Props, {}> {
     );
   }
 }
-
-import { connect } from 'react-redux';
-import { StoreState } from '../types/index';
 
 const mapStateToProps = (state: StoreState) => {
   const users: ContactWithUserId[] = [];
@@ -163,7 +172,4 @@ const mapStateToProps = (state: StoreState) => {
     myUserId: state.myUser.myUserId
   };
 };
-// Later this will take dispatch: any as argument
-const mapDispatchToProps = () => ({});
-
-export default connect(mapStateToProps, mapDispatchToProps)(ContactsList);
+export default connect(mapStateToProps)(ContactsList);

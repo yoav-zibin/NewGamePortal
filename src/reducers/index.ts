@@ -8,7 +8,8 @@ import {
   UserIdsAndPhoneNumbers,
   SignalEntry,
   IdIndexer,
-  MyUser
+  MyUser,
+  MatchState
 } from '../types';
 import { storeStateDefault } from '../stores/defaults';
 import { checkCondition } from '../globals';
@@ -25,8 +26,7 @@ export interface Action {
   updateUserIdsAndPhoneNumbers?: UserIdsAndPhoneNumbers;
   setMyUser?: MyUser;
   setSignals?: SignalEntry[];
-  resetStoreToDefaults?: null;
-  createMatch?: null;
+  restoreOldStore?: StoreState;
 }
 
 export function mergeMaps<T>(
@@ -36,34 +36,18 @@ export function mergeMaps<T>(
   return Object.assign(original, updateWithEntries);
 }
 
-/*
-function checkUserIdsAndPhoneNumbers(state: StoreState) {
-  const userIdsAndPhoneNumbers = state.userIdsAndPhoneNumbers;
+export function checkMatchStateInStore(
+  matchState: MatchState,
+  gameSpecId: string,
+  state: StoreState
+) {
+  // We load the matches, and then we load their game specs, so it's possible we don't have a spec yet.
+  const spec = state.gameSpecs.gameSpecIdToGameSpec[gameSpecId];
   checkCondition(
-    'UserIdsAndPhoneNumbers',
-    // UserIdsAndPhoneNumbers have two mappings that are exactly the reverse of each other
-    checkEqual(
-      Object.keys(userIdsAndPhoneNumbers.phoneNumberToUserId),
-      getValues(userIdsAndPhoneNumbers.userIdToPhoneNumber)
-    ) &&
-      checkEqual(
-        Object.keys(userIdsAndPhoneNumbers.userIdToPhoneNumber),
-        getValues(userIdsAndPhoneNumbers.phoneNumberToUserId)
-      )
+    '#pieces',
+    matchState.length === 0 || !spec || matchState.length === spec.pieces.length
   );
 }
-function checkEqual(x: string[], y: string[]) {
-  if (x.length !== y.length) {
-    return false;
-  }
-  for (var i = 0; i < x.length; i++) {
-    if (x[i] !== y[i]) {
-      return false;
-    }
-  }
-  return true;
-}
-*/
 
 function checkStoreInvariants(state: StoreState) {
   state.matchesList.forEach(match => {
@@ -71,24 +55,15 @@ function checkStoreInvariants(state: StoreState) {
       'I play in match',
       match.participantsUserIds.indexOf(state.myUser.myUserId) !== -1
     );
-    checkCondition(
-      'matchState',
-      match.matchState.length === 0 ||
-        match.matchState.length ===
-          state.gameSpecs.gameSpecIdToGameSpec[match.gameSpecId].pieces.length
-    );
+    checkMatchStateInStore(match.matchState, match.gameSpecId, state);
   });
-
-  // This condition fails for us when we use fake phone numbers for testing
-  // (because the same phoneNumber can map to many userIds).
-  // checkUserIdsAndPhoneNumbers(state);
 }
 
 function reduce(state: StoreState, action: Action) {
   if (undefined !== action.setGamesList) {
     return { ...state, gamesList: action.setGamesList };
-  } else if (undefined !== action.resetStoreToDefaults) {
-    return storeStateDefault;
+  } else if (undefined !== action.restoreOldStore) {
+    return action.restoreOldStore;
   } else if (undefined !== action.setMatchesList) {
     let { matchesList, ...rest } = state;
     return {

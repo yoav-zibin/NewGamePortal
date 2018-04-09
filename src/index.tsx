@@ -12,15 +12,37 @@ import { ourFirebase } from './services/firebase';
 import { Contact, PhoneNumberToContact } from './types';
 import * as Raven from 'raven-js';
 
+function reactRender() {
+  document.getElementById('loadingSpinner')!.style.display = 'none';
+  ReactDOM.render(
+    <MuiThemeProvider>
+      <Provider store={store}>
+        <BrowserRouter
+          basename={
+            location.hostname === 'yoav-zibin.github.io' ? 'NewGamePortal' : '/'
+          }
+        >
+          <div>
+            <Route path="/" component={App} />
+          </div>
+        </BrowserRouter>
+      </Provider>
+    </MuiThemeProvider>,
+    document.getElementById('root') as HTMLElement
+  );
+}
+
 // TODO: setup release tags using sentry-cli, see https://docs.sentry.io/learn/releases/
 Raven.config('https://efc65f7e50c14bd9a3482e2ad2ae3b9d@sentry.io/939406', {
   release: 'v0.1'
 }).install();
 
-document.getElementById('loadingSpinner')!.style.display = 'none';
-
 console.log('Page init with parameters:', window.location.search);
-if (window.location.search.length > 0) {
+ourFirebase.init();
+registerServiceWorker();
+
+if (window.location.search.match('^[?][0-9]$')) {
+  const myUserIndex = Number(window.location.search.substr(1));
   // These phone numbers are also in our firebase rules (so we can do testing).
   const testUsers: Contact[] = [];
   for (let i = 0; i < 10; i++) {
@@ -64,37 +86,17 @@ if (window.location.search.length > 0) {
       name: 'Yiwei Wu'
     }
   ];
-  ourFirebase.init();
-  const myUserIndex = window.location.search
-    ? Number(window.location.search.substr(1))
-    : 0;
   const myUser = testUsers[myUserIndex] || testUsers[0];
   console.log('My fake user is: ', myUser);
-  ourFirebase.signInAnonymously(myUser.phoneNumber).then(() => {
-    const userId = ourFirebase.getUserId();
-    console.warn('Signed in anonymously, userId=', userId, ' myUser=', myUser);
-    let currentContacts: PhoneNumberToContact = {};
-    for (let contact of testUsers.concat(realUsers)) {
-      currentContacts[contact.phoneNumber] = contact;
-    }
-    ourFirebase.storeContacts(currentContacts);
-  });
+  ourFirebase.signInAnonymously(myUser.phoneNumber);
+
+  let currentContacts: PhoneNumberToContact = {};
+  for (let contact of testUsers.concat(realUsers)) {
+    currentContacts[contact.phoneNumber] = contact;
+  }
+  ourFirebase.storeContacts(currentContacts);
 }
 
-ReactDOM.render(
-  <MuiThemeProvider>
-    <Provider store={store}>
-      <BrowserRouter
-        basename={
-          location.hostname === 'yoav-zibin.github.io' ? 'NewGamePortal' : '/'
-        }
-      >
-        <div>
-          <Route path="/" component={App} />
-        </div>
-      </BrowserRouter>
-    </Provider>
-  </MuiThemeProvider>,
-  document.getElementById('root') as HTMLElement
-);
-registerServiceWorker();
+// Give 500ms for onAuthStateChanged in firebase.ts to load the cookies and log in the user
+// (so we won't see the login screen flashed and redirect to '/')
+setTimeout(reactRender, 500);

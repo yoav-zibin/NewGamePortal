@@ -1,3 +1,12 @@
+import { CSSProperties } from 'react';
+
+export type PlatformType = 'ios' | 'android' | 'web' | 'tests';
+export interface RouterMatchParams {
+  params: {
+    matchIdInRoute: string;
+  };
+}
+
 export interface StoreState {
   gamesList: GameInfo[];
 
@@ -38,6 +47,8 @@ export interface IdIndexer<T> {
 }
 export type StringIndexer = IdIndexer<string>;
 export type BooleanIndexer = IdIndexer<boolean>;
+export type CSSPropertiesIndexer = IdIndexer<CSSProperties>;
+export type AnyIndexer = IdIndexer<any>;
 
 export interface PhoneNumberToContact extends IdIndexer<Contact> {
   [phoneNumber: string]: Contact;
@@ -72,6 +83,11 @@ export type MatchState = PieceState[];
 export interface Contact {
   phoneNumber: string; // Must match /^[+][0-9]{5,20}$/
   name: string;
+}
+
+export interface Opponent {
+  name: string;
+  userId: string;
 }
 
 export interface Image {

@@ -1,20 +1,17 @@
 import * as React from 'react';
-// import AppBar from 'material-ui/AppBar';
 import { connect } from 'react-redux';
-import { StoreState } from '../types/index';
-// import { ourFirebase } from '../services/firebase';
+import { StoreState, CSSPropertiesIndexer } from '../types/index';
 
 import { MatchInfo, UserIdToPhoneNumber, PhoneNumberToContact } from '../types';
-// import { GridList, GridTile } from 'material-ui/GridList';
 import FloatingActionButton from 'material-ui/FloatingActionButton';
 import ContentAdd from 'material-ui/svg-icons/content/add';
 
 import { List, ListItem } from 'material-ui/List';
-// import ActionGrade from 'material-ui/svg-icons/action/grade';
 import Avatar from 'material-ui/Avatar';
 import { Link } from 'react-router-dom';
+import { getOpponents } from '../globals';
 
-const styles: any = {
+const styles: CSSPropertiesIndexer = {
   root: {
     display: 'flex',
     flexWrap: 'wrap',
@@ -41,14 +38,33 @@ const styles: any = {
 
 interface Props {
   matchesList: MatchInfo[];
+  myUserId: string;
   userIdToPhoneNumber: UserIdToPhoneNumber;
   phoneNumberToContact: PhoneNumberToContact;
 }
 
 class MatchesList extends React.Component<Props, {}> {
-  style = {
+  style: React.CSSProperties = {
     textDecoration: 'None'
   };
+
+  getOpponentNames(participantsUserIds: string[]) {
+    if (participantsUserIds.length === 1) {
+      return '';
+    }
+    return (
+      ' with ' +
+      getOpponents(
+        participantsUserIds,
+        this.props.myUserId,
+        this.props.userIdToPhoneNumber,
+        this.props.phoneNumberToContact
+      )
+        .map(opponent => opponent.name)
+        .join(' ')
+    );
+  }
+
   render() {
     return (
       <div>
@@ -69,25 +85,8 @@ class MatchesList extends React.Component<Props, {}> {
                   secondaryText={
                     'Last played ' +
                     timeSince(tile.lastUpdatedOn) +
-                    ' ago with ' +
-                    // FIXME: The store doesn't have values for phoneNumberToContact and
-                    // userIdToPhoneNumber, so it throws an undefined error.
-                    tile.participantsUserIds.reduce(
-                      (accum: string, userId: string) => {
-                        const phone: string = this.props.userIdToPhoneNumber[
-                          userId
-                        ];
-                        if (phone) {
-                          const name: string = this.props.phoneNumberToContact[
-                            phone
-                          ].name;
-                          return (accum += name + ' ');
-                        } else {
-                          return (accum += 'Unidentified User ');
-                        }
-                      },
-                      ''
-                    )
+                    ' ago' +
+                    this.getOpponentNames(tile.participantsUserIds)
                   }
                   rightAvatar={
                     <Avatar
@@ -100,6 +99,7 @@ class MatchesList extends React.Component<Props, {}> {
             ))}
           </List>
         </div>
+        /* TODO: do NOT use href! */
         <FloatingActionButton style={styles.button} href="/addMatch">
           <ContentAdd />
         </FloatingActionButton>
@@ -137,10 +137,7 @@ function timeSince(date: number) {
 const mapStateToProps = (state: StoreState) => ({
   matchesList: state.matchesList,
   userIdToPhoneNumber: state.userIdsAndPhoneNumbers.userIdToPhoneNumber,
-  phoneNumberToContact: state.phoneNumberToContact
+  phoneNumberToContact: state.phoneNumberToContact,
+  myUserId: state.myUser.myUserId
 });
-
-// Later this will take dispatch: any as argument
-const mapDispatchToProps = () => ({});
-
-export default connect(mapStateToProps, mapDispatchToProps)(MatchesList);
+export default connect(mapStateToProps)(MatchesList);

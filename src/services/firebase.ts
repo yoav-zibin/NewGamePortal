@@ -1,4 +1,4 @@
-import { store, dispatch } from '../stores';
+import { store, dispatch, persistedOldStore } from '../stores';
 import * as firebase from 'firebase';
 import * as Raven from 'raven-js';
 import {
@@ -25,9 +25,10 @@ import {
   Piece,
   GameSpecIdToGameSpec,
   GameSpecs,
-  PieceState
+  PieceState,
+  AnyIndexer
 } from '../types';
-import { Action } from '../reducers';
+import { Action, checkMatchStateInStore } from '../reducers';
 
 // All interactions with firebase must be in this module.
 export namespace ourFirebase {
@@ -35,8 +36,20 @@ export namespace ourFirebase {
   // I.e., we can't have any state/variables/etc that is used externally.
   let calledFunctions: BooleanIndexer = {};
   function checkFunctionIsCalledOnce(functionName: string) {
+    console.log('Calling ', functionName);
     checkCondition('checkFunctionIsCalledOnce', !calledFunctions[functionName]);
     calledFunctions[functionName] = true;
+  }
+
+  // Stores my contacts in firebase and eventually dispatches updateUserIdsAndPhoneNumbers.
+  // storeContacts can be called even before the login finished.
+  let contactsToBeStored: PhoneNumberToContact | null = null;
+  export function storeContacts(currentContacts: PhoneNumberToContact) {
+    checkFunctionIsCalledOnce('storeContacts');
+    contactsToBeStored = currentContacts;
+    if (currentUser()) {
+      storeContactsAfterLogin();
+    }
   }
 
   // Call init exactly once to connect to firebase.
@@ -52,10 +65,19 @@ export namespace ourFirebase {
       messagingSenderId: '144595629077'
     };
     firebase.initializeApp(testConfig ? testConfig : config);
+    firebase.auth().onAuthStateChanged(user => {
+      console.log('onAuthStateChanged: hasUser=', !!user);
+      if (user) {
+        postLogin();
+        if (contactsToBeStored) {
+          storeContactsAfterLogin();
+        }
+      }
+    });
   }
 
   // See https://firebase.google.com/docs/auth/web/phone-auth
-  let myCountryCode = '';
+  let myCountryCodeForSignInWithPhoneNumber = '';
   export function signInWithPhoneNumber(
     phoneNumber: string,
     countryCode: string,
@@ -63,9 +85,7 @@ export namespace ourFirebase {
   ): Promise<any> {
     checkFunctionIsCalledOnce('signInWithPhoneNumber');
     checkCondition('countryCode', countryCode.length === 2);
-    myCountryCode = countryCode;
-    // Eventually call writeUser.
-    // TODO: set recaptcha
+    myCountryCodeForSignInWithPhoneNumber = countryCode;
     return firebase
       .auth()
       .signInWithPhoneNumber(phoneNumber, applicationVerifier);
@@ -75,43 +95,86 @@ export namespace ourFirebase {
     return <number>firebase.database.ServerValue.TIMESTAMP;
   }
 
+  let phoneNumberForSignInAnonymously: string = '';
+  let resolveAfterLoginForTests: (() => void) | null = null;
+  export let allPromisesForTests: Promise<any>[] | null = null;
   export function signInAnonymously(phoneNumberForTest: string) {
-    return firebase
-      .auth()
-      .signInAnonymously()
-      .then(() => {
-        writeUser(phoneNumberForTest);
-      });
+    phoneNumberForSignInAnonymously = phoneNumberForTest;
+    addPromiseForTests(firebase.auth().signInAnonymously());
+    if (allPromisesForTests) {
+      allPromisesForTests.push(
+        new Promise(resolve => {
+          console.log('Setting resolveAfterLoginForTests');
+          resolveAfterLoginForTests = resolve;
+        })
+      );
+    }
   }
 
-  export function writeUser(overridePhoneNumberForTest: string = '') {
-    checkFunctionIsCalledOnce('writeUser');
+  // Function is called after the user is logged in, which can happen either
+  // after the login screen (calling signIn* method) or because of cookies.
+  function postLogin() {
+    checkFunctionIsCalledOnce('postLogin');
     const user = assertLoggedIn();
     const uid = user.uid;
-    if (uid !== store.getState().myUser.myUserId) {
-      dispatch({ resetStoreToDefaults: null });
+    if (persistedOldStore && uid === persistedOldStore.myUser.myUserId) {
+      dispatch({ restoreOldStore: persistedOldStore });
     }
-    const phoneNumber = user.phoneNumber
-      ? user.phoneNumber
-      : overridePhoneNumberForTest;
-    if (!user.phoneNumber) {
+    if (phoneNumberForSignInAnonymously) {
       user.updateProfile({
         displayName: 'Anonymous Test user',
         photoURL: null
       });
     }
+    const phoneNumber = user.phoneNumber
+      ? user.phoneNumber
+      : phoneNumberForSignInAnonymously;
+
+    Raven.setUserContext({
+      phoneNumber: phoneNumber,
+      countryCode: myCountryCodeForSignInWithPhoneNumber,
+      userId: uid
+    });
+
+    // We update fields only after calling signIn* method.
+    if (
+      phoneNumberForSignInAnonymously ||
+      myCountryCodeForSignInWithPhoneNumber
+    ) {
+      updatePrivateFieldsAfterLogin(uid, phoneNumber);
+    }
+
+    dispatch({
+      setMyUser: {
+        myUserId: uid,
+        myCountryCode: myCountryCodeForSignInWithPhoneNumber,
+        myPhoneNumber: phoneNumber
+      }
+    });
+    // I can only listen to matches after I got the games list (because I convert gameSpecId to gameInfo).
+    const canListToMatches = store.getState().gamesList.length > 0;
+    if (canListToMatches) {
+      listenToMyMatchesList();
+    }
+    fetchGamesList().then(() => {
+      if (!canListToMatches) {
+        listenToMyMatchesList();
+      }
+    });
+    listenToSignals();
+    if (resolveAfterLoginForTests) {
+      resolveAfterLoginForTests();
+    }
+  }
+
+  function updatePrivateFieldsAfterLogin(uid: string, phoneNumber: string) {
     const userFbr: fbr.PrivateFields = {
       createdOn: getTimestamp(), // It's actually "last logged in on timestamp"
       fcmTokens: {},
       contacts: {},
       phoneNumber: phoneNumber,
-      countryCode: myCountryCode
+      countryCode: myCountryCodeForSignInWithPhoneNumber
     };
-    Raven.setUserContext({
-      phoneNumber: phoneNumber,
-      countryCode: myCountryCode,
-      userId: uid
-    });
     // I don't want to update these.
     delete userFbr.fcmTokens;
     delete userFbr.contacts;
@@ -131,25 +194,6 @@ export namespace ourFirebase {
         phoneNumberFbr
       );
     }
-
-    dispatch({
-      setMyUser: {
-        myUserId: uid,
-        myCountryCode: myCountryCode,
-        myPhoneNumber: phoneNumber
-      }
-    });
-    // I can only listen to matches after I got the games list (because I convert gameSpecId to gameInfo).
-    const canListToMatches = store.getState().gamesList.length > 0;
-    if (canListToMatches) {
-      listenToMyMatchesList();
-    }
-    fetchGamesList().then(() => {
-      if (!canListToMatches) {
-        listenToMyMatchesList();
-      }
-    });
-    listenToSignals();
   }
 
   export function checkPhoneNum(phoneNum: string) {
@@ -484,7 +528,7 @@ export namespace ourFirebase {
   export function updateMatchState(match: MatchInfo) {
     const matchState: MatchState = match.matchState;
     checkCondition('updateMatchState', matchState.length > 0);
-    const updates: any = {};
+    const updates: AnyIndexer = {};
     updates['pieces'] = convertMatchStateToPiecesState(
       matchState,
       match.gameSpecId
@@ -497,19 +541,14 @@ export namespace ourFirebase {
   export function updatePieceState(match: MatchInfo, pieceIndex: number) {
     console.log('updatePieceState');
     const pieceState: PieceState = match.matchState[pieceIndex];
-    const updates: any = {};
+    const updates: AnyIndexer = {};
     updates[`pieces/${pieceIndex}`] = convertPieceState(pieceState);
     updates['lastUpdatedOn'] = getTimestamp();
     refUpdate(getRef(`/gamePortal/matches/${match.matchId}`), updates);
   }
 
   export function checkMatchState(matchState: MatchState, gameSpecId: string) {
-    checkCondition(
-      '#pieces',
-      matchState.length ===
-        store.getState().gameSpecs.gameSpecIdToGameSpec[gameSpecId].pieces
-          .length
-    );
+    checkMatchStateInStore(matchState, gameSpecId, store.getState());
   }
 
   function convertPiecesStateToMatchState(
@@ -575,9 +614,12 @@ export namespace ourFirebase {
     );
   }
 
-  // Stores my contacts in firebase and eventually dispatches updateUserIdsAndPhoneNumbers.
-  export function storeContacts(currentContacts: PhoneNumberToContact) {
-    checkFunctionIsCalledOnce('storeContacts');
+  function storeContactsAfterLogin() {
+    const uid = getUserId();
+    const currentContacts = checkCondition(
+      'contactsToBeStored',
+      contactsToBeStored!
+    );
     const currentPhoneNumbers = Object.keys(currentContacts);
     currentPhoneNumbers.forEach(phoneNumber => checkPhoneNum(phoneNumber));
     // Max contactName is 20 chars
@@ -600,7 +642,7 @@ export namespace ourFirebase {
     );
     mapPhoneNumbersToUserIds(numbersWithoutUserId);
 
-    const updates: any = {};
+    const updates: AnyIndexer = {};
     const oldContacts = state.phoneNumberToContact;
     currentPhoneNumbers.forEach(phoneNumber => {
       const currentContact = currentContacts[phoneNumber];
@@ -613,9 +655,7 @@ export namespace ourFirebase {
     });
     if (Object.keys(updates).length > 0) {
       refUpdate(
-        getRef(
-          `/gamePortal/gamePortalUsers/${getUserId()}/privateFields/contacts`
-        ),
+        getRef(`/gamePortal/gamePortalUsers/${uid}/privateFields/contacts`),
         updates
       );
     }
@@ -675,7 +715,7 @@ export namespace ourFirebase {
       }
       // We start with the old signals and add to them.
       let signals: SignalEntry[] = store.getState().signals;
-      let updates: any = {};
+      let updates: AnyIndexer = {};
       Object.keys(signalsFbr).forEach(entryId => {
         updates[entryId] = null;
         const signalFbr: fbr.SignalEntry = signalsFbr[entryId];
@@ -700,7 +740,7 @@ export namespace ourFirebase {
 
   export function sendSignal(
     toUserId: string,
-    signalType: 'sdp' | 'candidate',
+    signalType: 'sdp1' | 'sdp2' | 'candidate',
     signalData: string
   ) {
     checkCondition('sendSignal', signalData.length < 10000);
@@ -734,8 +774,6 @@ export namespace ourFirebase {
     );
   }
 
-  export let allPromisesForTests: Promise<any>[] | null = null;
-
   function addPromiseForTests(promise: Promise<any>) {
     if (allPromisesForTests) {
       allPromisesForTests.push(promise);
@@ -747,7 +785,7 @@ export namespace ourFirebase {
     addPromiseForTests(ref.set(val, getOnComplete(ref, val)));
   }
 
-  function refUpdate(ref: firebase.database.Reference, val: any) {
+  function refUpdate(ref: firebase.database.Reference, val: AnyIndexer) {
     // console.log('refUpdate', ref.toString(), " val=", prettyJson(val));
     addPromiseForTests(ref.update(val, getOnComplete(ref, val)));
   }

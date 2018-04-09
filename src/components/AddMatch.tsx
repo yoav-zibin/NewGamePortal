@@ -6,14 +6,16 @@ import GamesList from './GamesList';
 import { connect } from 'react-redux';
 import { StoreState } from '../types/index';
 import { ourFirebase } from '../services/firebase';
+import { History } from 'history';
 
-const style: any = {
+const style: React.CSSProperties = {
   display: 'block',
   margin: '0 auto'
 };
 
 interface Props {
   gamesList: GameInfo[];
+  history: History;
 }
 
 class AddMatches extends React.Component<Props, {}> {
@@ -22,10 +24,15 @@ class AddMatches extends React.Component<Props, {}> {
     console.log('CHOSEN GAME:', chosenGame, index);
     this.props.gamesList.forEach((game: GameInfo) => {
       if (game.gameName === chosenGame) {
-        let matchId = ourFirebase.createMatch(game).matchId;
-        window.location.href = '/matches/' + matchId;
+        this.createMatch(game);
       }
     });
+  };
+
+  createMatch = (game: GameInfo) => {
+    let matchId = ourFirebase.createMatch(game).matchId;
+    console.log('createMatch matchId=', matchId);
+    this.props.history.push('/matches/' + matchId);
   };
 
   render() {
@@ -39,7 +46,7 @@ class AddMatches extends React.Component<Props, {}> {
           style={style}
           onNewRequest={this.onNewRequest}
         />
-        <GamesList />
+        <GamesList createMatch={g => this.createMatch(g)} />
       </div>
     );
   }
@@ -48,8 +55,4 @@ class AddMatches extends React.Component<Props, {}> {
 const mapStateToProps = (state: StoreState) => ({
   gamesList: state.gamesList
 });
-
-// Later this will take dispatch: any as argument
-const mapDispatchToProps = () => ({});
-
-export default connect(mapStateToProps, mapDispatchToProps)(AddMatches);
+export default connect(mapStateToProps)(AddMatches);

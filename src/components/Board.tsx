@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Layer, Stage } from 'react-konva';
-import { MatchInfo, GameSpecs, GameSpec } from '../types';
+import { MatchInfo, GameSpec } from '../types';
 import CanvasImage from './CanvasImage';
 import {
   // AppBar,
@@ -17,19 +17,14 @@ import { MatchStateHelper } from '../services/matchStateHelper';
 
 interface BoardProps {
   myUserId: string;
-  matchesList: MatchInfo[];
-  gameSpecs: GameSpecs;
-  match: {
-    params: {
-      matchId: string;
-    };
-  };
+  gameSpec: GameSpec;
+  matchInfo: MatchInfo;
 }
 
 interface BoardState {
   showCardOptions: boolean;
-  // TODO REMOVE
-  showTooltip: boolean;
+  innerWidth: number;
+  innerHeight: number;
 }
 
 /**
@@ -41,8 +36,6 @@ class Board extends React.Component<BoardProps, BoardState> {
   // TODO CARD
   selectedPieceIndex: number;
   selfParticipantIndex: number;
-  // TODO MAYBE REMOVE?
-  participantNames: string[];
   tooltipPosition: {
     x: number;
     y: number;
@@ -50,62 +43,70 @@ class Board extends React.Component<BoardProps, BoardState> {
   matchInfo: MatchInfo;
   gameSpec: GameSpec;
   helper: MatchStateHelper;
-  // TODO change to function
-  isDeck: boolean[];
+  throttled: boolean;
+  delay: number;
 
   constructor(props: BoardProps) {
     super(props);
     this.state = {
       showCardOptions: false,
-      showTooltip: false
+      innerHeight: window.innerHeight,
+      innerWidth: window.innerWidth
     };
-    // TODO change to new for loop
-    for (let i = 0; i < this.props.matchesList.length; i++) {
-      if (
-        this.props.match.params.matchId === this.props.matchesList[i].matchId
-      ) {
-        this.matchInfo = this.props.matchesList[i];
-        this.gameSpec = this.props.gameSpecs.gameSpecIdToGameSpec[
-          this.matchInfo.gameSpecId
-        ];
+    this.tooltipPosition = {
+      x: 0,
+      y: 0
+    };
 
-        if (this.gameSpec) {
-          this.helper = new MatchStateHelper(this.matchInfo);
-        }
-      }
-    }
-    this.participantNames = this.matchInfo.participantsUserIds;
-    this.selfParticipantIndex = this.participantNames.indexOf(
+    this.matchInfo = this.props.matchInfo;
+    this.gameSpec = this.props.gameSpec;
+    this.selfParticipantIndex = this.matchInfo.participantsUserIds.indexOf(
       this.props.myUserId
     );
-    let isDeckTemp: boolean[] = [];
-    for (let i = 0; i < this.gameSpec.pieces.length; i++) {
-      if (this.gameSpec.pieces[i].deckPieceIndex === -1) {
-        isDeckTemp[i] = false;
-      } else {
-        isDeckTemp[i] = true;
-      }
-    }
-    this.isDeck = isDeckTemp;
+    this.helper = new MatchStateHelper(this.matchInfo);
+
+    // for throttling window resize event
+    this.throttled = false;
   }
 
-  // TODO move this all to PlayingScreen
-  componentDidUpdate() {
-    for (let i = 0; i < this.props.matchesList.length; i++) {
-      if (
-        this.props.match.params.matchId === this.props.matchesList[i].matchId
-      ) {
-        this.matchInfo = this.props.matchesList[i];
-        this.gameSpec = this.props.gameSpecs.gameSpecIdToGameSpec[
-          this.matchInfo.gameSpecId
-        ];
-        this.helper = new MatchStateHelper(this.matchInfo);
-      }
+  // resize the board (also for correctly displaying on mobile)
+  componentDidMount() {
+    window.addEventListener('resize', () => {
+      this.handleResize();
+    });
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('resize', () => {
+      this.handleResize();
+    });
+  }
+
+  handleResize() {
+    if (!this.throttled) {
+      this.getDimensions();
+      this.throttled = true;
+      setTimeout(() => (this.throttled = false), 250);
     }
-    this.participantNames = this.matchInfo.participantsUserIds;
-    this.selfParticipantIndex = this.participantNames.indexOf(
-      this.props.myUserId
-    );
+  }
+
+  getDimensions() {
+    this.setState({
+      innerWidth: window.innerWidth,
+      innerHeight: window.innerHeight
+    });
+  }
+
+  // check if a card belongs to a deck
+  isDeck(index: number | undefined) {
+    if (index === undefined) {
+      return false;
+    }
+    if (this.gameSpec.pieces[index].deckPieceIndex === -1) {
+      return false;
+    } else {
+      return true;
+    }
   }
 
   // cycles through the images of each piece
@@ -136,16 +137,20 @@ class Board extends React.Component<BoardProps, BoardState> {
     let position = (this.refs[
       'canvasImage' + index
     ] as CanvasImage).imageNode.getAbsolutePosition();
-    console.log(position);
 
-    let width = this.gameSpec.board.width;
-    let height = this.gameSpec.board.height;
-    let x = position.x / width * 100;
-    let y = position.y / height * 100;
+    const width = this.gameSpec.board.width;
+    const height = this.gameSpec.board.height;
+    const ratio = Math.min(
+      this.state.innerWidth / width,
+      this.state.innerHeight / height
+    );
 
+    const x = position.x / ratio / width * 100;
+    const y = position.y / ratio / height * 100;
+
+    console.log(x, y);
     const match: MatchInfo = this.matchInfo;
     this.helper.dragTo(index, x, y);
-    console.log(match);
     ourFirebase.updatePieceState(match, index);
   };
 
@@ -170,39 +175,10 @@ class Board extends React.Component<BoardProps, BoardState> {
     console.log('card hide to everyone:', index);
   }
 
-  toggleTooltip(refString: string | null, index: number | null) {
-    // TODO combine these conditions
-    if (refString === null || index === null) {
-      // clicked on the board
-      this.selectedPieceIndex = -1;
-      this.setState({ showTooltip: false });
-      return;
-    } else if (this.selectedPieceIndex === index) {
-      // clicked on the same card
-      this.selectedPieceIndex = -1;
-      this.setState({ showTooltip: false });
-      return;
-    }
-
-    this.selectedPieceIndex = index;
-    let position = (this.refs[
-      refString
-    ] as CanvasImage).imageNode.getAbsolutePosition();
-    this.tooltipPosition = {
-      x: position.x,
-      y: position.y
-    };
-    this.setState({
-      showCardOptions: false,
-      showTooltip: true
-    });
-  }
-
   toggleCardOptions(refString: string, cardIndex: number) {
     if (this.selectedPieceIndex === cardIndex) {
-      this.setState({
-        showCardOptions: false
-      });
+      // if we click on an already selected piece, hide the tooltip
+      this.hideCardOptions();
     } else {
       this.selectedPieceIndex = cardIndex;
       let position = (this.refs[
@@ -213,51 +189,45 @@ class Board extends React.Component<BoardProps, BoardState> {
         y: position.y
       };
       this.setState({
-        showTooltip: false,
         showCardOptions: true
       });
     }
   }
 
+  hideCardOptions() {
+    this.selectedPieceIndex = -1;
+    this.setState({
+      showCardOptions: false
+    });
+  }
+
+  // TODO: the UI should show cards that are visible to you always at higher z-indices than
+  // cards that aren't visible to you, i.e., have two layers for pieces: one that
+  // is for cards that aren't visible to you and one for everything else.
+  // E.g., suppose that card A isn't visible to you and it has zDepth=10, and card B
+  // that is visible to you with zDepth=9, and they are both with the same x & y.
+  // If there is just one layer for pieces, then if you drag the card from that x&y then it would drag the piece with
+  // the highest zDepth (so card A).
+  // But if we use two layers for pieces, then card A will be in one layer and card B
+  // in another layer (that is above the first layer), so dragging will correctly pick card A.
+
   render() {
-    if (!this.gameSpec) {
-      let gameSpecScreenShot = this.matchInfo.game.screenShot.downloadURL;
-      let screenShotWidth = this.matchInfo.game.screenShot.width;
-      let screenShotHeight = this.matchInfo.game.screenShot.height;
-      let screenShotLayer = (
-        <CanvasImage
-          height={screenShotHeight}
-          width={screenShotWidth}
-          src={gameSpecScreenShot}
-        />
-      );
-      // TODO show a spinner over the screenshot
-      return (
-        <>
-          {/* <AppBar
-            showMenuIconButton={false}
-            title={
-              <span>Match: {this.matchInfo.game.gameName} (No game spec)</span>
-            }
-          /> */}
-          <div>The Gamespec has not been loaded.</div>
-          <Stage width={screenShotWidth} height={screenShotHeight}>
-            <Layer ref={() => 'screenShotLayer'}>{screenShotLayer}</Layer>
-          </Stage>
-        </>
-      );
-    }
     // TODO: Complete layer for board
     let boardImage = this.gameSpec.board.downloadURL;
     // TODO: handle resizing so everything fits in the screen
-    let width = this.gameSpec.board.width;
-    let height = this.gameSpec.board.height;
+    const width = this.gameSpec.board.width;
+    const height = this.gameSpec.board.height;
+    const ratio = Math.min(
+      this.state.innerWidth / width,
+      this.state.innerHeight / height
+    );
+
     let boardLayer = (
       <CanvasImage
-        height={height}
-        width={width}
+        height={height * ratio}
+        width={width * ratio}
         src={boardImage}
-        // onClick={() => this.toggleTooltip(null, null)}
+        onClick={() => this.hideCardOptions()}
       />
     );
 
@@ -290,27 +260,22 @@ class Board extends React.Component<BoardProps, BoardState> {
           key={index}
           draggable={pieceSpec.element.isDraggable || kind === 'standard'}
           onClick={() => {
-            console.log('Piece left clicked!' + index);
             if (kind === 'toggable') {
               this.togglePiece(index);
             } else if (kind === 'dice') {
               this.rollDice(index);
             } else if (kind === 'card') {
               this.toggleCardOptions('canvasImage' + index, index);
-            } else {
-              this.toggleTooltip('canvasImage' + index, index);
             }
           }}
-          height={
-            pieceSpec.element.height * height / this.gameSpec.board.height
-          }
-          width={pieceSpec.element.width * width / this.gameSpec.board.width}
-          x={piece.x * width / 100}
-          y={piece.y * height / 100}
+          height={pieceSpec.element.height * ratio}
+          width={pieceSpec.element.width * ratio}
+          x={piece.x * width / 100 * ratio}
+          y={piece.y * height / 100 * ratio}
           src={imageSrc}
-          //   onDragStart={() => {
-          //     this.toggleTooltip(null, null);
-          //   }}
+          onDragStart={() => {
+            this.hideCardOptions();
+          }}
           onDragEnd={() => {
             this.handleDragEnd(index);
           }}
@@ -318,121 +283,75 @@ class Board extends React.Component<BoardProps, BoardState> {
       );
     });
 
-    // TODO make sure it's 40x40px and the background is white
     let toolTipLayer = (
-      <>
-        {this.state.showTooltip ? (
-          <IconMenu
-            iconButtonElement={
-              <IconButton>
-                <MoreVertIcon />
-              </IconButton>
-            }
-            anchorOrigin={{ horizontal: 'left', vertical: 'top' }}
-            targetOrigin={{ horizontal: 'left', vertical: 'top' }}
-            className="my-tooltip"
-            style={{
-              left: this.tooltipPosition.x,
-              top: this.tooltipPosition.y,
-              position: 'absolute',
-              zIndex: 100
-            }}
-          >
-            {Object.keys(this.matchInfo.matchState).map((name, index) => {
-              return (
-                <MenuItem
-                  key={'tooltip' + index}
-                  style={{ padding: '0', listStyle: 'none', margin: '0' }}
-                  primaryText={name}
-                />
+      <IconMenu
+        iconButtonElement={
+          <IconButton>
+            <MoreVertIcon />
+          </IconButton>
+        }
+        anchorOrigin={{ horizontal: 'left', vertical: 'top' }}
+        targetOrigin={{ horizontal: 'left', vertical: 'top' }}
+        className="my-tooltip"
+        style={{
+          left: this.tooltipPosition.x,
+          top: this.tooltipPosition.y,
+          position: 'absolute',
+          display: this.state.showCardOptions ? 'initial' : 'none',
+          zIndex: 100,
+          background: 'white',
+          width: '40px',
+          height: '40px'
+        }}
+      >
+        <MenuItem
+          style={{ padding: '0', listStyle: 'none', margin: '0' }}
+          primaryText={'Options:'}
+          disabled={true}
+        />
+        <MenuItem
+          style={{ padding: '0', listStyle: 'none', margin: '0' }}
+          primaryText={'Make Visible To Me'}
+          onClick={() => {
+            this.makeCardVisibleToSelf(this.selectedPieceIndex);
+          }}
+        />
+        <MenuItem
+          style={{ padding: '0', listStyle: 'none', margin: '0' }}
+          primaryText={'Make Visible To Everyone'}
+          onClick={() => {
+            this.makeCardVisibleToAll(this.selectedPieceIndex);
+          }}
+        />
+        <MenuItem
+          style={{ padding: '0', listStyle: 'none', margin: '0' }}
+          primaryText={'Hide From Everyone'}
+          onClick={() => {
+            this.makeCardHiddenToAll(this.selectedPieceIndex);
+          }}
+        />
+        {this.selectedPieceIndex !== -1 &&
+        this.isDeck(this.selectedPieceIndex) ? (
+          <MenuItem
+            style={{ padding: '0', listStyle: 'none', margin: '0' }}
+            primaryText={'Shuffle Deck'}
+            onClick={() => {
+              this.shuffleDeck(
+                this.gameSpec.pieces[this.selectedPieceIndex].deckPieceIndex
               );
-            })}
-          </IconMenu>
-        ) : null}
-        {this.state.showCardOptions ? (
-          <IconMenu
-            iconButtonElement={
-              <IconButton>
-                <MoreVertIcon />
-              </IconButton>
-            }
-            anchorOrigin={{ horizontal: 'left', vertical: 'top' }}
-            targetOrigin={{ horizontal: 'left', vertical: 'top' }}
-            className="my-tooltip"
-            style={{
-              left: this.tooltipPosition.x,
-              top: this.tooltipPosition.y,
-              position: 'absolute',
-              zIndex: 100
             }}
-          >
-            <MenuItem
-              style={{ padding: '0', listStyle: 'none', margin: '0' }}
-              primaryText={'Options:'}
-              disabled={true}
-            />
-            <MenuItem
-              style={{ padding: '0', listStyle: 'none', margin: '0' }}
-              primaryText={'Make Visible To Me'}
-              onClick={() => {
-                this.makeCardVisibleToSelf(this.selectedPieceIndex);
-              }}
-            />
-            <MenuItem
-              style={{ padding: '0', listStyle: 'none', margin: '0' }}
-              primaryText={'Make Visible To Everyone'}
-              onClick={() => {
-                this.makeCardVisibleToAll(this.selectedPieceIndex);
-              }}
-            />
-            <MenuItem
-              style={{ padding: '0', listStyle: 'none', margin: '0' }}
-              primaryText={'Hide From Everyone'}
-              onClick={() => {
-                this.makeCardHiddenToAll(this.selectedPieceIndex);
-              }}
-            />
-            {this.isDeck[this.selectedPieceIndex] ? (
-              <MenuItem
-                style={{ padding: '0', listStyle: 'none', margin: '0' }}
-                primaryText={'Shuffle Deck'}
-                onClick={() => {
-                  this.shuffleDeck(
-                    this.gameSpec.pieces[this.selectedPieceIndex].deckPieceIndex
-                  );
-                }}
-              />
-            ) : null}
-          </IconMenu>
+          />
         ) : null}
-      </>
+      </IconMenu>
     );
 
-    // TODO: Don't use AppBar here, there is only one appbar in app that is header.
     return (
-      <div>
-        {/* <AppBar
-          showMenuIconButton={false}
-          iconElementRight={
-            <FlatButton
-              label="Reset"
-              onClick={e => {
-                e.preventDefault();
-                const helper = new MatchStateHelper(this.matchInfo);
-                helper.resetMatch();
-                ourFirebase.updateMatchState(this.matchInfo);
-              }}
-            />
-          }
-          title={<span>Match: {this.matchInfo.game.gameName}</span>}
-        /> */}
-        <div style={{ position: 'relative' }}>
-          {toolTipLayer}
-          <Stage width={width} height={height}>
-            <Layer ref={() => 'boardLayer'}>{boardLayer}</Layer>
-            <Layer ref={() => 'piecesLayer'}>{piecesLayer}</Layer>
-          </Stage>
-        </div>
+      <div style={{ position: 'relative' }}>
+        {toolTipLayer}
+        <Stage width={width * ratio} height={height * ratio}>
+          <Layer ref={() => 'boardLayer'}>{boardLayer}</Layer>
+          <Layer ref={() => 'piecesLayer'}>{piecesLayer}</Layer>
+        </Stage>
       </div>
     );
   }
@@ -440,13 +359,7 @@ class Board extends React.Component<BoardProps, BoardState> {
 
 const mapStateToProps = (state: StoreState) => {
   return {
-    myUserId: state.myUser.myUserId,
-    matchesList: state.matchesList,
-    gameSpecs: state.gameSpecs
+    myUserId: state.myUser.myUserId
   };
 };
-
-// Later this will take dispatch: any as argument
-const mapDispatchToProps = () => ({});
-
-export default connect(mapStateToProps, mapDispatchToProps)(Board);
+export default connect(mapStateToProps)(Board);
