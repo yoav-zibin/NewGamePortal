@@ -9,6 +9,7 @@ import RaisedButton from 'material-ui/RaisedButton';
 import ContentAdd from 'material-ui/svg-icons/content/add';
 import AutoComplete from 'material-ui/AutoComplete';
 import { ourFirebase } from '../services/firebase';
+import { History } from 'history';
 
 const style = {
   marginRight: 20
@@ -22,10 +23,14 @@ interface Props {
   matchesList: MatchInfo[];
   users: ContactWithUserId[];
   notUsers: Contact[];
-  allUsers: String[];
-  match: any;
+  allUserNames: String[];
+  match: {
+    params: {
+      matchId: string;
+    };
+  };
   myUserId: string;
-  history: any;
+  history: History;
 }
 
 class ContactsList extends React.Component<Props, {}> {
@@ -79,7 +84,7 @@ class ContactsList extends React.Component<Props, {}> {
         <AutoComplete
           floatingLabelText="Search"
           filter={AutoComplete.fuzzyFilter}
-          dataSource={this.props.allUsers}
+          dataSource={this.props.allUserNames}
           maxSearchResults={5}
           onNewRequest={this.handleRequest}
           onUpdateInput={this.handleUpdate}
@@ -131,7 +136,7 @@ import { StoreState } from '../types/index';
 const mapStateToProps = (state: StoreState) => {
   const users: ContactWithUserId[] = [];
   const notUsers: Contact[] = [];
-  const allUsers: String[] = [];
+  const allUserNames: String[] = [];
   const phoneNumbers = Object.keys(state.phoneNumberToContact);
   for (let phoneNumber of phoneNumbers) {
     const contact = state.phoneNumberToContact[phoneNumber];
@@ -141,10 +146,10 @@ const mapStateToProps = (state: StoreState) => {
       // Ignore my user (in case I have my own phone number in my contacts)
     } else if (userId) {
       users.push({ ...contact, userId: userId });
-      allUsers.push(contact.name);
+      allUserNames.push(contact.name);
     } else {
       notUsers.push(contact);
-      allUsers.push(contact.name);
+      allUserNames.push(contact.name);
     }
   }
 
@@ -153,7 +158,7 @@ const mapStateToProps = (state: StoreState) => {
   return {
     users,
     notUsers,
-    allUsers,
+    allUserNames,
     matchesList: state.matchesList,
     myUserId: state.myUser.myUserId
   };
