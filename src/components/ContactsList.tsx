@@ -18,6 +18,11 @@ const style: React.CSSProperties = {
   marginRight: 20
 };
 
+const searchStyle: React.CSSProperties = {
+  marginLeft: 17,
+  marginRight: 23
+};
+
 interface ContactWithUserId extends Contact {
   userId: string;
 }
@@ -90,15 +95,18 @@ class ContactsList extends React.Component<Props, {}> {
   render() {
     return (
       <div>
-        <br />
-        <AutoComplete
-          floatingLabelText="Search"
-          filter={AutoComplete.fuzzyFilter}
-          dataSource={this.props.allUserNames}
-          maxSearchResults={5}
-          onNewRequest={this.handleRequest}
-          onUpdateInput={this.handleUpdate}
-        />
+        <div style={searchStyle}>
+          <AutoComplete
+            floatingLabelText="Search"
+            filter={AutoComplete.fuzzyFilter}
+            dataSource={this.props.allUserNames}
+            maxSearchResults={5}
+            fullWidth={true}
+            onNewRequest={this.handleRequest}
+            onUpdateInput={this.handleUpdate}
+          />
+        </div>
+
         <List>
           <Subheader>Game User</Subheader>
           {this.filterParticipants(this.filterContacts(this.props.users)).map(
