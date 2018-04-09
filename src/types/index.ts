@@ -1,6 +1,11 @@
 import { CSSProperties } from 'react';
 
 export type PlatformType = 'ios' | 'android' | 'web' | 'tests';
+export interface RouterMatchParams {
+  params: {
+    matchIdInRoute: string;
+  };
+}
 
 export interface StoreState {
   gamesList: GameInfo[];

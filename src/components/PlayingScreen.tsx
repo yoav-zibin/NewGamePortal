@@ -8,7 +8,8 @@ import {
   GameSpec,
   UserIdToPhoneNumber,
   PhoneNumberToContact,
-  CSSPropertiesIndexer
+  CSSPropertiesIndexer,
+  RouterMatchParams
 } from '../types/index';
 import { connect } from 'react-redux';
 import { FloatingActionButton } from 'material-ui';
@@ -25,11 +26,7 @@ interface PlayingScreenProps {
   phoneNumberToContact: PhoneNumberToContact;
   matchesList: MatchInfo[];
   gameSpecs: GameSpecs;
-  match: {
-    params: {
-      matchId: string;
-    };
-  };
+  match: RouterMatchParams;
   history: History;
 }
 
@@ -40,13 +37,13 @@ const styles: CSSPropertiesIndexer = {
     bottom: 0,
     left: 0,
     width: '100%',
-    'min-height': '160px',
-    'overflow-y': 'scroll',
+    minHeight: '160px',
+    overflowY: 'scroll',
     /* 
       font-size is 0 to avoid spaces between the inline video elements after linebreak. 
       see https://css-tricks.com/fighting-the-space-between-inline-block-elements/ 
     */
-    'font-size': 0
+    fontSize: 0
   }
 };
 
@@ -58,7 +55,7 @@ class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
     super(props);
 
     for (let match of this.props.matchesList) {
-      if (this.props.match.params.matchId === match.matchId) {
+      if (this.props.match.params.matchIdInRoute === match.matchId) {
         this.matchInfo = match;
         this.gameSpec = this.props.gameSpecs.gameSpecIdToGameSpec[
           match.gameSpecId
@@ -70,7 +67,7 @@ class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
   // TODO move this all to PlayingScreen
   componentDidUpdate() {
     for (let match of this.props.matchesList) {
-      if (this.props.match.params.matchId === match.matchId) {
+      if (this.props.match.params.matchIdInRoute === match.matchId) {
         this.matchInfo = match;
         this.gameSpec = this.props.gameSpecs.gameSpecIdToGameSpec[
           match.gameSpecId
@@ -117,7 +114,8 @@ class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
       this.props.userIdToPhoneNumber,
       this.props.phoneNumberToContact
     );
-    const showVideoArea = opponents.length > 1 && videoChat.isSupported();
+    const showVideoArea = opponents.length >= 1 && videoChat.isSupported();
+    console.log('showVideoArea=', showVideoArea, 'opponents=', opponents);
     const videoArea = !showVideoArea ? null : (
       <div style={styles.videoChatContainer}>
         <VideoArea opponents={opponents} />

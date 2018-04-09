@@ -13,10 +13,10 @@ const styles: CSSPropertiesIndexer = {
     margin: 0,
     width: '150px',
     height: '150px',
-    'min-width': '150px',
-    'max-width': '150px',
-    'min-height': '150px',
-    'max-height': '150px'
+    minWidth: '150px',
+    maxWidth: '150px',
+    minHeight: '150px',
+    maxHeight: '150px'
   },
   hideVideo: {
     display: 'none'
@@ -27,9 +27,9 @@ const styles: CSSPropertiesIndexer = {
   },
   forVerticalCenteringChild: {
     display: 'table-cell',
-    'vertical-align': 'middle',
-    'text-align': 'center',
-    'font-size': '16px'
+    verticalAlign: 'middle',
+    textAlign: 'center',
+    fontSize: '16px'
   }
 };
 
@@ -54,7 +54,7 @@ class VideoArea extends React.Component<Props, {}> {
     const opponents = this.props.opponents;
     checkCondition(
       'VideoArea',
-      opponents.length > 1 && videoChat.isSupported()
+      opponents.length >= 1 && videoChat.isSupported()
     );
     const participants = opponents.concat();
     participants.unshift({ userId: 'Me', name: 'Me' });
@@ -76,7 +76,9 @@ class VideoArea extends React.Component<Props, {}> {
                 ...styles.forVerticalCenteringParent
               }}
             >
-              <div style={styles.videoChatPeer}>{participant.name}</div>
+              <div style={styles.forVerticalCenteringChild}>
+                {participant.name}
+              </div>
             </div>
           </div>
         ))}

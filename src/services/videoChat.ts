@@ -1,6 +1,7 @@
 import { checkCondition } from '../globals';
 import { store, dispatch } from '../stores';
 import { ourFirebase } from './firebase';
+require('webrtc-adapter/out/adapter_no_edge.js');
 
 // Signalling using firebase.
 // We send messages to a user by writing SignalData to
