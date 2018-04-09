@@ -25,11 +25,6 @@ interface Props {
   createMatch: (game: GameInfo) => void;
 }
 
-/**
- * TODOS:
- * 5. onClick of any of the grid tile dispatch an action which changes the currently selected game
- * and reroutes to that game's route.
- */
 class GamesList extends React.Component<Props, {}> {
   render() {
     return (

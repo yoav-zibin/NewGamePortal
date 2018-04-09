@@ -26,7 +26,6 @@ export class MatchStateHelper {
     const pieceState = this.getPieceState(pieceIndex);
     pieceState.x = x;
     pieceState.y = y;
-    // TODO: the UI should show cards that are visible just for you at the highest layer always.
     this.setMaxZ(pieceIndex);
   }
 

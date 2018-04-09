@@ -158,6 +158,16 @@ class Board extends React.Component<BoardProps, BoardState> {
     });
   }
 
+  // TODO: the UI should show cards that are visible to you always at higher z-indices than
+  // cards that aren't visible to you, i.e., have two layers for pieces: one that
+  // is for cards that aren't visible to you and one for everything else.
+  // E.g., suppose that card A isn't visible to you and it has zDepth=10, and card B
+  // that is visible to you with zDepth=9, and they are both with the same x & y.
+  // If there is just one layer for pieces, then if you drag the card from that x&y then it would drag the piece with
+  // the highest zDepth (so card A).
+  // But if we use two layers for pieces, then card A will be in one layer and card B
+  // in another layer (that is above the first layer), so dragging will correctly pick card A.
+
   render() {
     // TODO: Complete layer for board
     let boardImage = this.gameSpec.board.downloadURL;
