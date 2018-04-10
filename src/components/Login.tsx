@@ -7,6 +7,7 @@ import RaisedButton from 'material-ui/RaisedButton';
 import RefreshIndicator from 'material-ui/RefreshIndicator';
 import { History } from 'history';
 import { Redirect } from 'react-router';
+// TODO: either use react-select or material-ui/AutoComplete everywhere.
 import Select from 'react-select';
 import 'react-select/dist/react-select.css';
 const data = require('../countrycode.json');
@@ -358,6 +359,7 @@ class Login extends React.Component<Props, {}> {
   };
 
   onLogin = () => {
+    // TODO: if phoneNum isn't valid, show an error.
     ourFirebase
       .signInWithPhoneNumber(
         this.state.phoneNum,
@@ -388,9 +390,9 @@ class Login extends React.Component<Props, {}> {
     this.setState({ status: loadingType.loading });
   };
 
-  goToMainPage() {
+  goToMainPage = () => {
     this.props.history.push('/');
-  }
+  };
 
   render() {
     const selectField = this.state.selectField;

@@ -3,8 +3,25 @@ import AppBar from 'material-ui/AppBar';
 import FloatingActionButton from 'material-ui/FloatingActionButton';
 import NavigationArrowBack from 'material-ui/svg-icons/navigation/arrow-back';
 import { StringIndexer } from './types';
+import {
+  MatchInfo,
+  StoreState,
+  GameInfo,
+  UserIdsAndPhoneNumbers,
+  PhoneNumberToContact,
+  MyUser
+} from './types';
+import { connect } from 'react-redux';
 
-class AppHeader extends React.Component {
+interface Props {
+  matchesList: MatchInfo[];
+  gamesList: GameInfo[];
+  userIdsAndPhoneNumbers: UserIdsAndPhoneNumbers;
+  phoneNumberToContact: PhoneNumberToContact;
+  myUser: MyUser;
+}
+
+class AppHeader extends React.Component<Props, {}> {
   routes: StringIndexer = {
     '/login': 'Login',
     '/contactsList': 'Add an opponent',
@@ -19,10 +36,38 @@ class AppHeader extends React.Component {
     if (result) {
       return result;
     } else if (pathname.startsWith('/matches/')) {
-      // On specific match page, render match ID
       let matchId = pathname.split('/')[2];
-      // TODO: fix the name.
-      return 'GAME_NAME with OPPONENTS' + matchId;
+      let title = ''; // String to build
+
+      // Get corresponding info for selected match
+      this.props.matchesList.forEach((match: MatchInfo) => {
+        if (match.matchId === matchId) {
+          const game: GameInfo = match.game;
+          title += game.gameName;
+          console.log(
+            'PARTICIPANTUDERIDS LENGTH: ',
+            match.participantsUserIds.length
+          );
+          console.log('MY USER ID: ', this.props.myUser.myUserId);
+          // Is the game multiplayer? If so convert ID --> Phone --> Contact
+          if (match.participantsUserIds.length > 1) {
+            title += ' with ';
+            match.participantsUserIds.forEach((participantId: string) => {
+              // Exclude myself
+              if (participantId !== this.props.myUser.myUserId) {
+                console.log('PARTICIPANTID', participantId);
+                const phoneNumber = this.props.userIdsAndPhoneNumbers
+                  .userIdToPhoneNumber[participantId];
+                console.log('PHONE NUMBER: ', phoneNumber);
+                const contact = this.props.phoneNumberToContact[phoneNumber];
+                console.log('CONTACT NAME: ', contact);
+                title += contact.name;
+              }
+            });
+          } // End length if
+        } // End matchId if
+      });
+      return title;
     } else {
       return '';
     }
@@ -48,4 +93,12 @@ class AppHeader extends React.Component {
   }
 }
 
-export default AppHeader;
+const mapStateToProps = (state: StoreState) => ({
+  matchesList: state.matchesList,
+  gamesList: state.gamesList,
+  userIdsAndPhoneNumbers: state.userIdsAndPhoneNumbers,
+  phoneNumberToContact: state.phoneNumberToContact,
+  myUser: state.myUser
+});
+
+export default connect(mapStateToProps)(AppHeader);

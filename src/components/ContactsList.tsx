@@ -92,6 +92,8 @@ class ContactsList extends React.Component<Props, {}> {
     );
   }
 
+  // TODO: use primaryText & secondaryText in AutoComplete to show whether
+  // the name is an existing user ("Existing user") or not a user ("Invite with SMS").
   render() {
     return (
       <div>

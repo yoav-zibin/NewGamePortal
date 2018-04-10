@@ -45,6 +45,7 @@ class AddMatches extends React.Component<Props, {}> {
           dataSource={this.props.gamesList.map(g => g.gameName)}
           style={style}
           onNewRequest={this.onNewRequest}
+          fullWidth={true}
         />
         <GamesList createMatch={g => this.createMatch(g)} />
       </div>
