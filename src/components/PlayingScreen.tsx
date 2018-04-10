@@ -71,7 +71,6 @@ class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
     }
   }
 
-  // TODO move this all to PlayingScreen
   componentDidUpdate() {
     for (let match of this.props.matchesList) {
       if (this.props.match.params.matchIdInRoute === match.matchId) {
@@ -97,7 +96,6 @@ class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
           src={gameSpecScreenShot}
         />
       );
-      // TODO show a spinner over the screenshot
       document.getElementById('loadingSpinner')!.style.display = 'block';
       return (
         <>
