@@ -62,8 +62,8 @@ class CanvasImage extends React.Component<CanvasImageProps, CanvasImageState> {
 
   setImage = () => {
     const image = new window.Image();
-    image.src = this.props.src;
     image.crossOrigin = 'Anonymous';
+    image.src = this.props.src;
     image.onload = () => {
       this.setState({
         image: image
