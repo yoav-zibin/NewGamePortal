@@ -12,8 +12,8 @@ import {
   MyUser
 } from './types';
 import { connect } from 'react-redux';
-import { withRouter } from 'react-router-dom';
-import * as H from 'history';
+// import { withRouter } from 'react-router-dom';
+// import * as H from 'history';
 
 interface Props {
   matchesList: MatchInfo[];
@@ -22,9 +22,25 @@ interface Props {
   phoneNumberToContact: PhoneNumberToContact;
   myUser: MyUser;
   // react-router-dom says match<P> is the type, not sure what P should be
-  match: any;
-  location: H.Location;
-  history: H.History;
+  // match: any;
+  // location: H.Location;
+  // history: H.History;
+}
+(function(history: any){
+    console.log('HISTORY:', history);
+    var pushState = history.pushState;
+    history.pushState = function(state:Object) {
+        if (typeof history.onpushstate === "function") {
+            history.onpushstate({state: state});
+        }
+        // ... whatever else you want to do
+        // maybe call onhashchange e.handler
+        return pushState.apply(history, arguments);
+    };
+})(window.history);
+
+window.onpopstate = history.onpushstate = function(e:any) {
+
 }
 
 class AppHeader extends React.Component<Props, {}> {
@@ -37,10 +53,10 @@ class AppHeader extends React.Component<Props, {}> {
 
   // Header for AppBar
   getLocation() {
-    let pathname: string = this.props.location.pathname;
-    console.log('PROPS LOCATION:', this.props.location);
-    console.log('PROPS HISTORY:', this.props.history);
-    console.log('PROPS MATCH:', this.props.match);
+    let pathname: string = window.location.pathname;
+    // console.log('PROPS LOCATION:', this.props.location);
+    // console.log('PROPS HISTORY:', this.props.history);
+    // console.log('PROPS MATCH:', this.props.match);
     let result = this.routes[pathname];
     if (result) {
       return result;
@@ -102,4 +118,5 @@ const mapStateToProps = (state: StoreState) => ({
   myUser: state.myUser
 });
 
-export default connect(mapStateToProps)(withRouter(AppHeader));
+// export default connect(mapStateToProps)(withRouter(AppHeader));
+export default connect(mapStateToProps)(AppHeader);
