@@ -88,8 +88,6 @@ class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
       let gameSpecScreenShot = this.matchInfo.game.screenShot.downloadURL;
       let screenShotWidth = this.matchInfo.game.screenShot.width;
       let screenShotHeight = this.matchInfo.game.screenShot.height;
-      //   const width = this.gameSpec.board.width;
-      //   const height = this.gameSpec.board.height;
       const ratio = Math.min(
         window.innerWidth / screenShotWidth,
         window.innerHeight / screenShotHeight
