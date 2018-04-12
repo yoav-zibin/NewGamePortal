@@ -33,6 +33,11 @@ interface UserName {
   userType: string;
 }
 
+interface DataSourceConfig {
+  text: string;
+  value: string;
+}
+
 // todo rename allusers to allUserNames, do not use any
 interface Props {
   matchesList: MatchInfo[];
@@ -50,10 +55,11 @@ class ContactsList extends React.Component<Props, {}> {
     userAdded: false
   };
 
-  handleRequest = (chosenRequest: string, index: number) => {
-    if (chosenRequest.length > 0) {
-      this.setState({ filterValue: chosenRequest });
+  handleRequest = (chosenRequest: DataSourceConfig, index: number) => {
+    if (chosenRequest.text.length > 0) {
+      this.setState({ filterValue: chosenRequest.text });
     }
+    console.log(chosenRequest.text);
     return index;
   };
 
@@ -62,7 +68,6 @@ class ContactsList extends React.Component<Props, {}> {
       this.setState({ filterValue: '' });
     }
     console.log(dataSource.length);
-    console.log("all user's are " + this.props.allUserNames);
   };
 
   getMatch = () => {
