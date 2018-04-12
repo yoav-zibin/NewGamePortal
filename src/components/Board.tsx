@@ -325,11 +325,17 @@ class Board extends React.Component<BoardProps, BoardState> {
           onClick={() => {
             this.makeCardVisibleToSelf(this.selectedPieceIndex);
           }}
+          onTouchStart={() => {
+            this.makeCardVisibleToSelf(this.selectedPieceIndex);
+          }}
         />
         <MenuItem
           style={{ padding: '0', listStyle: 'none', margin: '0' }}
           primaryText={'Make Visible To Everyone'}
           onClick={() => {
+            this.makeCardVisibleToAll(this.selectedPieceIndex);
+          }}
+          onTouchStart={() => {
             this.makeCardVisibleToAll(this.selectedPieceIndex);
           }}
         />
@@ -339,6 +345,9 @@ class Board extends React.Component<BoardProps, BoardState> {
           onClick={() => {
             this.makeCardHiddenToAll(this.selectedPieceIndex);
           }}
+          onTouchStart={() => {
+            this.makeCardHiddenToAll(this.selectedPieceIndex);
+          }}
         />
         {this.selectedPieceIndex !== -1 &&
         this.isDeck(this.selectedPieceIndex) ? (
@@ -346,6 +355,11 @@ class Board extends React.Component<BoardProps, BoardState> {
             style={{ padding: '0', listStyle: 'none', margin: '0' }}
             primaryText={'Shuffle Deck'}
             onClick={() => {
+              this.shuffleDeck(
+                this.gameSpec.pieces[this.selectedPieceIndex].deckPieceIndex
+              );
+            }}
+            onTouchStart={() => {
               this.shuffleDeck(
                 this.gameSpec.pieces[this.selectedPieceIndex].deckPieceIndex
               );
