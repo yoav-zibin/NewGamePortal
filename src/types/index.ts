@@ -75,7 +75,7 @@ export interface UserIdToPhoneNumber extends IdIndexer<string> {
 }
 
 export interface CardVisibility extends IdIndexer<boolean> {
-  [participantIndex: string]: boolean;
+  [participantIndex: string]: true;
 }
 
 export type MatchState = PieceState[];

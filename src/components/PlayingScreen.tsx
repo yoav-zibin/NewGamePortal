@@ -24,13 +24,6 @@ interface PlayingScreenProps {
   myUserId: string;
   userIdToPhoneNumber: UserIdToPhoneNumber;
   phoneNumberToContact: PhoneNumberToContact;
-  // TODO: use router props in mapStateToProps so this component will just
-  // need the current match and current game spec.
-  /*
-  const mapStateToProps = (state, ownProps) => {
-    // Use props injected by React Router:
-    const selectedSlugs = ownProps.params.selectedSlugs.split(';')
-  */
   matchesList: MatchInfo[];
   gameSpecs: GameSpecs;
   match: RouterMatchParams;
@@ -60,7 +53,6 @@ class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
 
   constructor(props: PlayingScreenProps) {
     super(props);
-
     for (let match of this.props.matchesList) {
       if (this.props.match.params.matchIdInRoute === match.matchId) {
         this.matchInfo = match;
@@ -71,7 +63,6 @@ class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
     }
   }
 
-  // TODO move this all to PlayingScreen
   componentDidUpdate() {
     for (let match of this.props.matchesList) {
       if (this.props.match.params.matchIdInRoute === match.matchId) {
@@ -90,30 +81,31 @@ class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
       let gameSpecScreenShot = this.matchInfo.game.screenShot.downloadURL;
       let screenShotWidth = this.matchInfo.game.screenShot.width;
       let screenShotHeight = this.matchInfo.game.screenShot.height;
+      const ratio = Math.min(
+        window.innerWidth / screenShotWidth,
+        window.innerHeight / screenShotHeight
+      );
       let screenShotLayer = (
         <CanvasImage
-          height={screenShotHeight}
-          width={screenShotWidth}
+          height={screenShotHeight * ratio}
+          width={screenShotWidth * ratio}
           src={gameSpecScreenShot}
         />
       );
-      // TODO show a spinner over the screenshot
       document.getElementById('loadingSpinner')!.style.display = 'block';
       return (
         <>
-          {/* <AppBar
-                      showMenuIconButton={false}
-                      title={
-                        <span>Match: {this.matchInfo.game.gameName} (No game spec)</span>
-                      }
-                    /> */}
           <div>The Gamespec has not been loaded.</div>
-          <Stage width={screenShotWidth} height={screenShotHeight}>
+          <Stage
+            width={screenShotWidth * ratio}
+            height={screenShotHeight * ratio}
+          >
             <Layer ref={() => 'screenShotLayer'}>{screenShotLayer}</Layer>
           </Stage>
         </>
       );
     }
+    document.getElementById('loadingSpinner')!.style.display = 'none';
     const participantsUserIds = this.matchInfo.participantsUserIds;
     const opponents = getOpponents(
       participantsUserIds,
@@ -154,4 +146,12 @@ const mapStateToProps = (state: StoreState) => {
     phoneNumberToContact: state.phoneNumberToContact
   };
 };
+
+// TODO: use router props in mapStateToProps so this component will just
+// need the current match and current game spec.
+// const mapStateToProps = (state: StoreState, ownProps: PlayingScreenProps) => {
+//     // Use props injected by React Router
+//     const selectedSlugs = ownProps.params.selectedSlugs.split(';');
+// }
+
 export default connect(mapStateToProps)(PlayingScreen);

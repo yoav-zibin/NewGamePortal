@@ -36,6 +36,7 @@ class AddMatches extends React.Component<Props, {}> {
   };
 
   render() {
+    console.log('window addMatch' + window.innerHeight + window.innerWidth);
     console.log('this.props.gamesList=', this.props.gamesList);
     return (
       <div>

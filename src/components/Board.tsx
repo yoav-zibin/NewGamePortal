@@ -209,7 +209,7 @@ class Board extends React.Component<BoardProps, BoardState> {
   // If there is just one layer for pieces, then if you drag the card from that x&y then it would drag the piece with
   // the highest zDepth (so card A).
   // But if we use two layers for pieces, then card A will be in one layer and card B
-  // in another layer (that is above the first layer), so dragging will correctly pick card A.
+  // in another layer (that is above the first layer), so dragging will correctly pick card B.
 
   render() {
     // TODO: Complete layer for board
@@ -228,6 +228,7 @@ class Board extends React.Component<BoardProps, BoardState> {
         width={width * ratio}
         src={boardImage}
         onClick={() => this.hideCardOptions()}
+        onTouchStart={() => this.hideCardOptions()}
       />
     );
 
@@ -260,6 +261,15 @@ class Board extends React.Component<BoardProps, BoardState> {
           key={index}
           draggable={pieceSpec.element.isDraggable || kind === 'standard'}
           onClick={() => {
+            if (kind === 'toggable') {
+              this.togglePiece(index);
+            } else if (kind === 'dice') {
+              this.rollDice(index);
+            } else if (kind === 'card') {
+              this.toggleCardOptions('canvasImage' + index, index);
+            }
+          }}
+          onTouchStart={() => {
             if (kind === 'toggable') {
               this.togglePiece(index);
             } else if (kind === 'dice') {
@@ -315,11 +325,17 @@ class Board extends React.Component<BoardProps, BoardState> {
           onClick={() => {
             this.makeCardVisibleToSelf(this.selectedPieceIndex);
           }}
+          onTouchStart={() => {
+            this.makeCardVisibleToSelf(this.selectedPieceIndex);
+          }}
         />
         <MenuItem
           style={{ padding: '0', listStyle: 'none', margin: '0' }}
           primaryText={'Make Visible To Everyone'}
           onClick={() => {
+            this.makeCardVisibleToAll(this.selectedPieceIndex);
+          }}
+          onTouchStart={() => {
             this.makeCardVisibleToAll(this.selectedPieceIndex);
           }}
         />
@@ -329,6 +345,9 @@ class Board extends React.Component<BoardProps, BoardState> {
           onClick={() => {
             this.makeCardHiddenToAll(this.selectedPieceIndex);
           }}
+          onTouchStart={() => {
+            this.makeCardHiddenToAll(this.selectedPieceIndex);
+          }}
         />
         {this.selectedPieceIndex !== -1 &&
         this.isDeck(this.selectedPieceIndex) ? (
@@ -336,6 +355,11 @@ class Board extends React.Component<BoardProps, BoardState> {
             style={{ padding: '0', listStyle: 'none', margin: '0' }}
             primaryText={'Shuffle Deck'}
             onClick={() => {
+              this.shuffleDeck(
+                this.gameSpec.pieces[this.selectedPieceIndex].deckPieceIndex
+              );
+            }}
+            onTouchStart={() => {
               this.shuffleDeck(
                 this.gameSpec.pieces[this.selectedPieceIndex].deckPieceIndex
               );
