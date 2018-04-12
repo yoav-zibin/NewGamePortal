@@ -5,331 +5,118 @@ import { ourFirebase } from '../services/firebase';
 import TextField from 'material-ui/TextField';
 import RaisedButton from 'material-ui/RaisedButton';
 import RefreshIndicator from 'material-ui/RefreshIndicator';
+import AutoComplete from 'material-ui/AutoComplete';
+// import IconButton from 'material-ui/IconButton';
+import MenuItem from 'material-ui/MenuItem';
+// import ContentClear from 'material-ui/svg-icons/content/clear';
 import { History } from 'history';
 import { Redirect } from 'react-router';
-// TODO: either use react-select or material-ui/AutoComplete everywhere.
-import Select from 'react-select';
-import 'react-select/dist/react-select.css';
+require('../js/trans-compiled');
 const data = require('../countrycode.json');
+
+declare function isValidNumber(phoneNumber:String,regionCode:String):boolean;
+declare function phoneNumberParser(phoneNumber:String,regionCode:String):string;
 
 interface Country {
   name: string;
   code: string;
   callingCode: string;
+  emojiCode: string;
 }
 
 interface Props {
   myUserId: string;
   history: History;
+  countries: Country[];
+  countryNames: String[];
+}
+
+interface DataSourceNode {
+  text: string;
+  value: object;
 }
 
 enum loadingType {
   loading = 'loading',
   hide = 'hide'
 }
-// Todo: add all countries
-/*
-TODO:
-I think that a lot of users don't even know their country code 
-(e.g., I remember I only learned about Israel international code +972 when I first went abroad :))
-We should probably break the phone number into: country + national number
-So in the UI we should first show a drop down with all countries:
-https://en.wikipedia.org/wiki/List_of_country_calling_codes
 
-We should also have a JSON that we can later use to map country code ("IL") to calling code (+972), and vice versa.
-We should also check the number is valid and it's a mobile number before allowing to click on "Send code", see:
-https://yoav-zibin.github.io/FirebaseExample/libphonenumber/demo-compiled.html
-
-Try login flow for WhatsApp or Duo (take screenshots along the way), and you'll understand what I mean :)
-
-I found the mapping of calling code to country code :)
-Please use it, and show a drop down that allows you to select the country.
-The drop down should show the country  calling code + country name (in that language) + flag
-E.g.,
-(+1) United States
-(+972) ישראל
-
-etc :)
-Do some research to see if you can use an existing package, see:
-https://stackoverflow.com/questions/18099370/select2-drop-down-for-countries-with-flags
-
-Also validate the phone number is a valid mobile number (before sending to firebase), see:
-https://yoav-zibin.github.io/FirebaseExample/libphonenumber/demo-compiled.html
-*/
-/*
-interface CallingCodeToCountryCodes {
-  [callingCode: number]: string[];
+enum visibilityType {
+  visible = 'visible',
+  hidden = 'hidden'
 }
-// TODO: use it.
-const callingCodeToCountryCodes: CallingCodeToCountryCodes = {
-  1: 'US AG AI AS BB BM BS CA DM DO GD GU JM KN KY LC MP MS PR SX TC TT VC VG VI'.split(
-    ' '
-  ),
-  7: ['RU', 'KZ'],
-  20: ['EG'],
-  27: ['ZA'],
-  30: ['GR'],
-  31: ['NL'],
-  32: ['BE'],
-  33: ['FR'],
-  34: ['ES'],
-  36: ['HU'],
-  39: ['IT', 'VA'],
-  40: ['RO'],
-  41: ['CH'],
-  43: ['AT'],
-  44: ['GB', 'GG', 'IM', 'JE'],
-  45: ['DK'],
-  46: ['SE'],
-  47: ['NO', 'SJ'],
-  48: ['PL'],
-  49: ['DE'],
-  51: ['PE'],
-  52: ['MX'],
-  53: ['CU'],
-  54: ['AR'],
-  55: ['BR'],
-  56: ['CL'],
-  57: ['CO'],
-  58: ['VE'],
-  60: ['MY'],
-  61: ['AU', 'CC', 'CX'],
-  62: ['ID'],
-  63: ['PH'],
-  64: ['NZ'],
-  65: ['SG'],
-  66: ['TH'],
-  81: ['JP'],
-  82: ['KR'],
-  84: ['VN'],
-  86: ['CN'],
-  90: ['TR'],
-  91: ['IN'],
-  92: ['PK'],
-  93: ['AF'],
-  94: ['LK'],
-  95: ['MM'],
-  98: ['IR'],
-  211: ['SS'],
-  212: ['MA', 'EH'],
-  213: ['DZ'],
-  216: ['TN'],
-  218: ['LY'],
-  220: ['GM'],
-  221: ['SN'],
-  222: ['MR'],
-  223: ['ML'],
-  224: ['GN'],
-  225: ['CI'],
-  226: ['BF'],
-  227: ['NE'],
-  228: ['TG'],
-  229: ['BJ'],
-  230: ['MU'],
-  231: ['LR'],
-  232: ['SL'],
-  233: ['GH'],
-  234: ['NG'],
-  235: ['TD'],
-  236: ['CF'],
-  237: ['CM'],
-  238: ['CV'],
-  239: ['ST'],
-  240: ['GQ'],
-  241: ['GA'],
-  242: ['CG'],
-  243: ['CD'],
-  244: ['AO'],
-  245: ['GW'],
-  246: ['IO'],
-  247: ['AC'],
-  248: ['SC'],
-  249: ['SD'],
-  250: ['RW'],
-  251: ['ET'],
-  252: ['SO'],
-  253: ['DJ'],
-  254: ['KE'],
-  255: ['TZ'],
-  256: ['UG'],
-  257: ['BI'],
-  258: ['MZ'],
-  260: ['ZM'],
-  261: ['MG'],
-  262: ['RE', 'YT'],
-  263: ['ZW'],
-  264: ['NA'],
-  265: ['MW'],
-  266: ['LS'],
-  267: ['BW'],
-  268: ['SZ'],
-  269: ['KM'],
-  290: ['SH', 'TA'],
-  291: ['ER'],
-  297: ['AW'],
-  298: ['FO'],
-  299: ['GL'],
-  350: ['GI'],
-  351: ['PT'],
-  352: ['LU'],
-  353: ['IE'],
-  354: ['IS'],
-  355: ['AL'],
-  356: ['MT'],
-  357: ['CY'],
-  358: ['FI', 'AX'],
-  359: ['BG'],
-  370: ['LT'],
-  371: ['LV'],
-  372: ['EE'],
-  373: ['MD'],
-  374: ['AM'],
-  375: ['BY'],
-  376: ['AD'],
-  377: ['MC'],
-  378: ['SM'],
-  380: ['UA'],
-  381: ['RS'],
-  382: ['ME'],
-  383: ['XK'],
-  385: ['HR'],
-  386: ['SI'],
-  387: ['BA'],
-  389: ['MK'],
-  420: ['CZ'],
-  421: ['SK'],
-  423: ['LI'],
-  500: ['FK'],
-  501: ['BZ'],
-  502: ['GT'],
-  503: ['SV'],
-  504: ['HN'],
-  505: ['NI'],
-  506: ['CR'],
-  507: ['PA'],
-  508: ['PM'],
-  509: ['HT'],
-  590: ['GP', 'BL', 'MF'],
-  591: ['BO'],
-  592: ['GY'],
-  593: ['EC'],
-  594: ['GF'],
-  595: ['PY'],
-  596: ['MQ'],
-  597: ['SR'],
-  598: ['UY'],
-  599: ['CW', 'BQ'],
-  670: ['TL'],
-  672: ['NF'],
-  673: ['BN'],
-  674: ['NR'],
-  675: ['PG'],
-  676: ['TO'],
-  677: ['SB'],
-  678: ['VU'],
-  679: ['FJ'],
-  680: ['PW'],
-  681: ['WF'],
-  682: ['CK'],
-  683: ['NU'],
-  685: ['WS'],
-  686: ['KI'],
-  687: ['NC'],
-  688: ['TV'],
-  689: ['PF'],
-  690: ['TK'],
-  691: ['FM'],
-  692: ['MH'],
-  800: ['001'],
-  808: ['001'],
-  850: ['KP'],
-  852: ['HK'],
-  853: ['MO'],
-  855: ['KH'],
-  856: ['LA'],
-  870: ['001'],
-  878: ['001'],
-  880: ['BD'],
-  881: ['001'],
-  882: ['001'],
-  883: ['001'],
-  886: ['TW'],
-  888: ['001'],
-  960: ['MV'],
-  961: ['LB'],
-  962: ['JO'],
-  963: ['SY'],
-  964: ['IQ'],
-  965: ['KW'],
-  966: ['SA'],
-  967: ['YE'],
-  968: ['OM'],
-  970: ['PS'],
-  971: ['AE'],
-  972: ['IL'],
-  973: ['BH'],
-  974: ['QA'],
-  975: ['BT'],
-  976: ['MN'],
-  977: ['NP'],
-  979: ['001'],
-  992: ['TJ'],
-  993: ['TM'],
-  994: ['AZ'],
-  995: ['GE'],
-  996: ['KG'],
-  998: ['UZ']
-};
-*/
-/*
-const testCountries: Country[] = [
-  {
-    name: 'United States',
-    code: 'US',
-    callingCode: '+1'
-  },
-  {
-    name: 'Brazil',
-    code: 'BR',
-    callingCode: '+55'
-  },
-  {
-    name: 'China',
-    code: 'CN',
-    callingCode: '+86'
-  },
-  {
-    name: 'Colombia',
-    code: 'CO',
-    callingCode: '+57'
-  }
-];
-*/
+
 const style: React.CSSProperties = {
   margin: 20,
-  padding: 10
+  // padding: 10
 };
 
 class Login extends React.Component<Props, {}> {
   confirmationResult: any = null;
+ 
   state = {
     selectField: { value: '', label: '' },
     code: '',
+    defaultCode: 'US',
     phoneNum: '',
     veriCode: '',
     errorText: '',
     veriErrorText: '',
     confirmationResult: null,
     veriDisabled: true,
-    status: loadingType.hide
+    status: loadingType.hide,
+    searchText: '',
+    defaultText:'United States(+1)',
+    onSelect: false,
+    clearVisibility: visibilityType.visible,
+    countries:[],
+    countryNames: []
   };
 
-  handleChange = (selectedOption: any) => {
+  // clearStyle: React.CSSProperties = {
+  //   visibility: this.state.clearVisibility
+ //  };
+
+  handleClickOutsideSelect = () =>{
+    if(this.props.countryNames.indexOf(this.state.searchText)){
+      this.setState({
+        searchText: this.state.defaultText,
+        code: this.state.defaultCode
+      });
+    }
+  }
+
+  handleUpdateInput = (searchText: String) => {
+    if(searchText.length > 0){
+      this.setState({
+        clearVisibility: visibilityType.visible,
+      });
+    }else{
+      this.setState({
+        clearVisibility: visibilityType.hidden,
+      });
+    }
     this.setState({
-      selectField: selectedOption,
-      code: selectedOption.value ? selectedOption.value : ''
+      searchText: searchText,
     });
-    console.log(`Selected: ${selectedOption.label}`);
+  };
+
+  handleNewRequest = (chosenRequest: DataSourceNode) => {
+    let searchWords = chosenRequest.text.split("-");
+    if(this.props.countryNames.indexOf(searchWords[1]) !== -1){
+      this.setState({
+        searchText: searchWords[1],
+        defaultText: searchWords[1],
+        code: searchWords[0],
+        defaultCode: searchWords[0]
+      });
+    }else{
+      this.setState({
+        searchText: this.state.defaultText,
+        code: this.state.defaultCode
+      });
+    }
+   
   };
 
   handleInput = (event: any) => {
@@ -359,10 +146,11 @@ class Login extends React.Component<Props, {}> {
   };
 
   onLogin = () => {
-    // TODO: if phoneNum isn't valid, show an error.
-    ourFirebase
+    if(isValidNumber(this.state.phoneNum,this.state.code)){
+      let phoneNumber = phoneNumberParser(this.state.phoneNum,this.state.code);
+      ourFirebase
       .signInWithPhoneNumber(
-        this.state.phoneNum,
+        phoneNumber,
         this.state.code,
         new firebase.auth.RecaptchaVerifier('recaptcha-container', {
           size: 'invisible'
@@ -372,8 +160,11 @@ class Login extends React.Component<Props, {}> {
         this.confirmationResult = _confirmationResult;
       });
 
-    this.setState({ veriDisabled: false });
-  };
+      this.setState({ veriDisabled: false });
+    }else{
+      alert("invalid phone number")
+    }
+  }
 
   sendCode = () => {
     this.confirmationResult
@@ -394,30 +185,42 @@ class Login extends React.Component<Props, {}> {
     this.props.history.push('/');
   };
 
+  // todo: change listStyle in Autocomplete(some countries' names are too long to show)
   render() {
-    const selectField = this.state.selectField;
-    const value = selectField && selectField.value;
     if (this.props.myUserId) {
       return <Redirect to="/" />;
     }
     return (
       <div>
-        <div style={style}>
+        <div style={style} >
           <div id="recaptcha-container" />
 
-          <Select
-            name="Select Country"
-            value={value}
-            onChange={this.handleChange}
-            options={data.map((country: Country) => ({
-              value: country.code,
-              label: country.name + '(+' + country.callingCode + ')'
+          <div>
+          <AutoComplete
+            floatingLabelText="Country"
+            hintText="Select Country"
+            searchText={this.state.searchText}
+            onUpdateInput={this.handleUpdateInput}
+            onNewRequest={this.handleNewRequest}
+            dataSource={this.props.countries.map((country: Country) =>({
+              text: country.code+"-"+country.name+"(+"+country.callingCode+")",
+              value: (
+                      <MenuItem
+                        primaryText={country.name+"(+"+country.callingCode+")"} 
+                        secondaryText={country.emojiCode}
+                      />
+                    )
             }))}
+            filter={AutoComplete.fuzzyFilter}
+            openOnFocus={true}
           />
 
+          </div>
+          <div onClick={this.handleClickOutsideSelect}>
           <br />
           <TextField
             id="phoneNum"
+            floatingLabelText="Phone Number"
             hintText="Enter your phone number"
             errorText={this.state.errorText}
             onChange={this.handleInput}
@@ -433,6 +236,7 @@ class Login extends React.Component<Props, {}> {
           <br />
           <TextField
             id="veriCode"
+            floatingLabelText="Verification Code"
             hintText="Enter your verification code"
             errorText={this.state.veriErrorText}
             onChange={this.handleCodeInput}
@@ -446,7 +250,6 @@ class Login extends React.Component<Props, {}> {
             onClick={this.sendCode}
             disabled={this.state.veriDisabled}
           />
-        </div>
         <RefreshIndicator
           size={50}
           left={window.screen.width / 2}
@@ -454,6 +257,8 @@ class Login extends React.Component<Props, {}> {
           loadingColor="#FF9800"
           status={this.state.status}
         />
+        </div>
+        </div>
       </div>
     );
   }
@@ -462,7 +267,20 @@ class Login extends React.Component<Props, {}> {
 import { connect } from 'react-redux';
 import { StoreState } from '../types/index';
 
-const mapStateToProps = (state: StoreState) => ({
-  myUserId: state.myUser.myUserId
-});
+const mapStateToProps = (state: StoreState) => {
+  const countries: Country[] = [];
+  const countryNames: String[] = [];
+  for(let country of data){
+    const l = (country.code).codePointAt(0);
+    const r = (country.code).codePointAt(1);
+    const emoji = String.fromCodePoint(l + 127397)+String.fromCodePoint(r + 127397);
+    countries.push({code:country.code, name: country.name, callingCode: country.callingCode, emojiCode:emoji});
+    countryNames.push(country.name+"(+"+country.callingCode+")");
+  }
+  return {
+    myUserId: state.myUser.myUserId,
+    countries,
+    countryNames
+  };
+};
 export default connect(mapStateToProps)(Login);
