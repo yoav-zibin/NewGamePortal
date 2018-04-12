@@ -13,9 +13,9 @@ export const platform: PlatformType =
       ? 'ios'
       : window.location.search === '?platform=android' ? 'android' : 'web';
 
-export function checkCondition<T>(desc: string, cond: T): T {
+export function checkCondition(desc: any, cond: boolean | Object) {
   if (!cond) {
-    throw new Error('Condition check failed for: ' + desc);
+    throw new Error('Condition check failed for: ' + JSON.stringify(desc));
   }
   return cond;
 }

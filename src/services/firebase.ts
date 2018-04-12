@@ -26,7 +26,8 @@ import {
   GameSpecIdToGameSpec,
   GameSpecs,
   PieceState,
-  AnyIndexer
+  AnyIndexer,
+  CardVisibility
 } from '../types';
 import { Action, checkMatchStateInStore } from '../reducers';
 
@@ -119,6 +120,10 @@ export namespace ourFirebase {
     const uid = user.uid;
     if (persistedOldStore && uid === persistedOldStore.myUser.myUserId) {
       dispatch({ restoreOldStore: persistedOldStore });
+      if (!myCountryCodeForSignInWithPhoneNumber) {
+        myCountryCodeForSignInWithPhoneNumber =
+          persistedOldStore.myUser.myCountryCode;
+      }
     }
     if (phoneNumberForSignInAnonymously) {
       user.updateProfile({
@@ -136,14 +141,7 @@ export namespace ourFirebase {
       userId: uid
     });
 
-    // We update fields only after calling signIn* method.
-    if (
-      phoneNumberForSignInAnonymously ||
-      myCountryCodeForSignInWithPhoneNumber
-    ) {
-      updatePrivateFieldsAfterLogin(uid, phoneNumber);
-    }
-
+    updatePrivateFieldsAfterLogin(uid, phoneNumber);
     dispatch({
       setMyUser: {
         myUserId: uid,
@@ -422,10 +420,7 @@ export namespace ourFirebase {
           participants[uid2].participantIndex
       );
 
-      const gameInfo = checkCondition(
-        'gameInfo missing',
-        findGameInfo(gameSpecId)
-      );
+      const gameInfo = checkNotNull(findGameInfo(gameSpecId));
       fetchGameSpec(gameInfo);
       const match: MatchInfo = {
         matchId: matchId,
@@ -566,17 +561,46 @@ export namespace ourFirebase {
   }
 
   function convertFbrPieceState(pieceState: fbr.CurrentState): PieceState {
+    const cardVisibilityPerIndex: CardVisibility = {};
+    if (pieceState.cardVisibility) {
+      for (let visibleToIndex of Object.keys(pieceState.cardVisibility)) {
+        cardVisibilityPerIndex[visibleToIndex] = true;
+      }
+    }
     return {
       x: pieceState.x,
       y: pieceState.y,
       zDepth: pieceState.zDepth,
       currentImageIndex: pieceState.currentImageIndex,
-      cardVisibilityPerIndex: pieceState.cardVisibility
-        ? pieceState.cardVisibility
-        : {}
+      cardVisibilityPerIndex: cardVisibilityPerIndex
     };
   }
+  function validateInteger(
+    num: number,
+    fromInclusive: number,
+    toInclusive: number
+  ) {
+    return validateNumber(num, fromInclusive, toInclusive, true);
+  }
+  function validateNumber(
+    num: number,
+    fromInclusive: number,
+    toInclusive: number,
+    isInteger: boolean = false
+  ) {
+    if (isInteger) {
+      checkCondition(arguments, num % 1 === 0.0);
+    }
+    checkCondition(
+      arguments,
+      typeof num === 'number' && num >= fromInclusive && num <= toInclusive
+    );
+  }
   function convertPieceState(pieceState: PieceState): fbr.PieceState {
+    validateNumber(pieceState.x, -100, 100);
+    validateNumber(pieceState.y, -100, 100);
+    validateNumber(pieceState.zDepth, 1, 100000000000000000);
+    validateInteger(pieceState.currentImageIndex, 0, 256);
     return {
       currentState: {
         x: pieceState.x,
@@ -616,10 +640,7 @@ export namespace ourFirebase {
 
   function storeContactsAfterLogin() {
     const uid = getUserId();
-    const currentContacts = checkCondition(
-      'contactsToBeStored',
-      contactsToBeStored!
-    );
+    const currentContacts = checkNotNull(contactsToBeStored!);
     const currentPhoneNumbers = Object.keys(currentContacts);
     currentPhoneNumbers.forEach(phoneNumber => checkPhoneNum(phoneNumber));
     // Max contactName is 20 chars

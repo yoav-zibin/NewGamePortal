@@ -1,4 +1,4 @@
-import { checkCondition } from '../globals';
+import { checkCondition, checkNotNull } from '../globals';
 import { store, dispatch } from '../stores';
 import { ourFirebase } from './firebase';
 require('webrtc-adapter/out/adapter_no_edge.js');
@@ -56,8 +56,12 @@ export namespace videoChat {
       .then(res => res.json())
       .catch(error => console.error('Error:', error))
       .then(response => {
+        if (!response || !response.v || response.v.iceServers) {
+          console.warn('xirsys returned illegal reponse:', response);
+          return;
+        }
         const iceServers = response.v.iceServers;
-        console.log('Success:', response, 'ICE List: ' + iceServers);
+        console.log('Success:', response, 'ICE List: ', iceServers);
         configuration.iceServers = configuration.iceServers.concat(iceServers);
       });
   }
@@ -112,8 +116,7 @@ export namespace videoChat {
     opponentUserIds = _opponentIds.slice();
     let index = 0;
     localVideoElement = getVideoElement(index++);
-    checkCondition('call getUserMedia() first', localMediaStream);
-    setVideoStream(localVideoElement, localMediaStream!);
+    setVideoStream(localVideoElement, checkNotNull(localMediaStream!));
 
     // Close old connections that aren't going to be reused.
     for (let oldUserId of oldOpponentIds) {
@@ -168,8 +171,7 @@ export namespace videoChat {
       console.log('MyPeerConnection: initialSignals=', initialSignals);
       const pc = new RTCPeerConnection(configuration);
       this.pc = pc;
-      checkCondition('localMediaStream', localMediaStream);
-      pc.addStream(localMediaStream!);
+      pc.addStream(checkNotNull(localMediaStream!));
 
       // send any ice candidates to the other peer
       pc.onicecandidate = evt => {
@@ -414,7 +416,7 @@ export namespace videoChat {
   });
 
   function getElementById(id: string): HTMLElement {
-    return checkCondition('getElementById', document.getElementById(id)!);
+    return checkNotNull(document.getElementById(id)!);
   }
   function getVideoElement(index: number): VideoNameElement {
     const video = <HTMLVideoElement>getElementById('videoElement' + index);
