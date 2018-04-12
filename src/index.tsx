@@ -33,7 +33,7 @@ function reactRender() {
 }
 
 // TODO: setup release tags using sentry-cli, see https://docs.sentry.io/learn/releases/
-const release = 'v0.2';
+const release = 'v0.3';
 console.log('Version for sentry: ', release);
 Raven.config('https://efc65f7e50c14bd9a3482e2ad2ae3b9d@sentry.io/939406', {
   release: release
