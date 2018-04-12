@@ -99,10 +99,16 @@ class MatchesList extends React.Component<Props, {}> {
             ))}
           </List>
         </div>
-        /* TODO: do NOT use href! */
-        <FloatingActionButton style={styles.button} href="/addMatch">
-          <ContentAdd />
-        </FloatingActionButton>
+        <Link
+          style={styles.button}
+          to={{
+            pathname: '/addMatch'
+          }}
+        >
+          <FloatingActionButton>
+            <ContentAdd />
+          </FloatingActionButton>
+        </Link>
       </div>
     );
   }
