@@ -40,9 +40,11 @@ interface Props {
 class VideoArea extends React.Component<Props, {}> {
   componentDidMount() {
     videoChat.getUserMedia().then(() => {
-      videoChat.updateOpponents(
-        this.props.opponents.map(opponent => opponent.userId)
-      );
+      if (videoChat.isSupported()) {
+        videoChat.updateOpponents(
+          this.props.opponents.map(opponent => opponent.userId)
+        );
+      }
     });
   }
 
@@ -52,10 +54,10 @@ class VideoArea extends React.Component<Props, {}> {
 
   render() {
     const opponents = this.props.opponents;
-    checkCondition(
-      'VideoArea',
-      opponents.length >= 1 && videoChat.isSupported()
-    );
+    checkCondition('VideoArea', opponents.length >= 1);
+    if (!videoChat.isSupported()) {
+      return null;
+    }
     const participants = opponents.concat();
     participants.unshift({ userId: 'Me', name: 'Me' });
     return (

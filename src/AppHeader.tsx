@@ -3,8 +3,31 @@ import AppBar from 'material-ui/AppBar';
 import FloatingActionButton from 'material-ui/FloatingActionButton';
 import NavigationArrowBack from 'material-ui/svg-icons/navigation/arrow-back';
 import { StringIndexer } from './types';
+import {
+  MatchInfo,
+  StoreState,
+  GameInfo,
+  UserIdsAndPhoneNumbers,
+  PhoneNumberToContact,
+  MyUser
+} from './types';
+import { connect } from 'react-redux';
+import { withRouter } from 'react-router-dom';
+import * as H from 'history';
 
-class AppHeader extends React.Component {
+interface Props {
+  matchesList: MatchInfo[];
+  gamesList: GameInfo[];
+  userIdsAndPhoneNumbers: UserIdsAndPhoneNumbers;
+  phoneNumberToContact: PhoneNumberToContact;
+  myUser: MyUser;
+  // react-router-dom says match<P> is the type, not sure what P should be
+  match: any;
+  location: H.Location;
+  history: H.History;
+}
+
+class AppHeader extends React.Component<Props, {}> {
   routes: StringIndexer = {
     '/login': 'Login',
     '/contactsList': 'Add an opponent',
@@ -14,15 +37,38 @@ class AppHeader extends React.Component {
 
   // Header for AppBar
   getLocation() {
-    let pathname: string = window.location.pathname;
+    let pathname: string = this.props.location.pathname;
+    console.log('PROPS LOCATION:', this.props.location);
+    console.log('PROPS HISTORY:', this.props.history);
+    console.log('PROPS MATCH:', this.props.match);
     let result = this.routes[pathname];
     if (result) {
       return result;
     } else if (pathname.startsWith('/matches/')) {
-      // On specific match page, render match ID
       let matchId = pathname.split('/')[2];
-      // TODO: fix the name.
-      return 'GAME_NAME with OPPONENTS' + matchId;
+      let title = ''; // String to build
+
+      // Get corresponding info for selected match
+      this.props.matchesList.forEach((match: MatchInfo) => {
+        if (match.matchId === matchId) {
+          const game: GameInfo = match.game;
+          title += game.gameName;
+          // Is the game multiplayer? If so convert ID --> Phone --> Contact
+          if (match.participantsUserIds.length > 1) {
+            title += ' with ';
+            match.participantsUserIds.forEach((participantId: string) => {
+              // Exclude myself
+              if (participantId !== this.props.myUser.myUserId) {
+                const phoneNumber = this.props.userIdsAndPhoneNumbers
+                  .userIdToPhoneNumber[participantId];
+                const contact = this.props.phoneNumberToContact[phoneNumber];
+                title += contact.name;
+              }
+            });
+          } // End length if
+        } // End matchId if
+      });
+      return title;
     } else {
       return '';
     }
@@ -48,4 +94,12 @@ class AppHeader extends React.Component {
   }
 }
 
-export default AppHeader;
+const mapStateToProps = (state: StoreState) => ({
+  matchesList: state.matchesList,
+  gamesList: state.gamesList,
+  userIdsAndPhoneNumbers: state.userIdsAndPhoneNumbers,
+  phoneNumberToContact: state.phoneNumberToContact,
+  myUser: state.myUser
+});
+
+export default connect(mapStateToProps)(withRouter(AppHeader));

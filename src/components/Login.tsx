@@ -5,8 +5,13 @@ import { ourFirebase } from '../services/firebase';
 import TextField from 'material-ui/TextField';
 import RaisedButton from 'material-ui/RaisedButton';
 import RefreshIndicator from 'material-ui/RefreshIndicator';
+import AutoComplete from 'material-ui/AutoComplete';
+import IconButton from 'material-ui/IconButton';
+// import MenuItem from 'material-ui/MenuItem';
+import ContentClear from 'material-ui/svg-icons/content/clear';
 import { History } from 'history';
 import { Redirect } from 'react-router';
+// TODO: either use react-select or material-ui/AutoComplete everywhere.
 import Select from 'react-select';
 import 'react-select/dist/react-select.css';
 require('../js/trans-compiled');
@@ -30,6 +35,17 @@ enum loadingType {
   loading = 'loading',
   hide = 'hide'
 }
+
+const colors = [
+  'Red',
+  'Orange',
+  'Yellow',
+  'Green',
+  'Blue',
+  'Purple',
+  'Black',
+  'White',
+];
 // Todo: add all countries
 /*
 TODO:
@@ -284,14 +300,19 @@ const callingCodeToCountryCodes: CallingCodeToCountryCodes = {
   998: ['UZ']
 };
 */
+enum visibilityType {
+  visible = 'visible',
+  hidden = 'hidden'
+}
 
 const style: React.CSSProperties = {
   margin: 20,
-  padding: 10
+  // padding: 10
 };
 
 class Login extends React.Component<Props, {}> {
   confirmationResult: any = null;
+ 
   state = {
     selectField: { value: '', label: '' },
     code: '',
@@ -301,7 +322,52 @@ class Login extends React.Component<Props, {}> {
     veriErrorText: '',
     confirmationResult: null,
     veriDisabled: true,
-    status: loadingType.hide
+    status: loadingType.hide,
+    searchText: '',
+    chosenText:'United States(+1)',
+    onSelect: false,
+    clearVisibility: visibilityType.visible
+  };
+
+  clearStyle: React.CSSProperties = {
+    visibility: this.state.clearVisibility
+  };
+
+  handleClickOutsideSelect = () =>{
+    if(colors.indexOf(this.state.searchText) === -1){
+      this.setState({
+        searchText: this.state.chosenText,
+      });
+    }
+  }
+
+  handleUpdateInput = (searchText: String) => {
+    if(searchText.length > 0){
+      this.setState({
+        clearVisibility: visibilityType.visible,
+      });
+    }else{
+      this.setState({
+        clearVisibility: visibilityType.hidden,
+      });
+    }
+    this.setState({
+      searchText: searchText,
+    });
+  };
+
+  handleNewRequest = (chosenRequest: string) => {
+    if(colors.indexOf(chosenRequest) !== -1){
+      this.setState({
+        searchText: chosenRequest,
+        chosenText: chosenRequest
+      });
+    }else{
+      this.setState({
+        searchText: this.state.chosenText,
+      });
+    }
+   
   };
 
   handleChange = (selectedOption: any) => {
@@ -341,6 +407,7 @@ class Login extends React.Component<Props, {}> {
   onLogin = () => {
     if(isValidNumber(this.state.phoneNum,this.state.code)){
       let phoneNumber = phoneNumberParser(this.state.phoneNum,this.state.code);
+    // TODO: if phoneNum isn't valid, show an error.
       ourFirebase
       .signInWithPhoneNumber(
         phoneNumber,
@@ -374,9 +441,9 @@ class Login extends React.Component<Props, {}> {
     this.setState({ status: loadingType.loading });
   };
 
-  goToMainPage() {
+  goToMainPage = () => {
     this.props.history.push('/');
-  }
+  };
 
   render() {
     const selectField = this.state.selectField;
@@ -386,7 +453,7 @@ class Login extends React.Component<Props, {}> {
     }
     return (
       <div>
-        <div style={style}>
+        <div style={style} >
           <div id="recaptcha-container" />
 
           <Select
@@ -398,10 +465,26 @@ class Login extends React.Component<Props, {}> {
               label: country.name + '(+' + country.callingCode + ')'
             }))}
           />
-
+          <div>
+          <AutoComplete
+            floatingLabelText="Country"
+            hintText="Select Country"
+            searchText={this.state.searchText}
+            onUpdateInput={this.handleUpdateInput}
+            onNewRequest={this.handleNewRequest}
+            dataSource={colors}
+            filter={AutoComplete.fuzzyFilter}
+            openOnFocus={true}
+          />
+          <IconButton style={this.clearStyle}>
+            <ContentClear/>
+          </IconButton>
+          </div>
+          <div onClick={this.handleClickOutsideSelect}>
           <br />
           <TextField
             id="phoneNum"
+            floatingLabelText="Phone Number"
             hintText="Enter your phone number"
             errorText={this.state.errorText}
             onChange={this.handleInput}
@@ -417,6 +500,7 @@ class Login extends React.Component<Props, {}> {
           <br />
           <TextField
             id="veriCode"
+            floatingLabelText="Verification Code"
             hintText="Enter your verification code"
             errorText={this.state.veriErrorText}
             onChange={this.handleCodeInput}
@@ -430,7 +514,6 @@ class Login extends React.Component<Props, {}> {
             onClick={this.sendCode}
             disabled={this.state.veriDisabled}
           />
-        </div>
         <RefreshIndicator
           size={50}
           left={window.screen.width / 2}
@@ -438,6 +521,8 @@ class Login extends React.Component<Props, {}> {
           loadingColor="#FF9800"
           status={this.state.status}
         />
+        </div>
+        </div>
       </div>
     );
   }

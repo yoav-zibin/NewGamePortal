@@ -24,6 +24,13 @@ interface PlayingScreenProps {
   myUserId: string;
   userIdToPhoneNumber: UserIdToPhoneNumber;
   phoneNumberToContact: PhoneNumberToContact;
+  // TODO: use router props in mapStateToProps so this component will just
+  // need the current match and current game spec.
+  /*
+  const mapStateToProps = (state, ownProps) => {
+    // Use props injected by React Router:
+    const selectedSlugs = ownProps.params.selectedSlugs.split(';')
+  */
   matchesList: MatchInfo[];
   gameSpecs: GameSpecs;
   match: RouterMatchParams;

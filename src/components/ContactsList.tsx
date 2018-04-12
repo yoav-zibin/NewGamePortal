@@ -18,6 +18,11 @@ const style: React.CSSProperties = {
   marginRight: 20
 };
 
+const searchStyle: React.CSSProperties = {
+  marginLeft: 17,
+  marginRight: 23
+};
+
 interface ContactWithUserId extends Contact {
   userId: string;
 }
@@ -26,7 +31,7 @@ interface Props {
   matchesList: MatchInfo[];
   users: ContactWithUserId[];
   notUsers: Contact[];
-  allUsers: String[];
+  allUserNames: String[];
   match: RouterMatchParams;
   myUserId: string;
   history: History;
@@ -87,18 +92,23 @@ class ContactsList extends React.Component<Props, {}> {
     );
   }
 
+  // TODO: use primaryText & secondaryText in AutoComplete to show whether
+  // the name is an existing user ("Existing user") or not a user ("Invite with SMS").
   render() {
     return (
       <div>
-        <br />
-        <AutoComplete
-          floatingLabelText="Search"
-          filter={AutoComplete.fuzzyFilter}
-          dataSource={this.props.allUsers}
-          maxSearchResults={5}
-          onNewRequest={this.handleRequest}
-          onUpdateInput={this.handleUpdate}
-        />
+        <div style={searchStyle}>
+          <AutoComplete
+            floatingLabelText="Search"
+            filter={AutoComplete.fuzzyFilter}
+            dataSource={this.props.allUserNames}
+            maxSearchResults={5}
+            fullWidth={true}
+            onNewRequest={this.handleRequest}
+            onUpdateInput={this.handleUpdate}
+          />
+        </div>
+
         <List>
           <Subheader>Game User</Subheader>
           {this.filterParticipants(this.filterContacts(this.props.users)).map(
@@ -145,7 +155,7 @@ class ContactsList extends React.Component<Props, {}> {
 const mapStateToProps = (state: StoreState) => {
   const users: ContactWithUserId[] = [];
   const notUsers: Contact[] = [];
-  const allUsers: String[] = [];
+  const allUserNames: String[] = [];
   const phoneNumbers = Object.keys(state.phoneNumberToContact);
   for (let phoneNumber of phoneNumbers) {
     const contact = state.phoneNumberToContact[phoneNumber];
@@ -155,10 +165,10 @@ const mapStateToProps = (state: StoreState) => {
       // Ignore my user (in case I have my own phone number in my contacts)
     } else if (userId) {
       users.push({ ...contact, userId: userId });
-      allUsers.push(contact.name);
+      allUserNames.push(contact.name);
     } else {
       notUsers.push(contact);
-      allUsers.push(contact.name);
+      allUserNames.push(contact.name);
     }
   }
 
@@ -167,7 +177,7 @@ const mapStateToProps = (state: StoreState) => {
   return {
     users,
     notUsers,
-    allUsers,
+    allUserNames,
     matchesList: state.matchesList,
     myUserId: state.myUser.myUserId
   };
