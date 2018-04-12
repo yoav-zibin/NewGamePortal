@@ -8,6 +8,7 @@ import FloatingActionButton from 'material-ui/FloatingActionButton';
 import RaisedButton from 'material-ui/RaisedButton';
 import ContentAdd from 'material-ui/svg-icons/content/add';
 import AutoComplete from 'material-ui/AutoComplete';
+import MenuItem from 'material-ui/MenuItem';
 import { ourFirebase } from '../services/firebase';
 import { connect } from 'react-redux';
 import { StoreState } from '../types/index';
@@ -26,12 +27,23 @@ const searchStyle: React.CSSProperties = {
 interface ContactWithUserId extends Contact {
   userId: string;
 }
+
+interface UserName {
+  name: string;
+  userType: string;
+}
+
+interface DataSourceConfig {
+  text: string;
+  value: string;
+}
+
 // todo rename allusers to allUserNames, do not use any
 interface Props {
   matchesList: MatchInfo[];
   users: ContactWithUserId[];
   notUsers: Contact[];
-  allUserNames: String[];
+  allUserNames: UserName[];
   match: RouterMatchParams;
   myUserId: string;
   history: History;
@@ -43,11 +55,11 @@ class ContactsList extends React.Component<Props, {}> {
     userAdded: false
   };
 
-  handleRequest = (chosenRequest: string, index: number) => {
-    if (chosenRequest.length > 0) {
-      this.setState({ filterValue: chosenRequest });
+  handleRequest = (chosenRequest: DataSourceConfig, index: number) => {
+    if (chosenRequest.text.length > 0) {
+      this.setState({ filterValue: chosenRequest.text });
     }
-    console.log(chosenRequest.length);
+    console.log(chosenRequest.text);
     return index;
   };
 
@@ -101,7 +113,15 @@ class ContactsList extends React.Component<Props, {}> {
           <AutoComplete
             floatingLabelText="Search"
             filter={AutoComplete.fuzzyFilter}
-            dataSource={this.props.allUserNames}
+            dataSource={this.props.allUserNames.map((username: UserName) => ({
+              text: username.name,
+              value: (
+                <MenuItem
+                  primaryText={username.name}
+                  secondaryText={username.userType}
+                />
+              )
+            }))}
             maxSearchResults={5}
             fullWidth={true}
             onNewRequest={this.handleRequest}
@@ -155,7 +175,7 @@ class ContactsList extends React.Component<Props, {}> {
 const mapStateToProps = (state: StoreState) => {
   const users: ContactWithUserId[] = [];
   const notUsers: Contact[] = [];
-  const allUserNames: String[] = [];
+  const allUserNames: UserName[] = [];
   const phoneNumbers = Object.keys(state.phoneNumberToContact);
   for (let phoneNumber of phoneNumbers) {
     const contact = state.phoneNumberToContact[phoneNumber];
@@ -165,10 +185,22 @@ const mapStateToProps = (state: StoreState) => {
       // Ignore my user (in case I have my own phone number in my contacts)
     } else if (userId) {
       users.push({ ...contact, userId: userId });
-      allUserNames.push(contact.name);
+      // userName.name = contact.name;
+      // userName.userType = "Existing user";
+      let userName: UserName = {
+        name: contact.name,
+        userType: 'Existing user'
+      };
+      allUserNames.push(userName);
     } else {
       notUsers.push(contact);
-      allUserNames.push(contact.name);
+      let userName: UserName = {
+        name: contact.name,
+        userType: 'Invite with SMS'
+      };
+      // userName.name = contact.name;
+      // userName.userType = "Invite with SMS";
+      allUserNames.push(userName);
     }
   }
 
