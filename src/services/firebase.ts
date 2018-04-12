@@ -436,7 +436,6 @@ export namespace ourFirebase {
         matchState: newMatchStates
       };
 
-      console.log('listenToMatch');
       receivedMatches[matchId] = match;
       if (Object.keys(receivedMatches).length >= listeningToMatchIds.length) {
         dispatchSetMatchesList();
