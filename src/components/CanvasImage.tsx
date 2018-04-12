@@ -19,11 +19,12 @@ interface CanvasImageProps extends KonvaNodeProps {
   width: number;
   height: number;
   onClick?: (e: React.MouseEvent<{}>) => void;
-  onContextMenu?: (e: React.MouseEvent<{}>) => void;
+  onTouchStart?: (e: React.TouchEvent<{}>) => void;
   x?: number;
   y?: number;
   rotation?: number;
   draggable?: boolean;
+  onDragStart?: (e: React.SyntheticEvent<{}>) => void;
   onDragEnd?: (e: React.SyntheticEvent<{}>) => void;
   // TODO: do not use ": any" anywhere.
   item?: any;
@@ -50,7 +51,6 @@ class CanvasImage extends React.Component<CanvasImageProps, CanvasImageState> {
   componentWillReceiveProps(nextProps: CanvasImageProps) {
     const image = new window.Image();
     image.crossOrigin = 'Anonymous';
-    image.src = nextProps.src;
     image.onload = () => {
       this.setState({
         image: image
@@ -58,12 +58,13 @@ class CanvasImage extends React.Component<CanvasImageProps, CanvasImageState> {
       this.imageNode.cache();
       this.imageNode.drawHitFromCache(0);
     };
+    image.src = nextProps.src;
   }
 
   setImage = () => {
     const image = new window.Image();
-    image.src = this.props.src;
     image.crossOrigin = 'Anonymous';
+    image.src = this.props.src;
     image.onload = () => {
       this.setState({
         image: image

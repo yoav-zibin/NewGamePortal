@@ -12,6 +12,8 @@ import {
   MyUser
 } from './types';
 import { connect } from 'react-redux';
+import { withRouter } from 'react-router-dom';
+import * as H from 'history';
 
 interface Props {
   matchesList: MatchInfo[];
@@ -19,6 +21,10 @@ interface Props {
   userIdsAndPhoneNumbers: UserIdsAndPhoneNumbers;
   phoneNumberToContact: PhoneNumberToContact;
   myUser: MyUser;
+  // react-router-dom says match<P> is the type, not sure what P should be
+  match: any;
+  location: H.Location;
+  history: H.History;
 }
 
 class AppHeader extends React.Component<Props, {}> {
@@ -31,7 +37,10 @@ class AppHeader extends React.Component<Props, {}> {
 
   // Header for AppBar
   getLocation() {
-    let pathname: string = window.location.pathname;
+    let pathname: string = this.props.location.pathname;
+    console.log('PROPS LOCATION:', this.props.location);
+    console.log('PROPS HISTORY:', this.props.history);
+    console.log('PROPS MATCH:', this.props.match);
     let result = this.routes[pathname];
     if (result) {
       return result;
@@ -44,23 +53,15 @@ class AppHeader extends React.Component<Props, {}> {
         if (match.matchId === matchId) {
           const game: GameInfo = match.game;
           title += game.gameName;
-          console.log(
-            'PARTICIPANTUDERIDS LENGTH: ',
-            match.participantsUserIds.length
-          );
-          console.log('MY USER ID: ', this.props.myUser.myUserId);
           // Is the game multiplayer? If so convert ID --> Phone --> Contact
           if (match.participantsUserIds.length > 1) {
             title += ' with ';
             match.participantsUserIds.forEach((participantId: string) => {
               // Exclude myself
               if (participantId !== this.props.myUser.myUserId) {
-                console.log('PARTICIPANTID', participantId);
                 const phoneNumber = this.props.userIdsAndPhoneNumbers
                   .userIdToPhoneNumber[participantId];
-                console.log('PHONE NUMBER: ', phoneNumber);
                 const contact = this.props.phoneNumberToContact[phoneNumber];
-                console.log('CONTACT NAME: ', contact);
                 title += contact.name;
               }
             });
@@ -101,4 +102,4 @@ const mapStateToProps = (state: StoreState) => ({
   myUser: state.myUser
 });
 
-export default connect(mapStateToProps)(AppHeader);
+export default connect(mapStateToProps)(withRouter(AppHeader));
