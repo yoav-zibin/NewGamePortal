@@ -222,6 +222,16 @@ class Board extends React.Component<BoardProps, BoardState> {
       this.state.innerHeight / height
     );
 
+    this.matchInfo = this.props.matchInfo;
+    this.gameSpec = this.props.gameSpec;
+    this.selfParticipantIndex = this.matchInfo.participantsUserIds.indexOf(
+      this.props.myUserId
+    );
+    this.helper = new MatchStateHelper(this.matchInfo);
+
+    // for throttling window resize event
+    this.throttled = false;
+
     let boardLayer = (
       <CanvasImage
         height={height * ratio}
