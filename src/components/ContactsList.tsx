@@ -108,17 +108,15 @@ class ContactsList extends React.Component<Props, {}> {
           <AutoComplete
             floatingLabelText="Search"
             filter={AutoComplete.fuzzyFilter}
-            dataSource={[
-              this.props.allUserNames.map((username: UserName) => ({
-                text: username.name,
-                value: (
-                  <MenuItem
-                    primaryText={username.name}
-                    secondaryText={username.userType}
-                  />
-                )
-              }))
-            ]}
+            dataSource={this.props.allUserNames.map((username: UserName) => ({
+              text: username.name,
+              value: (
+                <MenuItem
+                  primaryText={username.name}
+                  secondaryText={username.userType}
+                />
+              )
+            }))}
             maxSearchResults={5}
             fullWidth={true}
             onNewRequest={this.handleRequest}
