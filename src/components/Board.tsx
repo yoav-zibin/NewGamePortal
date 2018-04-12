@@ -209,7 +209,7 @@ class Board extends React.Component<BoardProps, BoardState> {
   // If there is just one layer for pieces, then if you drag the card from that x&y then it would drag the piece with
   // the highest zDepth (so card A).
   // But if we use two layers for pieces, then card A will be in one layer and card B
-  // in another layer (that is above the first layer), so dragging will correctly pick card A.
+  // in another layer (that is above the first layer), so dragging will correctly pick card B.
 
   render() {
     // TODO: Complete layer for board
@@ -228,6 +228,7 @@ class Board extends React.Component<BoardProps, BoardState> {
         width={width * ratio}
         src={boardImage}
         onClick={() => this.hideCardOptions()}
+        onTouchStart={() => this.hideCardOptions()}
       />
     );
 
@@ -260,6 +261,15 @@ class Board extends React.Component<BoardProps, BoardState> {
           key={index}
           draggable={pieceSpec.element.isDraggable || kind === 'standard'}
           onClick={() => {
+            if (kind === 'toggable') {
+              this.togglePiece(index);
+            } else if (kind === 'dice') {
+              this.rollDice(index);
+            } else if (kind === 'card') {
+              this.toggleCardOptions('canvasImage' + index, index);
+            }
+          }}
+          onTouchStart={() => {
             if (kind === 'toggable') {
               this.togglePiece(index);
             } else if (kind === 'dice') {
