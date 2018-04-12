@@ -13,7 +13,8 @@ import {
 } from './types';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
-import * as H from 'history';
+// import { withRouter } from 'react-router-dom';
+// import * as H from 'history';
 
 interface Props {
   matchesList: MatchInfo[];
@@ -23,14 +24,13 @@ interface Props {
   myUser: MyUser;
   // react-router-dom says match<P> is the type, not sure what P should be
   match: any;
-  location: H.Location;
-  history: H.History;
+  location: any;
+  history: any;
 }
 
 class AppHeader extends React.Component<Props, {}> {
   routes: StringIndexer = {
     '/login': 'Login',
-    '/contactsList': 'Add an opponent',
     '/addMatch': 'Create a new game',
     '/': 'My games'
   };
@@ -38,12 +38,14 @@ class AppHeader extends React.Component<Props, {}> {
   // Header for AppBar
   getLocation() {
     let pathname: string = this.props.location.pathname;
-    console.log('PROPS LOCATION:', this.props.location);
-    console.log('PROPS HISTORY:', this.props.history);
-    console.log('PROPS MATCH:', this.props.match);
+    // console.log('PROPS LOCATION:', this.props.location);
+    // console.log('PROPS HISTORY:', this.props.history);
+    // console.log('PROPS MATCH:', this.props.match);
     let result = this.routes[pathname];
     if (result) {
       return result;
+    } else if (pathname.startsWith('/contactsList/')) {
+      return 'Contacts List';
     } else if (pathname.startsWith('/matches/')) {
       let matchId = pathname.split('/')[2];
       let title = ''; // String to build
@@ -76,14 +78,17 @@ class AppHeader extends React.Component<Props, {}> {
 
   // When back button is clicked
   handleOnClick() {
-    window.history.go(-1);
+    this.props.history.goBack();
   }
 
   render() {
     return (
       <AppBar
         iconElementLeft={
-          <FloatingActionButton mini={true} onClick={this.handleOnClick}>
+          <FloatingActionButton
+            mini={true}
+            onClick={this.handleOnClick.bind(this)}
+          >
             <NavigationArrowBack />
           </FloatingActionButton>
         }
@@ -102,4 +107,5 @@ const mapStateToProps = (state: StoreState) => ({
   myUser: state.myUser
 });
 
+// export default connect(mapStateToProps)(withRouter(AppHeader));
 export default connect(mapStateToProps)(withRouter(AppHeader));

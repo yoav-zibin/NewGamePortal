@@ -120,6 +120,10 @@ export namespace ourFirebase {
     const uid = user.uid;
     if (persistedOldStore && uid === persistedOldStore.myUser.myUserId) {
       dispatch({ restoreOldStore: persistedOldStore });
+      if (!myCountryCodeForSignInWithPhoneNumber) {
+        myCountryCodeForSignInWithPhoneNumber =
+          persistedOldStore.myUser.myCountryCode;
+      }
     }
     if (phoneNumberForSignInAnonymously) {
       user.updateProfile({
@@ -137,14 +141,7 @@ export namespace ourFirebase {
       userId: uid
     });
 
-    // We update fields only after calling signIn* method.
-    if (
-      phoneNumberForSignInAnonymously ||
-      myCountryCodeForSignInWithPhoneNumber
-    ) {
-      updatePrivateFieldsAfterLogin(uid, phoneNumber);
-    }
-
+    updatePrivateFieldsAfterLogin(uid, phoneNumber);
     dispatch({
       setMyUser: {
         myUserId: uid,

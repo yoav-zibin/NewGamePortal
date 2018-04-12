@@ -56,8 +56,12 @@ export namespace videoChat {
       .then(res => res.json())
       .catch(error => console.error('Error:', error))
       .then(response => {
+        if (!response || !response.v || response.v.iceServers) {
+          console.warn('xirsys returned illegal reponse:', response);
+          return;
+        }
         const iceServers = response.v.iceServers;
-        console.log('Success:', response, 'ICE List: ' + iceServers);
+        console.log('Success:', response, 'ICE List: ', iceServers);
         configuration.iceServers = configuration.iceServers.concat(iceServers);
       });
   }

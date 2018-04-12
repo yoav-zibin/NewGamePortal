@@ -39,9 +39,9 @@ const styles: CSSPropertiesIndexer = {
     width: '100%',
     minHeight: '160px',
     overflowY: 'scroll',
-    /* 
-      font-size is 0 to avoid spaces between the inline video elements after linebreak. 
-      see https://css-tricks.com/fighting-the-space-between-inline-block-elements/ 
+    /*
+      font-size is 0 to avoid spaces between the inline video elements after linebreak.
+      see https://css-tricks.com/fighting-the-space-between-inline-block-elements/
     */
     fontSize: 0
   }
@@ -51,36 +51,25 @@ class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
   matchInfo: MatchInfo;
   gameSpec: GameSpec;
 
-  constructor(props: PlayingScreenProps) {
-    super(props);
-    for (let match of this.props.matchesList) {
-      if (this.props.match.params.matchIdInRoute === match.matchId) {
-        this.matchInfo = match;
-        this.gameSpec = this.props.gameSpecs.gameSpecIdToGameSpec[
-          match.gameSpecId
-        ];
-      }
-    }
-  }
-
-  componentDidUpdate() {
-    for (let match of this.props.matchesList) {
-      if (this.props.match.params.matchIdInRoute === match.matchId) {
-        this.matchInfo = match;
-        this.gameSpec = this.props.gameSpecs.gameSpecIdToGameSpec[
-          match.gameSpecId
-        ];
-      }
-    }
-  }
-
   render() {
-    if (!this.matchInfo) {
+    let matchInfo: MatchInfo | undefined;
+    let gameSpec: GameSpec | undefined;
+
+    for (let match of this.props.matchesList) {
+      if (this.props.match.params.matchIdInRoute === match.matchId) {
+        matchInfo = match;
+        gameSpec = this.props.gameSpecs.gameSpecIdToGameSpec[
+          match.gameSpecId
+        ];
+      }
+    }
+
+    if (!matchInfo) {
       return <div>The matchId doesn't exist.</div>;
-    } else if (!this.gameSpec) {
-      let gameSpecScreenShot = this.matchInfo.game.screenShot.downloadURL;
-      let screenShotWidth = this.matchInfo.game.screenShot.width;
-      let screenShotHeight = this.matchInfo.game.screenShot.height;
+    } else if (!gameSpec) {
+      let gameSpecScreenShot = matchInfo!.game.screenShot.downloadURL;
+      let screenShotWidth = matchInfo!.game.screenShot.width;
+      let screenShotHeight = matchInfo!.game.screenShot.height;
       const ratio = Math.min(
         window.innerWidth / screenShotWidth,
         window.innerHeight / screenShotHeight
@@ -106,7 +95,7 @@ class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
       );
     }
     document.getElementById('loadingSpinner')!.style.display = 'none';
-    const participantsUserIds = this.matchInfo.participantsUserIds;
+    const participantsUserIds = matchInfo!.participantsUserIds;
     const opponents = getOpponents(
       participantsUserIds,
       this.props.myUserId,
@@ -122,12 +111,12 @@ class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
     );
     return (
       <div>
-        <Board matchInfo={this.matchInfo} gameSpec={this.gameSpec} />
+        <Board matchInfo={matchInfo!} gameSpec={gameSpec} />
         {videoArea}
         <FloatingActionButton
           style={{ marginRight: 20 }}
           onClick={() =>
-            this.props.history.push('/contactsList/' + this.matchInfo.matchId)
+            this.props.history.push('/contactsList/' + matchInfo!.matchId)
           }
         >
           <ContentAdd />
