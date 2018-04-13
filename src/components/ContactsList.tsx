@@ -185,8 +185,6 @@ const mapStateToProps = (state: StoreState) => {
       // Ignore my user (in case I have my own phone number in my contacts)
     } else if (userId) {
       users.push({ ...contact, userId: userId });
-      // userName.name = contact.name;
-      // userName.userType = "Existing user";
       let userName: UserName = {
         name: contact.name,
         userType: 'Existing user'
@@ -198,8 +196,6 @@ const mapStateToProps = (state: StoreState) => {
         name: contact.name,
         userType: 'Invite with SMS'
       };
-      // userName.name = contact.name;
-      // userName.userType = "Invite with SMS";
       allUserNames.push(userName);
     }
   }
