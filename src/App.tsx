@@ -1,6 +1,6 @@
 import * as React from 'react';
 import './App.css';
-import AppHeader from './AppHeader';
+import AppHeader from './components/AppHeader';
 import { Route } from 'react-router';
 import PrivateRoute from './components/PrivateRoute';
 import PlayingScreen from './components/PlayingScreen';
