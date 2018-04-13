@@ -39,6 +39,9 @@ interface Props {
 
 class VideoArea extends React.Component<Props, {}> {
   componentDidMount() {
+    // TODO: Permission Explanation, e.g. "GamePortal needs access to your camera for video chat"
+    // Similar permission explanation before getting the contacts or push notification.
+
     videoChat.getUserMedia().then(() => {
       if (videoChat.isSupported()) {
         videoChat.updateOpponents(

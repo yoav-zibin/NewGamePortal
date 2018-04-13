@@ -24,6 +24,7 @@ interface PlayingScreenProps {
   myUserId: string;
   userIdToPhoneNumber: UserIdToPhoneNumber;
   phoneNumberToContact: PhoneNumberToContact;
+  // Remove matchesList & gameSpecs, compute in mapStateToProps exactly what you need.
   matchesList: MatchInfo[];
   gameSpecs: GameSpecs;
   match: RouterMatchParams;
@@ -48,6 +49,7 @@ const styles: CSSPropertiesIndexer = {
 };
 
 class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
+  // todo: remove
   matchInfo: MatchInfo;
   gameSpec: GameSpec;
 
@@ -74,6 +76,7 @@ class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
         window.innerWidth / screenShotWidth,
         window.innerHeight / screenShotHeight
       );
+      // Don't need a canvas for the screenshot, just use HTML image
       let screenShotLayer = (
         <CanvasImage
           height={screenShotHeight * ratio}
@@ -126,7 +129,15 @@ class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
   }
 }
 
-const mapStateToProps = (state: StoreState) => {
+const mapStateToProps = (state: StoreState, ownProps: PlayingScreenProps) => {
+  console.log("ownProps=", ownProps);
+  // TODO: filter here!!!
+  // use router props in mapStateToProps so this component will just
+  // need the current match and current game spec.
+  // const mapStateToProps = (state: StoreState, ownProps: PlayingScreenProps) => {
+  //     // Use props injected by React Router
+  //     const selectedSlugs = ownProps.params.selectedSlugs.split(';');
+  // }
   return {
     matchesList: state.matchesList,
     gameSpecs: state.gameSpecs,
@@ -135,12 +146,5 @@ const mapStateToProps = (state: StoreState) => {
     phoneNumberToContact: state.phoneNumberToContact
   };
 };
-
-// TODO: use router props in mapStateToProps so this component will just
-// need the current match and current game spec.
-// const mapStateToProps = (state: StoreState, ownProps: PlayingScreenProps) => {
-//     // Use props injected by React Router
-//     const selectedSlugs = ownProps.params.selectedSlugs.split(';');
-// }
 
 export default connect(mapStateToProps)(PlayingScreen);
