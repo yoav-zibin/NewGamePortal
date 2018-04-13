@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import { Provider } from 'react-redux';
-import { Route, BrowserRouter } from 'react-router-dom';
+import { Route, HashRouter } from 'react-router-dom';
 
 import { store } from './stores/index';
 import App from './App';
@@ -18,7 +18,7 @@ function reactRender() {
   ReactDOM.render(
     <MuiThemeProvider>
       <Provider store={store}>
-        <BrowserRouter
+        <HashRouter
           basename={
             location.hostname === 'yoav-zibin.github.io' ? 'NewGamePortal' : '/'
           }
@@ -26,7 +26,7 @@ function reactRender() {
           <div>
             <Route path="/" component={App} />
           </div>
-        </BrowserRouter>
+        </HashRouter>
       </Provider>
     </MuiThemeProvider>,
     document.getElementById('root') as HTMLElement
@@ -102,6 +102,21 @@ if (window.location.search.match('^[?][0-9]$')) {
   ourFirebase.storeContacts(currentContacts);
 }
 
-// Give 500ms for onAuthStateChanged in firebase.ts to load the cookies and log in the user
-// (so we won't see the login screen flashed and redirect to '/')
-setTimeout(reactRender, 500);
+declare global {
+  interface Window {
+    cordova: any;
+  }
+}
+
+// Check for cordova plugins
+if (window.cordova) {
+  document.addEventListener(
+    'deviceready',
+    () => setTimeout(reactRender, 500),
+    false
+  );
+} else {
+  // Give 500ms for onAuthStateChanged in firebase.ts to load the cookies and log in the user
+  // (so we won't see the login screen flashed and redirect to '/')
+  setTimeout(reactRender, 500);
+}
