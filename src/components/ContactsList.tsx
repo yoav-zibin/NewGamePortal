@@ -30,7 +30,7 @@ interface ContactWithUserId extends Contact {
 
 interface UserName {
   name: string;
-  userType: string;
+  userType: 'Invite with SMS' | 'Existing user';
 }
 
 interface DataSourceConfig {
@@ -172,7 +172,7 @@ class ContactsList extends React.Component<Props, {}> {
   }
 }
 
-const mapStateToProps = (state: StoreState) => {
+const mapStateToProps = (state: StoreState, ownProps: Props) => {
   const users: ContactWithUserId[] = [];
   const notUsers: Contact[] = [];
   const allUserNames: UserName[] = [];
@@ -206,6 +206,9 @@ const mapStateToProps = (state: StoreState) => {
 
   users.sort((c1, c2) => c1.name.localeCompare(c2.name));
   notUsers.sort((c1, c2) => c1.name.localeCompare(c2.name));
+
+  console.log("ownProps=", ownProps);
+  // TODO: filter here!!! Use ownProps. Don't pass the entire matchesList.
   return {
     users,
     notUsers,

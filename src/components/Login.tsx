@@ -211,6 +211,7 @@ class Login extends React.Component<Props, {}> {
                       />
                     )
             }))}
+            fullWidth={true}
             filter={AutoComplete.fuzzyFilter}
             openOnFocus={true}
           />

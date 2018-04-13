@@ -48,6 +48,7 @@ const styles: CSSPropertiesIndexer = {
 };
 
 class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
+  // todo: remove
   matchInfo: MatchInfo;
   gameSpec: GameSpec;
 
@@ -126,7 +127,15 @@ class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
   }
 }
 
-const mapStateToProps = (state: StoreState) => {
+const mapStateToProps = (state: StoreState, ownProps: PlayingScreenProps) => {
+  console.log();
+  // TODO: filter here!!!
+  // use router props in mapStateToProps so this component will just
+  // need the current match and current game spec.
+  // const mapStateToProps = (state: StoreState, ownProps: PlayingScreenProps) => {
+  //     // Use props injected by React Router
+  //     const selectedSlugs = ownProps.params.selectedSlugs.split(';');
+  // }
   return {
     matchesList: state.matchesList,
     gameSpecs: state.gameSpecs,
@@ -136,11 +145,6 @@ const mapStateToProps = (state: StoreState) => {
   };
 };
 
-// TODO: use router props in mapStateToProps so this component will just
-// need the current match and current game spec.
-// const mapStateToProps = (state: StoreState, ownProps: PlayingScreenProps) => {
-//     // Use props injected by React Router
-//     const selectedSlugs = ownProps.params.selectedSlugs.split(';');
-// }
+
 
 export default connect(mapStateToProps)(PlayingScreen);

@@ -17,8 +17,10 @@ import { withRouter } from 'react-router-dom';
 // import * as H from 'history';
 
 interface Props {
+  // TODO: Refactor to use current match only
   matchesList: MatchInfo[];
   gamesList: GameInfo[];
+  // TODO: Refactor to use global functions 
   userIdsAndPhoneNumbers: UserIdsAndPhoneNumbers;
   phoneNumberToContact: PhoneNumberToContact;
   myUser: MyUser;
@@ -51,6 +53,7 @@ class AppHeader extends React.Component<Props, {}> {
       let title = ''; // String to build
 
       // Get corresponding info for selected match
+      // TODO: Refactor to use global function 
       this.props.matchesList.forEach((match: MatchInfo) => {
         if (match.matchId === matchId) {
           const game: GameInfo = match.game;
@@ -77,7 +80,7 @@ class AppHeader extends React.Component<Props, {}> {
   }
 
   // When back button is clicked
-  handleOnClick() {
+  handleOnClick = () => {
     this.props.history.goBack();
   }
 
@@ -87,7 +90,7 @@ class AppHeader extends React.Component<Props, {}> {
         iconElementLeft={
           <FloatingActionButton
             mini={true}
-            onClick={this.handleOnClick.bind(this)}
+            onClick={this.handleOnClick}
           >
             <NavigationArrowBack />
           </FloatingActionButton>

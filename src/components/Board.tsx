@@ -34,6 +34,7 @@ interface BoardState {
  */
 class Board extends React.Component<BoardProps, BoardState> {
   // TODO CARD
+  // TODO: try to get rid of all these class members.
   selectedPieceIndex: number;
   selfParticipantIndex: number;
   tooltipPosition: {
@@ -90,6 +91,7 @@ class Board extends React.Component<BoardProps, BoardState> {
     }
   }
 
+  // todo: change to set
   getDimensions() {
     this.setState({
       innerWidth: window.innerWidth,
