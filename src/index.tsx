@@ -36,6 +36,9 @@ function reactRender() {
 const release = (sentryRelease as any).releaseVersion.trim();
 console.log('Version for sentry: ', release);
 Raven.config('https://efc65f7e50c14bd9a3482e2ad2ae3b9d@sentry.io/939406', {
+  ignoreErrors: [
+    'Network Error',
+  ],
   release: release
 }).install();
 
