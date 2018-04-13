@@ -2,7 +2,7 @@ import * as React from 'react';
 import AppBar from 'material-ui/AppBar';
 import FloatingActionButton from 'material-ui/FloatingActionButton';
 import NavigationArrowBack from 'material-ui/svg-icons/navigation/arrow-back';
-import { StringIndexer } from './types';
+import { StringIndexer } from '../types';
 import {
   MatchInfo,
   StoreState,
@@ -10,27 +10,24 @@ import {
   UserIdsAndPhoneNumbers,
   PhoneNumberToContact,
   MyUser
-} from './types';
+} from '../types';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
-// import { withRouter } from 'react-router-dom';
-// import * as H from 'history';
+import * as H from 'history';
+import { getOpponents } from '../globals';
 
 interface Props {
-  // TODO: Refactor to use current match only
   matchesList: MatchInfo[];
   gamesList: GameInfo[];
-  // TODO: Refactor to use global functions 
   userIdsAndPhoneNumbers: UserIdsAndPhoneNumbers;
   phoneNumberToContact: PhoneNumberToContact;
   myUser: MyUser;
   // react-router-dom says match<P> is the type, not sure what P should be
   match: any;
-  location: any;
-  history: any;
+  location: H.Location;
+  history: H.History;
 }
 
-// Move AppHeader to components/
 class AppHeader extends React.Component<Props, {}> {
   routes: StringIndexer = {
     '/login': 'Login',
@@ -41,9 +38,6 @@ class AppHeader extends React.Component<Props, {}> {
   // Header for AppBar
   getLocation() {
     let pathname: string = this.props.location.pathname;
-    // console.log('PROPS LOCATION:', this.props.location);
-    // console.log('PROPS HISTORY:', this.props.history);
-    // console.log('PROPS MATCH:', this.props.match);
     let result = this.routes[pathname];
     if (result) {
       return result;
@@ -54,8 +48,6 @@ class AppHeader extends React.Component<Props, {}> {
       let title = ''; // String to build
 
       // Get corresponding info for selected match
-      // TODO: Refactor to use global function (getting corresponding matchInfo for the current location)
-
       this.props.matchesList.forEach((match: MatchInfo) => {
         if (match.matchId === matchId) {
           const game: GameInfo = match.game;
@@ -63,14 +55,13 @@ class AppHeader extends React.Component<Props, {}> {
           // Is the game multiplayer? If so convert ID --> Phone --> Contact
           if (match.participantsUserIds.length > 1) {
             title += ' with ';
-            match.participantsUserIds.forEach((participantId: string) => {
-              // Exclude myself
-              if (participantId !== this.props.myUser.myUserId) {
-                const phoneNumber = this.props.userIdsAndPhoneNumbers
-                  .userIdToPhoneNumber[participantId];
-                const contact = this.props.phoneNumberToContact[phoneNumber];
-                title += contact.name;
-              }
+            getOpponents(
+              match.participantsUserIds,
+              this.props.myUser.myUserId,
+              this.props.userIdsAndPhoneNumbers.userIdToPhoneNumber,
+              this.props.phoneNumberToContact
+            ).forEach((opponent: any) => {
+              title += opponent.name;
             });
           } // End length if
         } // End matchId if
@@ -84,16 +75,13 @@ class AppHeader extends React.Component<Props, {}> {
   // When back button is clicked
   handleOnClick = () => {
     this.props.history.goBack();
-  }
+  };
 
   render() {
     return (
       <AppBar
         iconElementLeft={
-          <FloatingActionButton
-            mini={true}
-            onClick={this.handleOnClick}
-          >
+          <FloatingActionButton mini={true} onClick={this.handleOnClick}>
             <NavigationArrowBack />
           </FloatingActionButton>
         }
