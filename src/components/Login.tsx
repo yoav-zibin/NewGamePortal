@@ -102,24 +102,31 @@ class Login extends React.Component<Props, {}> {
   };
 
   handleNewRequest = (chosenRequest: DataSourceNode) => {
-    let searchWords = chosenRequest.text.split("-");
-    if(this.props.countryNames.indexOf(searchWords[1]) !== -1){
-      this.setState({
-        searchText: searchWords[1],
-        defaultText: searchWords[1],
-        code: searchWords[0],
-        defaultCode: searchWords[0]
-      });
+    if(chosenRequest.text.indexOf("-") !== -1){
+      let searchWords = chosenRequest.text.split("-");
+      console.log(searchWords)
+      if(this.props.countryNames.indexOf(searchWords[1]) !== -1){
+        this.setState({
+          searchText: searchWords[1],
+          defaultText: searchWords[1],
+          code: searchWords[0],
+          defaultCode: searchWords[0]
+        });
+      }else{
+        this.setState({
+          searchText: this.state.defaultText,
+          code: this.state.defaultCode
+        });
+      }
     }else{
       this.setState({
         searchText: this.state.defaultText,
         code: this.state.defaultCode
-      });
-    }
-   
-  };
+    });
+  }
+};
 
-  handleInput = (event: any) => {
+ handleInput = (event: any) => {
     if (!event.target.value) {
       this.setState({
         phoneNum: event.target.value,
