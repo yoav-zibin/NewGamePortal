@@ -14,8 +14,7 @@ import { Redirect } from 'react-router';
 require('../js/trans-compiled');
 const data = require('../countrycode.json');
 
-declare function isValidNumber(phoneNumber:String,regionCode:String):boolean;
-declare function phoneNumberParser(phoneNumber:String,regionCode:String):string;
+declare function parsePhoneNumber(phoneNumber:String,regionCode:String):PhoneNumInfo;
 
 interface Country {
   name: string;
@@ -34,6 +33,16 @@ interface Props {
 interface DataSourceNode {
   text: string;
   value: object;
+}
+
+interface PhoneNumInfo {
+  number:string;
+  isPossibleNumber: boolean;
+  isValidNumber: boolean;
+  isValidNumberForRegion: boolean;
+  maybeMobileNumber: boolean;
+  internationalFormat: string;
+  e164Format: string;
 }
 
 enum loadingType {
@@ -153,8 +162,10 @@ class Login extends React.Component<Props, {}> {
   };
 
   onLogin = () => {
-    if(isValidNumber(this.state.phoneNum,this.state.code)){
-      let phoneNumber = phoneNumberParser(this.state.phoneNum,this.state.code);
+    let result = parsePhoneNumber(this.state.phoneNum,this.state.code);
+    console.log(result);
+    if(result['isValidNumber']){
+      let phoneNumber = result['internationalFormat'];
       ourFirebase
       .signInWithPhoneNumber(
         phoneNumber,
@@ -279,6 +290,7 @@ class Login extends React.Component<Props, {}> {
 
 import { connect } from 'react-redux';
 import { StoreState } from '../types/index';
+// import { bool } from 'prop-types';
 
 const mapStateToProps = (state: StoreState) => {
   const countries: Country[] = [];
