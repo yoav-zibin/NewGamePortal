@@ -11,7 +11,7 @@ import './index.css';
 import { ourFirebase } from './services/firebase';
 import { Contact, PhoneNumberToContact } from './types';
 import * as Raven from 'raven-js';
-import * as sentryRelease from './sentry-config.json';
+// import * as sentryRelease from './sentry-config.json';
 
 function reactRender() {
   document.getElementById('loadingSpinner')!.style.display = 'none';
@@ -33,12 +33,11 @@ function reactRender() {
   );
 }
 
-const release = (sentryRelease as any).releaseVersion.trim();
+// const release = (sentryRelease as any).releaseVersion.trim();
+const release = 'V2.0';
 console.log('Version for sentry: ', release);
 Raven.config('https://efc65f7e50c14bd9a3482e2ad2ae3b9d@sentry.io/939406', {
-  ignoreErrors: [
-    'Network Error',
-  ],
+  ignoreErrors: ['Network Error'],
   release: release
 }).install();
 

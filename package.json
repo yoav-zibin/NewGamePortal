@@ -9,7 +9,7 @@
     "raven-js": "^3.24.0",
     "react": "^16.3.1",
     "react-dom": "^16.3.1",
-    "react-konva": "^1.7.1",
+    "react-konva": "^1.7.2",
     "react-redux": "^5.0.7",
     "react-router": "^4.2.0",
     "react-router-dom": "^4.2.2",
@@ -19,7 +19,8 @@
   },
   "scripts": {
     "start": "react-scripts-ts start",
-    "build": "echo-cli '{\"releaseVersion\": \"' $(sentry-cli releases -o zibiga -p gameportal propose-version) '\"}' > src/sentry-config.json & react-scripts-ts build",
+    "sentry": "sentry-cli releases -o zibiga -p gameportal propose-version",
+    "build": "echo-cli sdf npm run sentry` > src/sentry-config.json",
     "test": "react-scripts-ts test --env=jsdom",
     "eject": "react-scripts-ts eject",
     "predeploy": "npm run build",
