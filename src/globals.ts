@@ -12,6 +12,10 @@ export const platform: PlatformType =
     : window.location.search === '?platform=ios'
       ? 'ios'
       : window.location.search === '?platform=android' ? 'android' : 'web';
+export const isTests = platform === 'tests';
+export const isIos = platform === 'ios';
+export const isAndroid = platform === 'android';
+export const isWeb = platform === 'web';
 
 export function checkCondition(desc: any, cond: boolean | Object) {
   if (!cond) {

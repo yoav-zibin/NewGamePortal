@@ -6,7 +6,8 @@ import {
   getValues,
   prettyJson,
   objectMap,
-  checkNotNull
+  checkNotNull,
+  isTests
 } from '../globals';
 import {
   BooleanIndexer,
@@ -240,7 +241,7 @@ export namespace ourFirebase {
     if (isFetchingGameSpec[gameSpecId]) {
       return;
     }
-    if (!allPromisesForTests) {
+    if (!isTests) {
       console.log('fetchGameSpec:', gameSpecId);
     }
     isFetchingGameSpec[gameSpecId] = true;
@@ -248,7 +249,9 @@ export namespace ourFirebase {
       getRef(
         `/gamePortal/gamesInfoAndSpec/gameSpecsForPortal/${gameSpecId}`
       ).once('value', snapshot => {
-        console.log('Got game spec for:', game);
+        if (!isTests) {
+          console.log('Got game spec for:', game);
+        }
         const gameSpecF: fbr.GameSpecForPortal = snapshot.val();
         if (!gameSpecF) {
           throw new Error('no game spec!');
@@ -446,7 +449,9 @@ export namespace ourFirebase {
   }
 
   export function createMatch(game: GameInfo) {
-    console.log('createMatch for:', game);
+    if (!isTests) {
+      console.log('createMatch for:', game);
+    }
     const uid = getUserId();
     const matchRef = getRef('/gamePortal/matches').push();
     const matchId = matchRef.key!;
