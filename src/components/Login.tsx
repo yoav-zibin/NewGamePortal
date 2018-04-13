@@ -180,8 +180,6 @@ class Login extends React.Component<Props, {}> {
 
       this.setState({ veriDisabled: false });
     }else{
-      // TODO: use react materiale UI instead of alert.
-      alert("invalid phone number")
       this.setState({errorText: "invalid phone number"})
     }
   }
