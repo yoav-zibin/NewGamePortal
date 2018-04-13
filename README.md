@@ -33,6 +33,6 @@ with react-scripts-ts for typescript bindings
 Run the following commands:
 `npm install`
 `npm run-script build`
-`./node_modules/@sentry/cli/sentry-cli login`
-`./node_modules/@sentry/cli/sentry-cli info`
-`./node_modules/@sentry/cli/sentry-cli releases -o zibiga -p gameportal list`
+`./node_modules/@sentry/cli/bin/sentry-cli login`
+`./node_modules/@sentry/cli/bin/sentry-cli info`
+`./node_modules/@sentry/cli/bin/sentry-cli releases -o zibiga -p gameportal list`
