@@ -30,4 +30,8 @@ with react-scripts-ts for typescript bindings
 ## Installation
 
 - Clone the repo
-- Do `npm install` or `yarn install`
+Run the following commands:
+`npm install`
+`./node_modules/@sentry/cli/sentry-cli login`
+`./node_modules/@sentry/cli/sentry-cli info`
+`./node_modules/@sentry/cli/sentry-cli releases -o zibiga -p gameportal list`

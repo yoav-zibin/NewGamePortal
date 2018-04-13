@@ -5,8 +5,7 @@
   "private": true,
   "dependencies": {
     "@types/prop-types": "^15.5.2",
-    "@types/react-select": "^1.2.6",
-    "konva": "^1.7.6",
+    "konva": "^2.0.0",
     "raven-js": "^3.24.0",
     "react": "^16.3.1",
     "react-dom": "^16.3.1",
@@ -15,7 +14,6 @@
     "react-router": "^4.2.0",
     "react-router-dom": "^4.2.2",
     "react-scripts-ts": "2.13.0",
-    "react-select": "^1.2.1",
     "redux": "^3.7.2",
     "redux-logger": "^3.0.6"
   },
@@ -26,7 +24,7 @@
     "eject": "react-scripts-ts eject",
     "predeploy": "npm run build",
     "ci-test": "cross-env CI=true react-scripts-ts test --env=jsdom --forceExit",
-    "deploy": "cross-env CI=true react-scripts-ts test --env=jsdom --forceExit & gh-pages -d build"
+    "deploy": "cross-env CI=true react-scripts-ts test --env=jsdom --forceExit & sentry-cli releases -o zibiga -p gameportal new `sentry-cli releases -o zibiga -p gameportal propose-version` --finalize & sentry-cli releases -o zibiga -p gameportal set-commits `sentry-cli releases -o zibiga -p gameportal propose-version` --auto & gh-pages -d build"
   },
   "lint-staged": {
     "src/**/*.{ts,tsx,js,jsx,json,css}": [
@@ -40,6 +38,7 @@
     }
   },
   "devDependencies": {
+    "@sentry/cli": "^1.30.4",
     "@types/firebase": "^3.2.1",
     "@types/jest": "^22.2.2",
     "@types/material-ui": "^0.20.5",
@@ -49,7 +48,6 @@
     "@types/react-redux": "^5.0.15",
     "@types/react-router": "^4.0.23",
     "@types/react-router-dom": "^4.2.6",
-    "@types/react-select": "^1.2.6",
     "@types/redux-logger": "^3.0.5",
     "cross-env": "^5.1.4",
     "gh-pages": "^1.1.0",
