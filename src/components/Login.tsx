@@ -14,15 +14,7 @@ import { Redirect } from 'react-router';
 require('../js/trans-compiled');
 const data = require('../countrycode.json');
 
-// Returns whether the localPhoneNumber is valid for that country.
-// E.g., isValidNumber("9175730795", "US") returns true
-// E.g., isValidNumber("917573079", "US") returns false
-// TODO: use parsePhoneNumber instead of these two functions.
-declare function isValidNumber(localPhoneNumber:String,twoLetterCountryCode:String):boolean;
-// phoneNumberParser gets a local phone number + country code and returns the international number.
-// E.g., phoneNumberParser("9175730795", "US") returns "+19175730795"
-// E.g., phoneNumberParser("0527896222", "IL") returns "+972527896222"
-declare function phoneNumberParser(localPhoneNumber:String,twoLetterCountryCode:String):string;
+declare function parsePhoneNumber(phoneNumber:String,regionCode:String):PhoneNumInfo;
 
 interface Country {
   name: string;
@@ -41,6 +33,16 @@ interface Props {
 interface DataSourceNode {
   text: string;
   value: object;
+}
+
+interface PhoneNumInfo {
+  number:string;
+  isPossibleNumber: boolean;
+  isValidNumber: boolean;
+  isValidNumberForRegion: boolean;
+  maybeMobileNumber: boolean;
+  internationalFormat: string;
+  e164Format: string;
 }
 
 enum loadingType {
@@ -109,24 +111,31 @@ class Login extends React.Component<Props, {}> {
   };
 
   handleNewRequest = (chosenRequest: DataSourceNode) => {
-    let searchWords = chosenRequest.text.split("-");
-    if(this.props.countryNames.indexOf(searchWords[1]) !== -1){
-      this.setState({
-        searchText: searchWords[1],
-        defaultText: searchWords[1],
-        code: searchWords[0],
-        defaultCode: searchWords[0]
-      });
+    if(chosenRequest.text.indexOf("-") !== -1){
+      let searchWords = chosenRequest.text.split("-");
+      console.log(searchWords)
+      if(this.props.countryNames.indexOf(searchWords[1]) !== -1){
+        this.setState({
+          searchText: searchWords[1],
+          defaultText: searchWords[1],
+          code: searchWords[0],
+          defaultCode: searchWords[0]
+        });
+      }else{
+        this.setState({
+          searchText: this.state.defaultText,
+          code: this.state.defaultCode
+        });
+      }
     }else{
       this.setState({
         searchText: this.state.defaultText,
         code: this.state.defaultCode
-      });
-    }
-   
-  };
+    });
+  }
+};
 
-  handleInput = (event: any) => {
+ handleInput = (event: any) => {
     if (!event.target.value) {
       this.setState({
         phoneNum: event.target.value,
@@ -153,8 +162,10 @@ class Login extends React.Component<Props, {}> {
   };
 
   onLogin = () => {
-    if(isValidNumber(this.state.phoneNum,this.state.code)){
-      let phoneNumber = phoneNumberParser(this.state.phoneNum,this.state.code);
+    let result = parsePhoneNumber(this.state.phoneNum,this.state.code);
+    console.log(result);
+    if(result['isValidNumber']){
+      let phoneNumber = result['internationalFormat'];
       ourFirebase
       .signInWithPhoneNumber(
         phoneNumber,
@@ -169,8 +180,7 @@ class Login extends React.Component<Props, {}> {
 
       this.setState({ veriDisabled: false });
     }else{
-      // TODO: use react materiale UI instead of alert.
-      alert("invalid phone number")
+      this.setState({errorText: "invalid phone number"})
     }
   }
 
@@ -278,6 +288,7 @@ class Login extends React.Component<Props, {}> {
 
 import { connect } from 'react-redux';
 import { StoreState } from '../types/index';
+// import { bool } from 'prop-types';
 
 const mapStateToProps = (state: StoreState) => {
   const countries: Country[] = [];
