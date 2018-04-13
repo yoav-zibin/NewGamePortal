@@ -35,16 +35,21 @@ interface UserName {
 
 interface DataSourceConfig {
   text: string;
-  value: string;
+  value: {
+    props: {
+      primaryText: string;
+      secondaryText: string;
+    };
+  };
 }
 
-// todo rename allusers to allUserNames, do not use any
 interface Props {
   matchesList: MatchInfo[];
   users: ContactWithUserId[];
   notUsers: Contact[];
   allUserNames: UserName[];
   match: RouterMatchParams;
+  currentMatch: MatchInfo;
   myUserId: string;
   history: History;
 }
@@ -59,23 +64,33 @@ class ContactsList extends React.Component<Props, {}> {
     if (chosenRequest.text.length > 0) {
       this.setState({ filterValue: chosenRequest.text });
     }
-    console.log(chosenRequest.text);
+    console.log(chosenRequest);
+
+    if (chosenRequest.value.props.secondaryText === 'Existing user') {
+      let chosenUser: any = this.props.users.find(
+        user => user.name === chosenRequest.text
+      );
+      this.handleAddUser(chosenUser.userId);
+    } else {
+      /*chosenUser = this.props.notUsers.find(
+        user => user.name === chosenRequest.text
+      );*/
+    }
     return index;
   };
 
-  handleUpdate = (searchText: string, dataSource: any[]) => {
+  handleUpdate = (searchText: string) => {
     if (searchText.length === 0) {
       this.setState({ filterValue: '' });
     }
-    console.log(dataSource.length);
   };
 
   getMatch = () => {
-    let currentMatchId: String = this.props.match.params.matchIdInRoute;
+    /*let currentMatchId: String = this.props.match.params.matchIdInRoute;
     let currentMatch = this.props.matchesList.find(
       match => match.matchId === currentMatchId
-    );
-    return checkNotNull(currentMatch)!;
+    );*/
+    return checkNotNull(this.props.currentMatch)!;
   };
 
   handleAddUser = (userId: string) => {
@@ -103,9 +118,6 @@ class ContactsList extends React.Component<Props, {}> {
       contact => contact.name.indexOf(this.state.filterValue) !== -1
     );
   }
-
-  // TODO: use primaryText & secondaryText in AutoComplete to show whether
-  // the name is an existing user ("Existing user") or not a user ("Invite with SMS").
   render() {
     return (
       <div>
@@ -203,13 +215,17 @@ const mapStateToProps = (state: StoreState, ownProps: Props) => {
   users.sort((c1, c2) => c1.name.localeCompare(c2.name));
   notUsers.sort((c1, c2) => c1.name.localeCompare(c2.name));
 
-  console.log("ownProps=", ownProps);
+  console.log('ownProps=', ownProps);
   // TODO: filter here!!! Use ownProps. Don't pass the entire matchesList.
+  let currentMatchId: String = ownProps.match.params.matchIdInRoute;
+  let currentMatch = state.matchesList.find(
+    match => match.matchId === currentMatchId
+  );
   return {
     users,
     notUsers,
     allUserNames,
-    matchesList: state.matchesList,
+    currentMatch,
     myUserId: state.myUser.myUserId
   };
 };
