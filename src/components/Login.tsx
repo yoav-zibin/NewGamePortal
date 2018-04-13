@@ -163,6 +163,7 @@ class Login extends React.Component<Props, {}> {
       this.setState({ veriDisabled: false });
     }else{
       alert("invalid phone number")
+      this.setState({errorText: "invalid phone number"})
     }
   }
 
