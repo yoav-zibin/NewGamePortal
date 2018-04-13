@@ -14,8 +14,15 @@ import { Redirect } from 'react-router';
 require('../js/trans-compiled');
 const data = require('../countrycode.json');
 
-declare function isValidNumber(phoneNumber:String,regionCode:String):boolean;
-declare function phoneNumberParser(phoneNumber:String,regionCode:String):string;
+// Returns whether the localPhoneNumber is valid for that country.
+// E.g., isValidNumber("9175730795", "US") returns true
+// E.g., isValidNumber("917573079", "US") returns false
+// TODO: use parsePhoneNumber instead of these two functions.
+declare function isValidNumber(localPhoneNumber:String,twoLetterCountryCode:String):boolean;
+// phoneNumberParser gets a local phone number + country code and returns the international number.
+// E.g., phoneNumberParser("9175730795", "US") returns "+19175730795"
+// E.g., phoneNumberParser("0527896222", "IL") returns "+972527896222"
+declare function phoneNumberParser(localPhoneNumber:String,twoLetterCountryCode:String):string;
 
 interface Country {
   name: string;
@@ -187,7 +194,7 @@ class Login extends React.Component<Props, {}> {
   };
 
   // todo: change listStyle in Autocomplete(some countries' names are too long to show)
-  
+
   // TODO: click on the autoComplete should immediately do the action, i.e., either 
   // addParticipant or sendSMS (instead of filtering the contacts list).
   render() {
