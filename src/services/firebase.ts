@@ -232,16 +232,16 @@ export namespace ourFirebase {
   // Eventually dispatches the action updateGameSpecs.
   const isFetchingGameSpec: BooleanIndexer = {};
   export function fetchGameSpec(game: GameInfo) {
-    console.log('fetchGameSpec:', game);
     const gameSpecId = game.gameSpecId;
     assertLoggedIn();
     if (store.getState().gameSpecs.gameSpecIdToGameSpec[gameSpecId]) {
-      console.log('Game spec already exists');
       return;
     }
     if (isFetchingGameSpec[gameSpecId]) {
-      console.log('Already fetching game spec');
       return;
+    }
+    if (!allPromisesForTests) {
+      console.log('fetchGameSpec:', gameSpecId);
     }
     isFetchingGameSpec[gameSpecId] = true;
     addPromiseForTests(
