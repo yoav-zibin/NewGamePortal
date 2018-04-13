@@ -30,6 +30,7 @@ interface Props {
   history: any;
 }
 
+// Move AppHeader to components/
 class AppHeader extends React.Component<Props, {}> {
   routes: StringIndexer = {
     '/login': 'Login',
@@ -53,7 +54,8 @@ class AppHeader extends React.Component<Props, {}> {
       let title = ''; // String to build
 
       // Get corresponding info for selected match
-      // TODO: Refactor to use global function 
+      // TODO: Refactor to use global function (getting corresponding matchInfo for the current location)
+
       this.props.matchesList.forEach((match: MatchInfo) => {
         if (match.matchId === matchId) {
           const game: GameInfo = match.game;

@@ -162,6 +162,7 @@ class Login extends React.Component<Props, {}> {
 
       this.setState({ veriDisabled: false });
     }else{
+      // TODO: use react materiale UI instead of alert.
       alert("invalid phone number")
     }
   }
@@ -186,6 +187,9 @@ class Login extends React.Component<Props, {}> {
   };
 
   // todo: change listStyle in Autocomplete(some countries' names are too long to show)
+  
+  // TODO: click on the autoComplete should immediately do the action, i.e., either 
+  // addParticipant or sendSMS (instead of filtering the contacts list).
   render() {
     if (this.props.myUserId) {
       return <Redirect to="/" />;

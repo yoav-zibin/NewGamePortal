@@ -24,6 +24,7 @@ interface PlayingScreenProps {
   myUserId: string;
   userIdToPhoneNumber: UserIdToPhoneNumber;
   phoneNumberToContact: PhoneNumberToContact;
+  // Remove matchesList & gameSpecs, compute in mapStateToProps exactly what you need.
   matchesList: MatchInfo[];
   gameSpecs: GameSpecs;
   match: RouterMatchParams;
@@ -75,6 +76,7 @@ class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
         window.innerWidth / screenShotWidth,
         window.innerHeight / screenShotHeight
       );
+      // Don't need a canvas for the screenshot, just use HTML image
       let screenShotLayer = (
         <CanvasImage
           height={screenShotHeight * ratio}
@@ -128,7 +130,7 @@ class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
 }
 
 const mapStateToProps = (state: StoreState, ownProps: PlayingScreenProps) => {
-  console.log();
+  console.log("ownProps=", ownProps);
   // TODO: filter here!!!
   // use router props in mapStateToProps so this component will just
   // need the current match and current game spec.
@@ -144,7 +146,5 @@ const mapStateToProps = (state: StoreState, ownProps: PlayingScreenProps) => {
     phoneNumberToContact: state.phoneNumberToContact
   };
 };
-
-
 
 export default connect(mapStateToProps)(PlayingScreen);

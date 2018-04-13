@@ -34,7 +34,7 @@ interface BoardState {
  */
 class Board extends React.Component<BoardProps, BoardState> {
   // TODO CARD
-  // TODO: try to get rid of all these class members.
+  // TODO: try to get rid of all these class members (Move local variables into state)
   selectedPieceIndex: number;
   selfParticipantIndex: number;
   tooltipPosition: {
@@ -91,7 +91,7 @@ class Board extends React.Component<BoardProps, BoardState> {
     }
   }
 
-  // todo: change to set
+  // todo: change to setDimensions
   getDimensions() {
     this.setState({
       innerWidth: window.innerWidth,
@@ -234,6 +234,7 @@ class Board extends React.Component<BoardProps, BoardState> {
     // for throttling window resize event
     this.throttled = false;
 
+    // TODO: Remove onClick, instead calculate the distance between drag start and drag end
     let boardLayer = (
       <CanvasImage
         height={height * ratio}
