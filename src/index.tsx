@@ -2,8 +2,7 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import { Provider } from 'react-redux';
-import { Route, BrowserRouter } from 'react-router-dom';
-
+import { Route, HashRouter } from 'react-router-dom';
 import { store } from './stores/index';
 import App from './App';
 import registerServiceWorker from './registerServiceWorker';
@@ -11,14 +10,14 @@ import './index.css';
 import { ourFirebase } from './services/firebase';
 import { Contact, PhoneNumberToContact } from './types';
 import * as Raven from 'raven-js';
-// import * as sentryRelease from './sentry-config.json';
+// import * as sentryRelease from './sentry-config.txt';
 
 function reactRender() {
   document.getElementById('loadingSpinner')!.style.display = 'none';
   ReactDOM.render(
     <MuiThemeProvider>
       <Provider store={store}>
-        <BrowserRouter
+        <HashRouter
           basename={
             location.hostname === 'yoav-zibin.github.io' ? 'NewGamePortal' : '/'
           }
@@ -26,7 +25,7 @@ function reactRender() {
           <div>
             <Route path="/" component={App} />
           </div>
-        </BrowserRouter>
+        </HashRouter>
       </Provider>
     </MuiThemeProvider>,
     document.getElementById('root') as HTMLElement
@@ -34,7 +33,7 @@ function reactRender() {
 }
 
 // const release = (sentryRelease as any).releaseVersion.trim();
-const release = 'V2.0';
+const release = 'v2.0';
 console.log('Version for sentry: ', release);
 Raven.config('https://efc65f7e50c14bd9a3482e2ad2ae3b9d@sentry.io/939406', {
   ignoreErrors: ['Network Error'],
@@ -101,6 +100,21 @@ if (window.location.search.match('^[?][0-9]$')) {
   ourFirebase.storeContacts(currentContacts);
 }
 
-// Give 500ms for onAuthStateChanged in firebase.ts to load the cookies and log in the user
-// (so we won't see the login screen flashed and redirect to '/')
-setTimeout(reactRender, 500);
+declare global {
+  interface Window {
+    cordova: any;
+  }
+}
+
+// Check for cordova plugins
+if (window.cordova) {
+  document.addEventListener(
+    'deviceready',
+    () => setTimeout(reactRender, 500),
+    false
+  );
+} else {
+  // Give 500ms for onAuthStateChanged in firebase.ts to load the cookies and log in the user
+  // (so we won't see the login screen flashed and redirect to '/')
+  setTimeout(reactRender, 500);
+}

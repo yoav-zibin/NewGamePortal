@@ -50,10 +50,6 @@ const styles: CSSPropertiesIndexer = {
 };
 
 class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
-  // todo: remove
-  matchInfo: MatchInfo;
-  gameSpec: GameSpec;
-
   render() {
     if (!this.props.matchInfo) {
       return <div>The matchId doesn't exist.</div>;
