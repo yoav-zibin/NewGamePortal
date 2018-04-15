@@ -94,6 +94,12 @@ cordova.define('cordova/plugin_list', function(require, exports, module) {
       file: 'plugins/phonegap-plugin-push/www/push.js',
       pluginId: 'phonegap-plugin-push',
       clobbers: ['PushNotification']
+    },
+    {
+      id: 'cordova-plugin-device.device',
+      file: 'plugins/cordova-plugin-device/www/device.js',
+      pluginId: 'cordova-plugin-device',
+      clobbers: ['device']
     }
   ];
   module.exports.metadata =
@@ -104,7 +110,8 @@ cordova.define('cordova/plugin_list', function(require, exports, module) {
       'cordova-plugin-whitelist': '1.3.3',
       'cordova-sms-plugin': '0.1.11',
       'cordova-universal-links-plugin': '1.2.1',
-      'phonegap-plugin-push': '2.2.2'
+      'phonegap-plugin-push': '2.2.2',
+      'cordova-plugin-device': '2.0.1'
     };
   // BOTTOM OF METADATA
 });
