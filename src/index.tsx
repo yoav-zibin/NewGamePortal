@@ -3,7 +3,7 @@ import * as ReactDOM from 'react-dom';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import { Provider } from 'react-redux';
 import { Route, HashRouter } from 'react-router-dom';
-
+import { isIos, isAndroid } from './globals';
 import { store } from './stores/index';
 import App from './App';
 import registerServiceWorker from './registerServiceWorker';
@@ -36,9 +36,7 @@ function reactRender() {
 const release = (sentryRelease as any).releaseVersion.trim();
 console.log('Version for sentry: ', release);
 Raven.config('https://efc65f7e50c14bd9a3482e2ad2ae3b9d@sentry.io/939406', {
-  ignoreErrors: [
-    'Network Error',
-  ],
+  ignoreErrors: ['Network Error'],
   release: release
 }).install();
 
@@ -106,13 +104,29 @@ declare global {
   interface Window {
     cordova: any;
   }
+  interface Navigator {
+    contacts: any;
+  }
+}
+
+// check for mobile and load cordova
+if (isIos) {
+  console.log('Adding iOS cordova plugins...');
+  require('./js/cordova_plugins_ios/cordova');
+} else if (isAndroid) {
+  console.log('Android not tested yet...');
+  // require('./js/cordova_plugins_android/cordova');
 }
 
 // Check for cordova plugins
 if (window.cordova) {
   document.addEventListener(
     'deviceready',
-    () => setTimeout(reactRender, 500),
+    () => {
+      console.log('Cordova detected');
+      console.log(navigator.contacts || "Contacts doesn't exist");
+      setTimeout(reactRender, 500);
+    },
     false
   );
 } else {
