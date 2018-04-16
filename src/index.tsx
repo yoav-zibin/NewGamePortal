@@ -112,7 +112,7 @@ declare global {
 // check for mobile and load cordova
 if (isIos) {
   console.log('Adding iOS cordova plugins...');
-  require('./js/cordova_plugins_ios/cordova');
+  // require('./js/cordova_plugins_ios/cordova');
 } else if (isAndroid) {
   console.log('Android not tested yet...');
   // require('./js/cordova_plugins_android/cordova');
@@ -124,7 +124,10 @@ if (window.cordova) {
     'deviceready',
     () => {
       console.log('Cordova detected');
-      console.log(navigator.contacts || "Contacts doesn't exist");
+      console.log(
+        'Navigator:',
+        navigator.contacts || 'Contacts does not exist!'
+      );
       setTimeout(reactRender, 500);
     },
     false
@@ -134,3 +137,13 @@ if (window.cordova) {
   // (so we won't see the login screen flashed and redirect to '/')
   setTimeout(reactRender, 500);
 }
+//   js.src = src;
+//   js.id = id;
+//   js.onload = () => {
+//     console.log("Loaded script ", src);
+//   };
+//   js.async = true;
+//   js.crossOrigin = "anonymous";
+//   let fjs = document.getElementsByTagName('script')[0];
+//   fjs.parentNode!.insertBefore(js, fjs);
+// }

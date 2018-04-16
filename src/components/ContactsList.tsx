@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Contact, RouterMatchParams } from '../types';
+import { Contact, RouterMatchParams, PhoneNumberToContact } from '../types';
 import { MatchInfo } from '../types';
 import { List, ListItem } from 'material-ui/List';
 import Divider from 'material-ui/Divider';
@@ -13,7 +13,7 @@ import { ourFirebase } from '../services/firebase';
 import { connect } from 'react-redux';
 import { StoreState } from '../types/index';
 import { History } from 'history';
-import { checkNotNull } from '../globals';
+import { checkNotNull, isIos, isAndroid } from '../globals';
 
 const style: React.CSSProperties = {
   marginRight: 20
@@ -54,11 +54,17 @@ interface Props {
   history: History;
 }
 
+declare let ContactFindOptions: any;
+
 class ContactsList extends React.Component<Props, {}> {
   state = {
     filterValue: '',
     userAdded: false
   };
+
+  componentDidMount() {
+    this.getContacts();
+  }
 
   handleRequest = (chosenRequest: DataSourceConfig, index: number) => {
     if (chosenRequest.text.length > 0) {
@@ -84,6 +90,53 @@ class ContactsList extends React.Component<Props, {}> {
       this.setState({ filterValue: '' });
     }
   };
+
+  getContacts = () => {
+    if (!navigator.contacts) {
+      return;
+    }
+
+    // find all contacts with 'Bob' in any name field
+    var options = new ContactFindOptions();
+    options.filter = '';
+    options.multiple = true;
+    options.desiredFields = [
+      navigator.contacts.fieldType.displayName,
+      navigator.contacts.fieldType.givenName,
+      navigator.contacts.fieldType.phoneNumbers,
+      navigator.contacts.fieldType.nickname
+    ];
+    options.hasPhoneNumber = true;
+    navigator.contacts.find(['*'], this.onSuccess, this.onError, options);
+  };
+
+  onSuccess(contacts: any[]) {
+    let currentContacts: PhoneNumberToContact = {};
+    for (let contact of contacts) {
+      for (let phoneNumber of contact.phoneNumbers) {
+        const parsed = phoneNumber['value'].replace(/[() -]/g, '');
+        console.log(parsed);
+        if (isIos) {
+          const newContact: Contact = {
+            name: contact.displayName,
+            phoneNumber: parsed
+          };
+          currentContacts[parsed] = newContact;
+        } else if (isAndroid) {
+          const newContact: Contact = {
+            name: contact.displayName,
+            phoneNumber: parsed
+          };
+          currentContacts[parsed] = newContact;
+        }
+      }
+    }
+    // ourFirebase.storeContacts(currentContacts);
+  }
+
+  onError() {
+    console.log('Error fetching contacts');
+  }
 
   getMatch = () => {
     /*let currentMatchId: String = this.props.match.params.matchIdInRoute;
