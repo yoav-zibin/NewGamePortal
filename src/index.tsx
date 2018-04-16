@@ -111,14 +111,17 @@ declare global {
 
 // check for mobile and load cordova
 if (isIos) {
-  console.log('Adding iOS cordova plugins...');
-  // require('./js/cordova_plugins_ios/cordova');
+  createScript('cordova', 'cordova_plugins_ios/cordova.js', () => {
+    setTimeout(reactRender, 500);
+  });
 } else if (isAndroid) {
-  console.log('Android not tested yet...');
-  // require('./js/cordova_plugins_android/cordova');
+  createScript('cordova', 'cordova_plugins_android/cordova.js', () => {
+    setTimeout(reactRender, 500);
+  });
+} else {
+  setTimeout(reactRender, 500);
 }
 
-// Check for cordova plugins
 if (window.cordova) {
   document.addEventListener(
     'deviceready',
@@ -128,22 +131,25 @@ if (window.cordova) {
         'Navigator:',
         navigator.contacts || 'Contacts does not exist!'
       );
-      setTimeout(reactRender, 500);
     },
     false
   );
-} else {
-  // Give 500ms for onAuthStateChanged in firebase.ts to load the cookies and log in the user
-  // (so we won't see the login screen flashed and redirect to '/')
-  setTimeout(reactRender, 500);
 }
-//   js.src = src;
-//   js.id = id;
-//   js.onload = () => {
-//     console.log("Loaded script ", src);
-//   };
-//   js.async = true;
-//   js.crossOrigin = "anonymous";
-//   let fjs = document.getElementsByTagName('script')[0];
-//   fjs.parentNode!.insertBefore(js, fjs);
-// }
+
+function createScript(id: string, src: string, onload: () => void) {
+  console.log('Loading script ', src, ' into script element with id=', id);
+  if (document.getElementById(id)) {
+    console.log('Already loaded src=', src);
+    return;
+  }
+  let js: HTMLScriptElement = document.createElement('script');
+  js.src = src;
+  js.id = id;
+  js.onload = () => {
+    console.log('Loaded script ', src);
+    onload();
+  };
+  js.async = true;
+  let fjs = document.getElementsByTagName('script')[0];
+  fjs.parentNode!.insertBefore(js, fjs);
+}
