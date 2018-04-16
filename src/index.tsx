@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import { Provider } from 'react-redux';
-import { Route, HashRouter } from 'react-router-dom';
+import { Route, BrowserRouter } from 'react-router-dom';
 import { isIos, isAndroid } from './globals';
 import { store } from './stores/index';
 import App from './App';
@@ -18,15 +18,15 @@ function reactRender() {
   ReactDOM.render(
     <MuiThemeProvider>
       <Provider store={store}>
-        <HashRouter
+        <BrowserRouter
           basename={
-            location.hostname === 'yoav-zibin.github.io' ? 'NewGamePortal' : '/'
+            location.hostname === 'yoav-zibin.github.io'
+              ? '/NewGamePortal'
+              : '/'
           }
         >
-          <div>
-            <Route path="/" component={App} />
-          </div>
-        </HashRouter>
+          <Route path="/" component={App} />
+        </BrowserRouter>
       </Provider>
     </MuiThemeProvider>,
     document.getElementById('root') as HTMLElement
