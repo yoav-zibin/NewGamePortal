@@ -103,6 +103,7 @@ if (window.location.search.match('^[?][0-9]$')) {
 declare global {
   interface Window {
     cordova: any;
+    device: any;
   }
   interface Navigator {
     contacts: any;
@@ -127,26 +128,28 @@ if (window.cordova) {
     'deviceready',
     () => {
       console.log('Cordova detected');
-      console.log(
-        'Navigator:',
-        navigator.contacts || 'Contacts does not exist!'
-      );
+      if (window.device.platform === 'iOS') {
+        console.log('Loading WebRTC for iOS');
+        window.cordova.plugins.iosrtc.registerGlobals();
+        var script = document.createElement('script');
+        script.type = 'text/javascript';
+        script.src = 'js/adapter-latest.js';
+        script.async = false;
+        document.getElementsByTagName('head')[0].appendChild(script);
+      }
     },
     false
   );
 }
 
 function createScript(id: string, src: string, onload: () => void) {
-  console.log('Loading script ', src, ' into script element with id=', id);
   if (document.getElementById(id)) {
-    console.log('Already loaded src=', src);
     return;
   }
   let js: HTMLScriptElement = document.createElement('script');
   js.src = src;
   js.id = id;
   js.onload = () => {
-    console.log('Loaded script ', src);
     onload();
   };
   js.async = true;
