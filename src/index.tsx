@@ -3,7 +3,7 @@ import * as ReactDOM from 'react-dom';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import { Provider } from 'react-redux';
 import { Route, BrowserRouter } from 'react-router-dom';
-import { isIos, isAndroid } from './globals';
+import { isIos, isAndroid, checkCondition } from './globals';
 import { store } from './stores/index';
 import App from './App';
 import registerServiceWorker from './registerServiceWorker';
@@ -110,49 +110,42 @@ declare global {
   }
 }
 
-// check for mobile and load cordova
-if (isIos) {
-  createScript('cordova', 'cordova_plugins_ios/cordova.js', () => {
-    setTimeout(reactRender, 500);
-  });
-} else if (isAndroid) {
-  createScript('cordova', 'cordova_plugins_android/cordova.js', () => {
-    setTimeout(reactRender, 500);
-  });
-} else {
+function delayReactRender() {
   setTimeout(reactRender, 500);
 }
 
-if (window.cordova) {
-  document.addEventListener(
-    'deviceready',
-    () => {
-      console.log('Cordova detected');
-      if (window.device.platform === 'iOS') {
-        console.log('Loading WebRTC for iOS');
-        window.cordova.plugins.iosrtc.registerGlobals();
-        var script = document.createElement('script');
-        script.type = 'text/javascript';
-        script.src = 'js/adapter-latest.js';
-        script.async = false;
-        document.getElementsByTagName('head')[0].appendChild(script);
-      }
-    },
-    false
-  );
-}
-
-function createScript(id: string, src: string, onload: () => void) {
-  if (document.getElementById(id)) {
-    return;
-  }
+function createScript(id: string, src: string) {
+  checkCondition('createScript', !document.getElementById(id));
   let js: HTMLScriptElement = document.createElement('script');
   js.src = src;
   js.id = id;
   js.onload = () => {
-    onload();
+    console.log('Loaded script:', src);
   };
   js.async = true;
   let fjs = document.getElementsByTagName('script')[0];
   fjs.parentNode!.insertBefore(js, fjs);
+}
+
+// check for mobile and load cordova
+if (isIos || isAndroid) {
+  document.addEventListener(
+    'deviceready',
+    () => {
+      console.log('Cordova deviceready called');
+      if (isIos) {
+        console.log('Loading WebRTC for iOS');
+        window.cordova.plugins.iosrtc.registerGlobals();
+      }
+      delayReactRender();
+    },
+    false
+  );
+}
+if (isIos) {
+  createScript('cordova', 'cordova/phonegapPlugins.ios.v1.min.js');
+} else if (isAndroid) {
+  createScript('cordova', 'cordova/phonegapPlugins.android.v1.min.js');
+} else {
+  delayReactRender();
 }
