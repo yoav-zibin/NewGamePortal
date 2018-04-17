@@ -170,7 +170,7 @@ class ContactsList extends React.Component<Props, {}> {
     console.log(!this.state.stay);
     this.timer = setTimeout(() => {
       this.props.history.push('/matches/' + currentMatch.matchId);
-    }, 3000);
+    },                      3000);
   };
 
   handleActionClick = () => {
