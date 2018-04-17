@@ -167,8 +167,8 @@ class Login extends React.Component<Props, {}> {
   onLogin = () => {
     let result = parsePhoneNumber(this.state.phoneNum, this.state.code);
     console.log(result);
-    if (result['isValidNumber']) {
-      let phoneNumber = result['internationalFormat'];
+    if(result.isValidNumber){
+      let phoneNumber = result.internationalFormat;
       ourFirebase
         .signInWithPhoneNumber(
           phoneNumber,

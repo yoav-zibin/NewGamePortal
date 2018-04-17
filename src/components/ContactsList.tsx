@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Contact, RouterMatchParams } from '../types';
+import { Contact, RouterMatchParams, PhoneNumberToContact } from '../types';
 import { MatchInfo } from '../types';
 import { List, ListItem } from 'material-ui/List';
 import Divider from 'material-ui/Divider';
@@ -13,7 +13,7 @@ import { ourFirebase } from '../services/firebase';
 import { connect } from 'react-redux';
 import { StoreState } from '../types/index';
 import { History } from 'history';
-import { checkNotNull } from '../globals';
+import { checkNotNull, isIos, isAndroid } from '../globals';
 
 const style: React.CSSProperties = {
   marginRight: 20
@@ -35,19 +35,26 @@ interface UserName {
 
 interface DataSourceConfig {
   text: string;
-  value: string;
+  value: {
+    props: {
+      primaryText: string;
+      secondaryText: string;
+    };
+  };
 }
 
-// todo rename allusers to allUserNames, do not use any
 interface Props {
   matchesList: MatchInfo[];
   users: ContactWithUserId[];
   notUsers: Contact[];
   allUserNames: UserName[];
   match: RouterMatchParams;
+  currentMatch: MatchInfo;
   myUserId: string;
   history: History;
 }
+
+declare let ContactFindOptions: any;
 
 class ContactsList extends React.Component<Props, {}> {
   state = {
@@ -55,27 +62,88 @@ class ContactsList extends React.Component<Props, {}> {
     userAdded: false
   };
 
+  componentDidMount() {
+    this.getContacts();
+  }
+
   handleRequest = (chosenRequest: DataSourceConfig, index: number) => {
     if (chosenRequest.text.length > 0) {
       this.setState({ filterValue: chosenRequest.text });
     }
-    console.log(chosenRequest.text);
+    console.log(chosenRequest);
+
+    if (chosenRequest.value.props.secondaryText === 'Existing user') {
+      let chosenUser: any = this.props.users.find(
+        user => user.name === chosenRequest.text
+      );
+      this.handleAddUser(chosenUser.userId);
+    } else {
+      /*chosenUser = this.props.notUsers.find(
+        user => user.name === chosenRequest.text
+      );*/
+    }
     return index;
   };
 
-  handleUpdate = (searchText: string, dataSource: any[]) => {
+  handleUpdate = (searchText: string) => {
     if (searchText.length === 0) {
       this.setState({ filterValue: '' });
     }
-    console.log(dataSource.length);
   };
 
+  getContacts = () => {
+    if (!navigator.contacts) {
+      return;
+    }
+
+    // find all contacts with 'Bob' in any name field
+    var options = new ContactFindOptions();
+    options.filter = '';
+    options.multiple = true;
+    options.desiredFields = [
+      navigator.contacts.fieldType.displayName,
+      navigator.contacts.fieldType.givenName,
+      navigator.contacts.fieldType.phoneNumbers,
+      navigator.contacts.fieldType.nickname
+    ];
+    options.hasPhoneNumber = true;
+    navigator.contacts.find(['*'], this.onSuccess, this.onError, options);
+  };
+
+  onSuccess(contacts: any[]) {
+    let currentContacts: PhoneNumberToContact = {};
+    for (let contact of contacts) {
+      for (let phoneNumber of contact.phoneNumbers) {
+        const parsed = phoneNumber['value'].replace(/[() -]/g, '');
+        console.log(parsed);
+        if (isIos) {
+          const newContact: Contact = {
+            name: contact.displayName,
+            phoneNumber: parsed
+          };
+          currentContacts[parsed] = newContact;
+        } else if (isAndroid) {
+          const newContact: Contact = {
+            name: contact.displayName,
+            phoneNumber: parsed
+          };
+          currentContacts[parsed] = newContact;
+        }
+      }
+    }
+    // ourFirebase.storeContacts(currentContacts);
+  }
+
+  onError() {
+    console.log('Error fetching contacts');
+  }
+
   getMatch = () => {
-    let currentMatchId: String = this.props.match.params.matchIdInRoute;
+    /*let currentMatchId: String = this.props.match.params.matchIdInRoute;
     let currentMatch = this.props.matchesList.find(
       match => match.matchId === currentMatchId
-    );
-    return checkNotNull(currentMatch)!;
+    );*/
+    return checkNotNull(this.props.currentMatch)!;
   };
 
   handleAddUser = (userId: string) => {
@@ -103,9 +171,6 @@ class ContactsList extends React.Component<Props, {}> {
       contact => contact.name.indexOf(this.state.filterValue) !== -1
     );
   }
-
-  // TODO: use primaryText & secondaryText in AutoComplete to show whether
-  // the name is an existing user ("Existing user") or not a user ("Invite with SMS").
   render() {
     return (
       <div>
@@ -185,8 +250,6 @@ const mapStateToProps = (state: StoreState, ownProps: Props) => {
       // Ignore my user (in case I have my own phone number in my contacts)
     } else if (userId) {
       users.push({ ...contact, userId: userId });
-      // userName.name = contact.name;
-      // userName.userType = "Existing user";
       let userName: UserName = {
         name: contact.name,
         userType: 'Existing user'
@@ -198,8 +261,6 @@ const mapStateToProps = (state: StoreState, ownProps: Props) => {
         name: contact.name,
         userType: 'Invite with SMS'
       };
-      // userName.name = contact.name;
-      // userName.userType = "Invite with SMS";
       allUserNames.push(userName);
     }
   }
@@ -207,13 +268,17 @@ const mapStateToProps = (state: StoreState, ownProps: Props) => {
   users.sort((c1, c2) => c1.name.localeCompare(c2.name));
   notUsers.sort((c1, c2) => c1.name.localeCompare(c2.name));
 
-  console.log("ownProps=", ownProps);
+  console.log('ownProps=', ownProps);
   // TODO: filter here!!! Use ownProps. Don't pass the entire matchesList.
+  let currentMatchId: String = ownProps.match.params.matchIdInRoute;
+  let currentMatch = state.matchesList.find(
+    match => match.matchId === currentMatchId
+  );
   return {
     users,
     notUsers,
     allUserNames,
-    matchesList: state.matchesList,
+    currentMatch,
     myUserId: state.myUser.myUserId
   };
 };

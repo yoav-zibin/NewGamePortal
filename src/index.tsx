@@ -3,7 +3,7 @@ import * as ReactDOM from 'react-dom';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import { Provider } from 'react-redux';
 import { Route, BrowserRouter } from 'react-router-dom';
-
+import { isIos, isAndroid, checkCondition } from './globals';
 import { store } from './stores/index';
 import App from './App';
 import registerServiceWorker from './registerServiceWorker';
@@ -20,12 +20,12 @@ function reactRender() {
       <Provider store={store}>
         <BrowserRouter
           basename={
-            location.hostname === 'yoav-zibin.github.io' ? 'NewGamePortal' : '/'
+            location.hostname === 'yoav-zibin.github.io'
+              ? '/NewGamePortal'
+              : '/'
           }
         >
-          <div>
-            <Route path="/" component={App} />
-          </div>
+          <Route path="/" component={App} />
         </BrowserRouter>
       </Provider>
     </MuiThemeProvider>,
@@ -36,6 +36,7 @@ function reactRender() {
 const release = (sentryRelease as any).releaseVersion.trim();
 console.log('Version for sentry: ', release);
 Raven.config('https://efc65f7e50c14bd9a3482e2ad2ae3b9d@sentry.io/939406', {
+  ignoreErrors: ['Network Error'],
   release: release
 }).install();
 
@@ -99,6 +100,52 @@ if (window.location.search.match('^[?][0-9]$')) {
   ourFirebase.storeContacts(currentContacts);
 }
 
-// Give 500ms for onAuthStateChanged in firebase.ts to load the cookies and log in the user
-// (so we won't see the login screen flashed and redirect to '/')
-setTimeout(reactRender, 500);
+declare global {
+  interface Window {
+    cordova: any;
+    device: any;
+  }
+  interface Navigator {
+    contacts: any;
+  }
+}
+
+function delayReactRender() {
+  setTimeout(reactRender, 500);
+}
+
+function createScript(id: string, src: string) {
+  checkCondition('createScript', !document.getElementById(id));
+  let js: HTMLScriptElement = document.createElement('script');
+  js.src = src;
+  js.id = id;
+  js.onload = () => {
+    console.log('Loaded script:', src);
+  };
+  js.async = true;
+  let fjs = document.getElementsByTagName('script')[0];
+  fjs.parentNode!.insertBefore(js, fjs);
+}
+
+// check for mobile and load cordova
+if (isIos || isAndroid) {
+  document.addEventListener(
+    'deviceready',
+    () => {
+      console.log('Cordova deviceready called');
+      if (isIos) {
+        console.log('Loading WebRTC for iOS');
+        window.cordova.plugins.iosrtc.registerGlobals();
+      }
+      delayReactRender();
+    },
+    false
+  );
+}
+if (isIos) {
+  createScript('cordova', 'cordova/phonegapPlugins.ios.v1.min.js');
+} else if (isAndroid) {
+  createScript('cordova', 'cordova/phonegapPlugins.android.v1.min.js');
+} else {
+  delayReactRender();
+}

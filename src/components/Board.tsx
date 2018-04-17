@@ -25,6 +25,15 @@ interface BoardState {
   showCardOptions: boolean;
   innerWidth: number;
   innerHeight: number;
+  helper: MatchStateHelper;
+  selectedPieceIndex: number;
+  selfParticipantIndex: number;
+  tooltipPosition: {
+    x: number;
+    y: number;
+  };
+  throttled: boolean;
+  delay: number;
 }
 
 /**
@@ -34,40 +43,24 @@ interface BoardState {
  */
 class Board extends React.Component<BoardProps, BoardState> {
   // TODO CARD
-  // TODO: try to get rid of all these class members (Move local variables into state)
-  selectedPieceIndex: number;
-  selfParticipantIndex: number;
-  tooltipPosition: {
-    x: number;
-    y: number;
-  };
-  matchInfo: MatchInfo;
-  gameSpec: GameSpec;
-  helper: MatchStateHelper;
-  throttled: boolean;
-  delay: number;
-
   constructor(props: BoardProps) {
     super(props);
     this.state = {
       showCardOptions: false,
-      innerHeight: window.innerHeight,
-      innerWidth: window.innerWidth
+      innerHeight: window.innerHeight * 0.8,
+      innerWidth: window.innerWidth * 0.8,
+      helper: new MatchStateHelper(this.props.matchInfo),
+      selectedPieceIndex: -1,
+      selfParticipantIndex: this.props.matchInfo.participantsUserIds.indexOf(
+        this.props.myUserId
+      ),
+      tooltipPosition: {
+        x: 0,
+        y: 0
+      },
+      throttled: false,
+      delay: -1
     };
-    this.tooltipPosition = {
-      x: 0,
-      y: 0
-    };
-
-    this.matchInfo = this.props.matchInfo;
-    this.gameSpec = this.props.gameSpec;
-    this.selfParticipantIndex = this.matchInfo.participantsUserIds.indexOf(
-      this.props.myUserId
-    );
-    this.helper = new MatchStateHelper(this.matchInfo);
-
-    // for throttling window resize event
-    this.throttled = false;
   }
 
   // resize the board (also for correctly displaying on mobile)
@@ -77,25 +70,21 @@ class Board extends React.Component<BoardProps, BoardState> {
     });
   }
 
-  componentWillUnmount() {
-    window.removeEventListener('resize', () => {
-      this.handleResize();
-    });
-  }
-
   handleResize() {
-    if (!this.throttled) {
-      this.getDimensions();
-      this.throttled = true;
-      setTimeout(() => (this.throttled = false), 250);
+    if (!this.state.throttled) {
+      this.setDimensions();
+      this.setState({
+        throttled: true
+      });
+      setTimeout(() => this.setState({ throttled: false }), 250);
     }
   }
 
   // todo: change to setDimensions
-  getDimensions() {
+  setDimensions() {
     this.setState({
-      innerWidth: window.innerWidth,
-      innerHeight: window.innerHeight
+      innerWidth: window.innerWidth * 0.8,
+      innerHeight: window.innerHeight * 0.8
     });
   }
 
@@ -104,7 +93,7 @@ class Board extends React.Component<BoardProps, BoardState> {
     if (index === undefined) {
       return false;
     }
-    if (this.gameSpec.pieces[index].deckPieceIndex === -1) {
+    if (this.props.gameSpec.pieces[index].deckPieceIndex === -1) {
       return false;
     } else {
       return true;
@@ -113,22 +102,22 @@ class Board extends React.Component<BoardProps, BoardState> {
 
   // cycles through the images of each piece
   togglePiece(index: number) {
-    const match: MatchInfo = this.matchInfo;
-    this.helper.toggleImage(index);
+    const match: MatchInfo = this.props.matchInfo;
+    this.state.helper.toggleImage(index);
     ourFirebase.updatePieceState(match, index);
     console.log('toggle Piece index:', index);
   }
 
   rollDice(index: number) {
     console.log('Roll Dice for index:', index);
-    const match: MatchInfo = this.matchInfo;
-    this.helper.rollDice(index);
+    const match: MatchInfo = this.props.matchInfo;
+    this.state.helper.rollDice(index);
     ourFirebase.updatePieceState(match, index);
   }
 
   shuffleDeck(index: number) {
-    const match: MatchInfo = this.matchInfo;
-    this.helper.shuffleDeck(index);
+    const match: MatchInfo = this.props.matchInfo;
+    this.state.helper.shuffleDeck(index);
     ourFirebase.updateMatchState(match);
     console.log('Shufle Deck for index:', index);
   }
@@ -140,8 +129,8 @@ class Board extends React.Component<BoardProps, BoardState> {
       'canvasImage' + index
     ] as CanvasImage).imageNode.getAbsolutePosition();
 
-    const width = this.gameSpec.board.width;
-    const height = this.gameSpec.board.height;
+    const width = this.props.gameSpec.board.width;
+    const height = this.props.gameSpec.board.height;
     const ratio = Math.min(
       this.state.innerWidth / width,
       this.state.innerHeight / height
@@ -151,54 +140,56 @@ class Board extends React.Component<BoardProps, BoardState> {
     const y = position.y / ratio / height * 100;
 
     console.log(x, y);
-    const match: MatchInfo = this.matchInfo;
-    this.helper.dragTo(index, x, y);
+    const match: MatchInfo = this.props.matchInfo;
+    this.state.helper.dragTo(index, x, y);
     ourFirebase.updatePieceState(match, index);
   };
 
   makeCardVisibleToSelf(index: number) {
-    const match: MatchInfo = this.matchInfo;
-    this.helper.showMe(index);
+    const match: MatchInfo = this.props.matchInfo;
+    this.state.helper.showMe(index);
     ourFirebase.updatePieceState(match, index);
     console.log('card show to me:', index);
   }
 
   makeCardVisibleToAll(index: number) {
-    const match: MatchInfo = this.matchInfo;
-    this.helper.showEveryone(index);
+    const match: MatchInfo = this.props.matchInfo;
+    this.state.helper.showEveryone(index);
     ourFirebase.updatePieceState(match, index);
     console.log('card show to everyone:', index);
   }
 
   makeCardHiddenToAll(index: number) {
-    const match: MatchInfo = this.matchInfo;
-    this.helper.hideFromEveryone(index);
+    const match: MatchInfo = this.props.matchInfo;
+    this.state.helper.hideFromEveryone(index);
     ourFirebase.updatePieceState(match, index);
     console.log('card hide to everyone:', index);
   }
 
   toggleCardOptions(refString: string, cardIndex: number) {
-    if (this.selectedPieceIndex === cardIndex) {
+    if (this.state.selectedPieceIndex === cardIndex) {
       // if we click on an already selected piece, hide the tooltip
       this.hideCardOptions();
     } else {
-      this.selectedPieceIndex = cardIndex;
+      this.setState({ selectedPieceIndex: cardIndex });
+
       let position = (this.refs[
         refString
       ] as CanvasImage).imageNode.getAbsolutePosition();
-      this.tooltipPosition = {
-        x: position.x,
-        y: position.y
-      };
+
       this.setState({
-        showCardOptions: true
+        tooltipPosition: {
+          x: position.x,
+          y: position.y,
+          showCardOptions: true
+        }
       });
     }
   }
 
   hideCardOptions() {
-    this.selectedPieceIndex = -1;
     this.setState({
+      selectedPieceIndex: -1,
       showCardOptions: false
     });
   }
@@ -215,24 +206,14 @@ class Board extends React.Component<BoardProps, BoardState> {
 
   render() {
     // TODO: Complete layer for board
-    let boardImage = this.gameSpec.board.downloadURL;
+    let boardImage = this.props.gameSpec.board.downloadURL;
     // TODO: handle resizing so everything fits in the screen
-    const width = this.gameSpec.board.width;
-    const height = this.gameSpec.board.height;
+    const width = this.props.gameSpec.board.width;
+    const height = this.props.gameSpec.board.height;
     const ratio = Math.min(
       this.state.innerWidth / width,
       this.state.innerHeight / height
     );
-
-    this.matchInfo = this.props.matchInfo;
-    this.gameSpec = this.props.gameSpec;
-    this.selfParticipantIndex = this.matchInfo.participantsUserIds.indexOf(
-      this.props.myUserId
-    );
-    this.helper = new MatchStateHelper(this.matchInfo);
-
-    // for throttling window resize event
-    this.throttled = false;
 
     // TODO: Remove onClick, instead calculate the distance between drag start and drag end
     let boardLayer = (
@@ -245,18 +226,19 @@ class Board extends React.Component<BoardProps, BoardState> {
       />
     );
 
-    if (this.matchInfo.matchState.length === 0) {
-      this.matchInfo.matchState = MatchStateHelper.createInitialState(
-        this.gameSpec
+    if (this.props.matchInfo.matchState.length === 0) {
+      this.props.matchInfo.matchState = MatchStateHelper.createInitialState(
+        this.props.gameSpec
       );
-      ourFirebase.updateMatchState(this.matchInfo);
+      ourFirebase.updateMatchState(this.props.matchInfo);
     }
 
     // // TODO: Complete layer for pieces
-    let piecesLayer = this.matchInfo.matchState.map((piece, index) => {
-      const pieceSpec = this.gameSpec.pieces[index];
+    let piecesLayer = this.props.matchInfo.matchState.map((piece, index) => {
+      const pieceSpec = this.props.gameSpec.pieces[index];
       let kind = pieceSpec.element.elementKind;
-      let isVisible = piece.cardVisibilityPerIndex[this.selfParticipantIndex];
+      let isVisible =
+        piece.cardVisibilityPerIndex[this.state.selfParticipantIndex];
       let imageSrc: string = '';
       if (pieceSpec.element.elementKind === 'card') {
         if (isVisible) {
@@ -317,8 +299,8 @@ class Board extends React.Component<BoardProps, BoardState> {
         targetOrigin={{ horizontal: 'left', vertical: 'top' }}
         className="my-tooltip"
         style={{
-          left: this.tooltipPosition.x,
-          top: this.tooltipPosition.y,
+          left: this.state.tooltipPosition.x,
+          top: this.state.tooltipPosition.y,
           position: 'absolute',
           display: this.state.showCardOptions ? 'initial' : 'none',
           zIndex: 100,
@@ -336,45 +318,47 @@ class Board extends React.Component<BoardProps, BoardState> {
           style={{ padding: '0', listStyle: 'none', margin: '0' }}
           primaryText={'Make Visible To Me'}
           onClick={() => {
-            this.makeCardVisibleToSelf(this.selectedPieceIndex);
+            this.makeCardVisibleToSelf(this.state.selectedPieceIndex);
           }}
           onTouchStart={() => {
-            this.makeCardVisibleToSelf(this.selectedPieceIndex);
+            this.makeCardVisibleToSelf(this.state.selectedPieceIndex);
           }}
         />
         <MenuItem
           style={{ padding: '0', listStyle: 'none', margin: '0' }}
           primaryText={'Make Visible To Everyone'}
           onClick={() => {
-            this.makeCardVisibleToAll(this.selectedPieceIndex);
+            this.makeCardVisibleToAll(this.state.selectedPieceIndex);
           }}
           onTouchStart={() => {
-            this.makeCardVisibleToAll(this.selectedPieceIndex);
+            this.makeCardVisibleToAll(this.state.selectedPieceIndex);
           }}
         />
         <MenuItem
           style={{ padding: '0', listStyle: 'none', margin: '0' }}
           primaryText={'Hide From Everyone'}
           onClick={() => {
-            this.makeCardHiddenToAll(this.selectedPieceIndex);
+            this.makeCardHiddenToAll(this.state.selectedPieceIndex);
           }}
           onTouchStart={() => {
-            this.makeCardHiddenToAll(this.selectedPieceIndex);
+            this.makeCardHiddenToAll(this.state.selectedPieceIndex);
           }}
         />
-        {this.selectedPieceIndex !== -1 &&
-        this.isDeck(this.selectedPieceIndex) ? (
+        {this.state.selectedPieceIndex !== -1 &&
+        this.isDeck(this.state.selectedPieceIndex) ? (
           <MenuItem
             style={{ padding: '0', listStyle: 'none', margin: '0' }}
             primaryText={'Shuffle Deck'}
             onClick={() => {
               this.shuffleDeck(
-                this.gameSpec.pieces[this.selectedPieceIndex].deckPieceIndex
+                this.props.gameSpec.pieces[this.state.selectedPieceIndex]
+                  .deckPieceIndex
               );
             }}
             onTouchStart={() => {
               this.shuffleDeck(
-                this.gameSpec.pieces[this.selectedPieceIndex].deckPieceIndex
+                this.props.gameSpec.pieces[this.state.selectedPieceIndex]
+                  .deckPieceIndex
               );
             }}
           />

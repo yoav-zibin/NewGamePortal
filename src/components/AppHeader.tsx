@@ -6,7 +6,6 @@ import { StringIndexer } from '../types';
 import {
   MatchInfo,
   StoreState,
-  GameInfo,
   UserIdsAndPhoneNumbers,
   PhoneNumberToContact,
   MyUser
@@ -17,8 +16,7 @@ import * as H from 'history';
 import { getOpponents } from '../globals';
 
 interface Props {
-  matchesList: MatchInfo[];
-  gamesList: GameInfo[];
+  matchInfo: MatchInfo;
   userIdsAndPhoneNumbers: UserIdsAndPhoneNumbers;
   phoneNumberToContact: PhoneNumberToContact;
   myUser: MyUser;
@@ -44,28 +42,21 @@ class AppHeader extends React.Component<Props, {}> {
     } else if (pathname.startsWith('/contactsList/')) {
       return 'Contacts List';
     } else if (pathname.startsWith('/matches/')) {
-      let matchId = pathname.split('/')[2];
-      let title = ''; // String to build
-
-      // Get corresponding info for selected match
-      this.props.matchesList.forEach((match: MatchInfo) => {
-        if (match.matchId === matchId) {
-          const game: GameInfo = match.game;
-          title += game.gameName;
-          // Is the game multiplayer? If so convert ID --> Phone --> Contact
-          if (match.participantsUserIds.length > 1) {
-            title += ' with ';
-            getOpponents(
-              match.participantsUserIds,
-              this.props.myUser.myUserId,
-              this.props.userIdsAndPhoneNumbers.userIdToPhoneNumber,
-              this.props.phoneNumberToContact
-            ).forEach((opponent: any) => {
-              title += opponent.name;
-            });
-          } // End length if
-        } // End matchId if
-      });
+      let title = 'Playing Game';
+      if (this.props.matchInfo) {
+        title = this.props.matchInfo.game.gameName; // String to build
+        if (this.props.matchInfo.participantsUserIds.length > 1) {
+          title += ' with ';
+          getOpponents(
+            this.props.matchInfo.participantsUserIds,
+            this.props.myUser.myUserId,
+            this.props.userIdsAndPhoneNumbers.userIdToPhoneNumber,
+            this.props.phoneNumberToContact
+          ).forEach((opponent: any) => {
+            title += opponent.name;
+          });
+        }
+      }
       return title;
     } else {
       return '';
@@ -92,13 +83,32 @@ class AppHeader extends React.Component<Props, {}> {
   }
 }
 
-const mapStateToProps = (state: StoreState) => ({
-  matchesList: state.matchesList,
-  gamesList: state.gamesList,
-  userIdsAndPhoneNumbers: state.userIdsAndPhoneNumbers,
-  phoneNumberToContact: state.phoneNumberToContact,
-  myUser: state.myUser
-});
+const mapStateToProps = (state: StoreState, ownProps: Props) => {
+  let matchInfo;
+  let pathname = ownProps.location.pathname;
+  // We need match info for title
+  if (pathname.startsWith('/matches/')) {
+    let matchId = pathname.split('/')[2];
+
+    matchInfo = state.matchesList.find((match: any) => {
+      return matchId === match.matchId ? match : {};
+    });
+
+    return {
+      matchInfo: matchInfo,
+      userIdsAndPhoneNumbers: state.userIdsAndPhoneNumbers,
+      phoneNumberToContact: state.phoneNumberToContact,
+      myUser: state.myUser
+    };
+  } else {
+    // We're not on a match
+    return {
+      userIdsAndPhoneNumbers: state.userIdsAndPhoneNumbers,
+      phoneNumberToContact: state.phoneNumberToContact,
+      myUser: state.myUser
+    };
+  }
+};
 
 // export default connect(mapStateToProps)(withRouter(AppHeader));
 export default connect(mapStateToProps)(withRouter(AppHeader));
