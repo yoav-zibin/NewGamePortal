@@ -103,6 +103,7 @@ if (window.location.search.match('^[?][0-9]$')) {
 declare global {
   interface Window {
     cordova: any;
+    device: any;
   }
   interface Navigator {
     contacts: any;
@@ -111,26 +112,47 @@ declare global {
 
 // check for mobile and load cordova
 if (isIos) {
-  console.log('Adding iOS cordova plugins...');
-  require('./js/cordova_plugins_ios/cordova');
+  createScript('cordova', 'cordova_plugins_ios/cordova.js', () => {
+    setTimeout(reactRender, 500);
+  });
 } else if (isAndroid) {
-  console.log('Android not tested yet...');
-  // require('./js/cordova_plugins_android/cordova');
+  createScript('cordova', 'cordova_plugins_android/cordova.js', () => {
+    setTimeout(reactRender, 500);
+  });
+} else {
+  setTimeout(reactRender, 500);
 }
 
-// Check for cordova plugins
 if (window.cordova) {
   document.addEventListener(
     'deviceready',
     () => {
       console.log('Cordova detected');
-      console.log(navigator.contacts || "Contacts doesn't exist");
-      setTimeout(reactRender, 500);
+      if (window.device.platform === 'iOS') {
+        console.log('Loading WebRTC for iOS');
+        window.cordova.plugins.iosrtc.registerGlobals();
+        var script = document.createElement('script');
+        script.type = 'text/javascript';
+        script.src = 'js/adapter-latest.js';
+        script.async = false;
+        document.getElementsByTagName('head')[0].appendChild(script);
+      }
     },
     false
   );
-} else {
-  // Give 500ms for onAuthStateChanged in firebase.ts to load the cookies and log in the user
-  // (so we won't see the login screen flashed and redirect to '/')
-  setTimeout(reactRender, 500);
+}
+
+function createScript(id: string, src: string, onload: () => void) {
+  if (document.getElementById(id)) {
+    return;
+  }
+  let js: HTMLScriptElement = document.createElement('script');
+  js.src = src;
+  js.id = id;
+  js.onload = () => {
+    onload();
+  };
+  js.async = true;
+  let fjs = document.getElementsByTagName('script')[0];
+  fjs.parentNode!.insertBefore(js, fjs);
 }
