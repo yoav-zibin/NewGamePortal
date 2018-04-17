@@ -131,49 +131,54 @@ class Board extends React.Component<BoardProps, BoardState> {
     console.log('Shufle Deck for index:', index);
   }
 
-  handleTouchStart = (index: number, kind: string) => {
-    if (kind === 'toggable') {
-      this.togglePiece(index);
-    } else if (kind === 'dice') {
-      this.rollDice(index);
-    } else if (kind === 'card') {
-      this.toggleCardOptions('canvasImage' + index, index);
-    }
-  };
-  handleDragEnd = (
+  handleTouchEnd = (
     index: number,
     kind: string,
-    ratio: number,
     startX: number,
-    startY: number
+    startY: number,
+    ratio: number
   ) => {
+    let position = (this.refs[
+      'canvasImage' + index
+    ] as CanvasImage).imageNode.getAbsolutePosition();
+
+    let width = this.gameSpec.board.width;
+    let height = this.gameSpec.board.height;
+
+    let endX = position.x / ratio / width * 100;
+    let endY = position.y / ratio / height * 100;
+    let distance = Math.sqrt(
+      (startX - endX) * (startX - endX) + (startY - endY) * (startY - endY)
+    );
+
+    console.log('distance' + distance);
+    if (distance < 1) {
+      // it's a touch instead of drag
+      if (kind === 'toggable') {
+        this.togglePiece(index);
+      } else if (kind === 'dice') {
+        this.rollDice(index);
+      } else if (kind === 'card') {
+        this.toggleCardOptions('canvasImage' + index, index);
+      }
+    }
+  };
+  handleDragEnd = (index: number, ratio: number) => {
     console.log('handleDragEnd' + index);
     let position = (this.refs[
       'canvasImage' + index
     ] as CanvasImage).imageNode.getAbsolutePosition();
-    let endX = position.x;
-    let endY = position.y;
-    let distance = Math.sqrt(
-      (startX - endX) * (startX - endX) + (startY - endY) * (startY - endY)
-    );
-    console.log('distance' + distance + 'screen' + window.innerWidth / 100);
-    if (distance < window.innerWidth / 100) {
-      // it's a touch instead of drag
-      this.handleTouchStart(index, kind);
-    } else {
-      // it's a drag
 
-      const width = this.gameSpec.board.width;
-      const height = this.gameSpec.board.height;
+    const width = this.gameSpec.board.width;
+    const height = this.gameSpec.board.height;
 
-      const x = position.x / ratio / width * 100;
-      const y = position.y / ratio / height * 100;
+    const x = position.x / ratio / width * 100;
+    const y = position.y / ratio / height * 100;
 
-      console.log(x, y);
-      const match: MatchInfo = this.matchInfo;
-      this.helper.dragTo(index, x, y);
-      ourFirebase.updatePieceState(match, index);
-    }
+    console.log(x, y);
+    const match: MatchInfo = this.matchInfo;
+    this.helper.dragTo(index, x, y);
+    ourFirebase.updatePieceState(match, index);
   };
 
   makeCardVisibleToSelf(index: number) {
@@ -203,6 +208,7 @@ class Board extends React.Component<BoardProps, BoardState> {
       this.hideCardOptions();
     } else {
       this.selectedPieceIndex = cardIndex;
+      console.log('selectedPieceIndex' + this.selectedPieceIndex);
       let position = (this.refs[
         refString
       ] as CanvasImage).imageNode.getAbsolutePosition();
@@ -296,19 +302,28 @@ class Board extends React.Component<BoardProps, BoardState> {
           x={piece.x * width / 100 * ratio}
           y={piece.y * height / 100 * ratio}
           src={imageSrc}
+          onTouchStart={() => {
+            console.log('onTouchStart');
+          }}
+          onTouchEnd={() => {
+            console.log('onTouchEnd');
+            let startX = piece.x;
+            let startY = piece.y;
+            this.handleTouchEnd(index, kind, startX, startY, ratio);
+          }}
           onDragStart={() => {
+            console.log('onDragStart');
             this.hideCardOptions();
           }}
           onDragEnd={() => {
-            let startX = this.matchInfo.matchState[index].x;
-            let startY = this.matchInfo.matchState[index].y;
-            this.handleDragEnd(index, kind, ratio, startX, startY);
+            console.log('onDragEnd');
+            this.handleDragEnd(index, ratio);
           }}
         />
       );
     });
 
-    let toolTipLayer = (
+    let toolTipLayer = this.state.showCardOptions ? (
       <IconMenu
         iconButtonElement={
           <IconButton>
@@ -322,7 +337,7 @@ class Board extends React.Component<BoardProps, BoardState> {
           left: this.tooltipPosition.x,
           top: this.tooltipPosition.y,
           position: 'absolute',
-          display: this.state.showCardOptions ? 'initial' : 'none',
+          display: 'initial',
           zIndex: 100,
           background: 'white',
           width: '40px',
@@ -337,21 +352,21 @@ class Board extends React.Component<BoardProps, BoardState> {
         <MenuItem
           style={{ padding: '0', listStyle: 'none', margin: '0' }}
           primaryText={'Make Visible To Me'}
-          onTouchStart={() => {
+          onClick={() => {
             this.makeCardVisibleToSelf(this.selectedPieceIndex);
           }}
         />
         <MenuItem
           style={{ padding: '0', listStyle: 'none', margin: '0' }}
           primaryText={'Make Visible To Everyone'}
-          onTouchStart={() => {
+          onClick={() => {
             this.makeCardVisibleToAll(this.selectedPieceIndex);
           }}
         />
         <MenuItem
           style={{ padding: '0', listStyle: 'none', margin: '0' }}
           primaryText={'Hide From Everyone'}
-          onTouchStart={() => {
+          onClick={() => {
             this.makeCardHiddenToAll(this.selectedPieceIndex);
           }}
         />
@@ -360,7 +375,7 @@ class Board extends React.Component<BoardProps, BoardState> {
           <MenuItem
             style={{ padding: '0', listStyle: 'none', margin: '0' }}
             primaryText={'Shuffle Deck'}
-            onTouchStart={() => {
+            onClick={() => {
               this.shuffleDeck(
                 this.gameSpec.pieces[this.selectedPieceIndex].deckPieceIndex
               );
@@ -368,7 +383,7 @@ class Board extends React.Component<BoardProps, BoardState> {
           />
         ) : null}
       </IconMenu>
-    );
+    ) : null;
 
     return (
       <div style={{ position: 'relative' }}>

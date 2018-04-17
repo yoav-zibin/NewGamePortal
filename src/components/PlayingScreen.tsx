@@ -26,8 +26,6 @@ interface PlayingScreenProps {
   phoneNumberToContact: PhoneNumberToContact;
   matchInfo: MatchInfo;
   gameSpec: GameSpec;
-  // matchesList: MatchInfo[];
-  // gameSpecs: GameSpecs;
   match: RouterMatchParams;
   history: History;
 }

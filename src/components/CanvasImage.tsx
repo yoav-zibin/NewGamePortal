@@ -20,6 +20,7 @@ interface CanvasImageProps extends KonvaNodeProps {
   height: number;
   onClick?: (e: React.MouseEvent<{}>) => void;
   onTouchStart?: (e: React.TouchEvent<{}>) => void;
+  onTouchEnd?: (e: React.TouchEvent<{}>) => void;
   x?: number;
   y?: number;
   rotation?: number;
