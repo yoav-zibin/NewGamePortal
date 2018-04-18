@@ -14,8 +14,6 @@ import { connect } from 'react-redux';
 import { StoreState } from '../types/index';
 import { ourFirebase } from '../services/firebase';
 import { MatchStateHelper } from '../services/matchStateHelper';
-import { prettyJson } from '../globals';
-// import { prettyJson } from '../globals';
 
 interface BoardProps {
   myUserId: string;
@@ -48,8 +46,6 @@ class Board extends React.Component<BoardProps, BoardState> {
 
   constructor(props: BoardProps) {
     super(props);
-    console.log('constructor');
-    console.log('matchInfo is:' + prettyJson(this.props.matchInfo));
     this.state = {
       showCardOptions: false,
       innerHeight: window.innerHeight,
@@ -138,9 +134,6 @@ class Board extends React.Component<BoardProps, BoardState> {
     startY: number,
     ratio: number
   ) => {
-    console.log(
-      'selectedPieceIndex in handleTouchEnd ' + this.state.selectedPieceIndex
-    );
     let position = (this.refs[
       'canvasImage' + index
     ] as CanvasImage).imageNode.getAbsolutePosition();
@@ -168,9 +161,6 @@ class Board extends React.Component<BoardProps, BoardState> {
   };
   handleDragEnd = (index: number, ratio: number) => {
     console.log('handleDragEnd' + index);
-    console.log(
-      'selectedPieceIndex in handleDragEnd ' + this.state.selectedPieceIndex
-    );
     let position = (this.refs[
       'canvasImage' + index
     ] as CanvasImage).imageNode.getAbsolutePosition();
@@ -213,10 +203,6 @@ class Board extends React.Component<BoardProps, BoardState> {
       // if we click on an already selected piece, hide the tooltip
       this.hideCardOptions();
     } else {
-      console.log(
-        'selectedPieceIndex in toggleCardOptions' +
-          this.state.selectedPieceIndex
-      );
       let position = (this.refs[
         refString
       ] as CanvasImage).imageNode.getAbsolutePosition();
@@ -260,31 +246,8 @@ class Board extends React.Component<BoardProps, BoardState> {
       this.state.innerHeight / height
     );
 
-    // this.state = {
-    //   showCardOptions: this.state.showCardOptions,
-    //   innerHeight: window.innerHeight,
-    //   innerWidth: window.innerWidth,
-    //   selectedPieceIndex: this.state.selectedPieceIndex,
-    //   selfParticipantIndex: this.props.matchInfo.participantsUserIds.indexOf(
-    //     this.props.myUserId
-    //   ),
-    //   tooltipPosition: {
-    //     x: 0,
-    //     y: 0
-    //   },
-    //   // for throttling window resize event
-    //   throttled: false,
-    //   helper: new MatchStateHelper(this.props.matchInfo),
-    // };
-
-    // console.log("state "+prettyJson(this.state));
-
     this.helper = new MatchStateHelper(this.props.matchInfo);
 
-    console.log(
-      'selectedPieceIndex in render ' + this.state.selectedPieceIndex
-    );
-    // console.log("helper "+prettyJson(this.state.helper));
     let boardLayer = (
       <CanvasImage
         height={height * ratio}

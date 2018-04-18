@@ -18,7 +18,6 @@ import CanvasImage from './CanvasImage';
 import { Layer, Stage } from 'react-konva';
 import { getOpponents } from '../globals';
 import { videoChat } from '../services/videoChat';
-// import { ourFirebase } from '../services/firebase';
 
 interface PlayingScreenProps {
   myUserId: string;
@@ -81,7 +80,7 @@ class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
         </>
       );
     }
-    // ourFirebase.addParticipant(matchInfo, "wbrj6fHArqUPw8ToKN4Y728oz6i1");
+
     document.getElementById('loadingSpinner')!.style.display = 'none';
     const participantsUserIds = this.props.matchInfo!.participantsUserIds;
     const opponents = getOpponents(
