@@ -28,6 +28,9 @@ interface PlayingScreenProps {
 }
 
 const styles: CSSPropertiesIndexer = {
+  playingScreenContainer: {
+    overflowY: 'scroll'
+  },
   videoChatContainer: {
     padding: 0,
     margin: 0,
@@ -53,19 +56,18 @@ class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
         .downloadURL;
       let screenShotWidth = this.props.matchInfo!.game.screenShot.width;
       let screenShotHeight = this.props.matchInfo!.game.screenShot.height;
-      const ratio = Math.min(
-        window.innerWidth / screenShotWidth,
-        window.innerHeight / screenShotHeight
-      );
+      const ratio = window.innerWidth / screenShotWidth;
       document.getElementById('loadingSpinner')!.style.display = 'block';
       return (
         <>
-          <div>The Gamespec has not been loaded.</div>
-          <img
-            height={screenShotHeight * ratio}
-            width={screenShotWidth * ratio}
-            src={gameSpecScreenShot}
-          />
+          <div style={styles.playingScreenContainer}>
+            <div>The Gamespec has not been loaded.</div>
+            <img
+              height={screenShotHeight * ratio}
+              width={screenShotWidth * ratio}
+              src={gameSpecScreenShot}
+            />
+          </div>
         </>
       );
     }
@@ -86,7 +88,7 @@ class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
       </div>
     );
     return (
-      <div>
+      <div style={styles.playingScreenContainer}>
         <Board
           matchInfo={this.props.matchInfo!}
           gameSpec={this.props.gameSpec}
