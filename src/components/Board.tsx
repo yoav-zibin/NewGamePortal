@@ -14,6 +14,8 @@ import { connect } from 'react-redux';
 import { StoreState } from '../types/index';
 import { ourFirebase } from '../services/firebase';
 import { MatchStateHelper } from '../services/matchStateHelper';
+import { prettyJson } from '../globals';
+// import { prettyJson } from '../globals';
 
 interface BoardProps {
   myUserId: string;
@@ -25,7 +27,6 @@ interface BoardState {
   showCardOptions: boolean;
   innerWidth: number;
   innerHeight: number;
-  helper: MatchStateHelper;
   selectedPieceIndex: number;
   selfParticipantIndex: number;
   tooltipPosition: {
@@ -43,14 +44,16 @@ interface BoardState {
 class Board extends React.Component<BoardProps, BoardState> {
   // TODO CARD
 
+  helper: MatchStateHelper;
+
   constructor(props: BoardProps) {
     super(props);
     console.log('constructor');
+    console.log('matchInfo is:' + prettyJson(this.props.matchInfo));
     this.state = {
       showCardOptions: false,
       innerHeight: window.innerHeight,
       innerWidth: window.innerWidth,
-      helper: new MatchStateHelper(this.props.matchInfo),
       selectedPieceIndex: -1,
       selfParticipantIndex: this.props.matchInfo.participantsUserIds.indexOf(
         this.props.myUserId
@@ -109,7 +112,7 @@ class Board extends React.Component<BoardProps, BoardState> {
   // cycles through the images of each piece
   togglePiece(index: number) {
     const match: MatchInfo = this.props.matchInfo;
-    this.state.helper.toggleImage(index);
+    this.helper.toggleImage(index);
     ourFirebase.updatePieceState(match, index);
     console.log('toggle Piece index:', index);
   }
@@ -117,13 +120,13 @@ class Board extends React.Component<BoardProps, BoardState> {
   rollDice(index: number) {
     console.log('Roll Dice for index:', index);
     const match: MatchInfo = this.props.matchInfo;
-    this.state.helper.rollDice(index);
+    this.helper.rollDice(index);
     ourFirebase.updatePieceState(match, index);
   }
 
   shuffleDeck(index: number) {
     const match: MatchInfo = this.props.matchInfo;
-    this.state.helper.shuffleDeck(index);
+    this.helper.shuffleDeck(index);
     ourFirebase.updateMatchState(match);
     console.log('Shufle Deck for index:', index);
   }
@@ -135,6 +138,9 @@ class Board extends React.Component<BoardProps, BoardState> {
     startY: number,
     ratio: number
   ) => {
+    console.log(
+      'selectedPieceIndex in handleTouchEnd ' + this.state.selectedPieceIndex
+    );
     let position = (this.refs[
       'canvasImage' + index
     ] as CanvasImage).imageNode.getAbsolutePosition();
@@ -162,6 +168,9 @@ class Board extends React.Component<BoardProps, BoardState> {
   };
   handleDragEnd = (index: number, ratio: number) => {
     console.log('handleDragEnd' + index);
+    console.log(
+      'selectedPieceIndex in handleDragEnd ' + this.state.selectedPieceIndex
+    );
     let position = (this.refs[
       'canvasImage' + index
     ] as CanvasImage).imageNode.getAbsolutePosition();
@@ -174,27 +183,27 @@ class Board extends React.Component<BoardProps, BoardState> {
 
     console.log(x, y);
     const match: MatchInfo = this.props.matchInfo;
-    this.state.helper.dragTo(index, x, y);
+    this.helper.dragTo(index, x, y);
     ourFirebase.updatePieceState(match, index);
   };
 
   makeCardVisibleToSelf(index: number) {
     const match: MatchInfo = this.props.matchInfo;
-    this.state.helper.showMe(index);
+    this.helper.showMe(index);
     ourFirebase.updatePieceState(match, index);
     console.log('card show to me:', index);
   }
 
   makeCardVisibleToAll(index: number) {
     const match: MatchInfo = this.props.matchInfo;
-    this.state.helper.showEveryone(index);
+    this.helper.showEveryone(index);
     ourFirebase.updatePieceState(match, index);
     console.log('card show to everyone:', index);
   }
 
   makeCardHiddenToAll(index: number) {
     const match: MatchInfo = this.props.matchInfo;
-    this.state.helper.hideFromEveryone(index);
+    this.helper.hideFromEveryone(index);
     ourFirebase.updatePieceState(match, index);
     console.log('card hide to everyone:', index);
   }
@@ -204,25 +213,26 @@ class Board extends React.Component<BoardProps, BoardState> {
       // if we click on an already selected piece, hide the tooltip
       this.hideCardOptions();
     } else {
-      this.setState({ selectedPieceIndex: cardIndex });
-      console.log('selectedPieceIndex' + this.state.selectedPieceIndex);
+      console.log(
+        'selectedPieceIndex in toggleCardOptions' +
+          this.state.selectedPieceIndex
+      );
       let position = (this.refs[
         refString
       ] as CanvasImage).imageNode.getAbsolutePosition();
       this.setState({
         tooltipPosition: {
           x: position.x,
-          y: position.y,
-          showCardOptions: true
-        }
-      });
-      this.setState({
-        showCardOptions: true
+          y: position.y
+        },
+        showCardOptions: true,
+        selectedPieceIndex: cardIndex
       });
     }
   }
 
   hideCardOptions() {
+    console.log('hideCardOptions');
     this.setState({
       selectedPieceIndex: -1,
       showCardOptions: false
@@ -250,6 +260,31 @@ class Board extends React.Component<BoardProps, BoardState> {
       this.state.innerHeight / height
     );
 
+    // this.state = {
+    //   showCardOptions: this.state.showCardOptions,
+    //   innerHeight: window.innerHeight,
+    //   innerWidth: window.innerWidth,
+    //   selectedPieceIndex: this.state.selectedPieceIndex,
+    //   selfParticipantIndex: this.props.matchInfo.participantsUserIds.indexOf(
+    //     this.props.myUserId
+    //   ),
+    //   tooltipPosition: {
+    //     x: 0,
+    //     y: 0
+    //   },
+    //   // for throttling window resize event
+    //   throttled: false,
+    //   helper: new MatchStateHelper(this.props.matchInfo),
+    // };
+
+    // console.log("state "+prettyJson(this.state));
+
+    this.helper = new MatchStateHelper(this.props.matchInfo);
+
+    console.log(
+      'selectedPieceIndex in render ' + this.state.selectedPieceIndex
+    );
+    // console.log("helper "+prettyJson(this.state.helper));
     let boardLayer = (
       <CanvasImage
         height={height * ratio}
@@ -304,7 +339,7 @@ class Board extends React.Component<BoardProps, BoardState> {
           }}
           onDragStart={() => {
             console.log('onDragStart');
-            this.hideCardOptions();
+            // this.hideCardOptions();
           }}
           onDragEnd={() => {
             console.log('onDragEnd');
