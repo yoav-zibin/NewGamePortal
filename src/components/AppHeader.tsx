@@ -42,17 +42,20 @@ class AppHeader extends React.Component<Props, {}> {
     } else if (pathname.startsWith('/contactsList/')) {
       return 'Contacts List';
     } else if (pathname.startsWith('/matches/')) {
-      let title = this.props.matchInfo.game.gameName; // String to build
-      if (this.props.matchInfo.participantsUserIds.length > 1) {
-        title += ' with ';
-        getOpponents(
-          this.props.matchInfo.participantsUserIds,
-          this.props.myUser.myUserId,
-          this.props.userIdsAndPhoneNumbers.userIdToPhoneNumber,
-          this.props.phoneNumberToContact
-        ).forEach((opponent: any) => {
-          title += opponent.name;
-        });
+      let title = 'Playing Game';
+      if (this.props.matchInfo) {
+        title = this.props.matchInfo.game.gameName; // String to build
+        if (this.props.matchInfo.participantsUserIds.length > 1) {
+          title += ' with ';
+          getOpponents(
+            this.props.matchInfo.participantsUserIds,
+            this.props.myUser.myUserId,
+            this.props.userIdsAndPhoneNumbers.userIdToPhoneNumber,
+            this.props.phoneNumberToContact
+          ).forEach((opponent: any) => {
+            title += opponent.name;
+          });
+        }
       }
       return title;
     } else {

@@ -1,10 +1,11 @@
 import * as React from 'react';
-import { Contact, RouterMatchParams } from '../types';
+import { Contact, RouterMatchParams, PhoneNumberToContact } from '../types';
 import { MatchInfo } from '../types';
 import { List, ListItem } from 'material-ui/List';
 import Divider from 'material-ui/Divider';
 import Subheader from 'material-ui/Subheader';
 import FloatingActionButton from 'material-ui/FloatingActionButton';
+import Snackbar from 'material-ui/Snackbar';
 import RaisedButton from 'material-ui/RaisedButton';
 import ContentAdd from 'material-ui/svg-icons/content/add';
 import AutoComplete from 'material-ui/AutoComplete';
@@ -13,7 +14,7 @@ import { ourFirebase } from '../services/firebase';
 import { connect } from 'react-redux';
 import { StoreState } from '../types/index';
 import { History } from 'history';
-import { checkNotNull } from '../globals';
+import { checkNotNull, isIos, isAndroid } from '../globals';
 
 const style: React.CSSProperties = {
   marginRight: 20
@@ -54,11 +55,21 @@ interface Props {
   history: History;
 }
 
+declare let ContactFindOptions: any;
+
 class ContactsList extends React.Component<Props, {}> {
+  timer: any = undefined;
+
   state = {
     filterValue: '',
-    userAdded: false
+    stay: false,
+    message: 'Message sent',
+    snackBarOpen: false
   };
+
+  componentDidMount() {
+    this.getContacts();
+  }
 
   handleRequest = (chosenRequest: DataSourceConfig, index: number) => {
     if (chosenRequest.text.length > 0) {
@@ -72,9 +83,10 @@ class ContactsList extends React.Component<Props, {}> {
       );
       this.handleAddUser(chosenUser.userId);
     } else {
-      /*chosenUser = this.props.notUsers.find(
+      let chosenUser: any = this.props.notUsers.find(
         user => user.name === chosenRequest.text
-      );*/
+      );
+      this.handleAddNotUser(chosenUser);
     }
     return index;
   };
@@ -84,6 +96,53 @@ class ContactsList extends React.Component<Props, {}> {
       this.setState({ filterValue: '' });
     }
   };
+
+  getContacts = () => {
+    if (!navigator.contacts) {
+      return;
+    }
+
+    // find all contacts with 'Bob' in any name field
+    var options = new ContactFindOptions();
+    options.filter = '';
+    options.multiple = true;
+    options.desiredFields = [
+      navigator.contacts.fieldType.displayName,
+      navigator.contacts.fieldType.givenName,
+      navigator.contacts.fieldType.phoneNumbers,
+      navigator.contacts.fieldType.nickname
+    ];
+    options.hasPhoneNumber = true;
+    navigator.contacts.find(['*'], this.onSuccess, this.onError, options);
+  };
+
+  onSuccess(contacts: any[]) {
+    let currentContacts: PhoneNumberToContact = {};
+    for (let contact of contacts) {
+      for (let phoneNumber of contact.phoneNumbers) {
+        const parsed = phoneNumber['value'].replace(/[() -]/g, '');
+        console.log(parsed);
+        if (isIos) {
+          const newContact: Contact = {
+            name: contact.displayName,
+            phoneNumber: parsed
+          };
+          currentContacts[parsed] = newContact;
+        } else if (isAndroid) {
+          const newContact: Contact = {
+            name: contact.displayName,
+            phoneNumber: parsed
+          };
+          currentContacts[parsed] = newContact;
+        }
+      }
+    }
+    // ourFirebase.storeContacts(currentContacts);
+  }
+
+  onError() {
+    console.log('Error fetching contacts');
+  }
 
   getMatch = () => {
     /*let currentMatchId: String = this.props.match.params.matchIdInRoute;
@@ -100,9 +159,25 @@ class ContactsList extends React.Component<Props, {}> {
     this.props.history.push('/matches/' + currentMatch.matchId);
   };
 
+  componentWillUnMount() {
+    clearTimeout(this.timer);
+  }
+
   handleAddNotUser = (contact: Contact) => {
-    // todo: sent Sms
     console.log('Sending SMS to ', contact);
+    this.setState({ snackBarOpen: true });
+    let currentMatch = this.getMatch();
+    console.log(!this.state.stay);
+    this.timer = setTimeout(() => {
+      this.props.history.push('/matches/' + currentMatch.matchId);
+    }, 3000);
+  };
+
+  handleActionClick = () => {
+    this.setState({
+      open: false
+    });
+    clearTimeout(this.timer);
   };
 
   filterParticipants(contacts: ContactWithUserId[]): ContactWithUserId[] {
@@ -179,6 +254,13 @@ class ContactsList extends React.Component<Props, {}> {
             />
           ))}
         </List>
+        <Snackbar
+          open={this.state.snackBarOpen}
+          message={this.state.message}
+          action="stay"
+          autoHideDuration={3000}
+          onActionClick={this.handleActionClick}
+        />
       </div>
     );
   }

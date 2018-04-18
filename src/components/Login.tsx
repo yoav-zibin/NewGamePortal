@@ -167,8 +167,8 @@ class Login extends React.Component<Props, {}> {
   onLogin = () => {
     let result = parsePhoneNumber(this.state.phoneNum, this.state.code);
     console.log(result);
-    if (result['isValidNumber']) {
-      let phoneNumber = result['internationalFormat'];
+    if (result.isValidNumber) {
+      let phoneNumber = result.internationalFormat;
       ourFirebase
         .signInWithPhoneNumber(
           phoneNumber,
@@ -206,10 +206,6 @@ class Login extends React.Component<Props, {}> {
     this.props.history.push('/');
   };
 
-  // todo: change listStyle in Autocomplete(some countries' names are too long to show)
-
-  // TODO: click on the autoComplete should immediately do the action, i.e., either
-  // addParticipant or sendSMS (instead of filtering the contacts list).
   render() {
     if (this.props.myUserId) {
       return <Redirect to="/" />;
@@ -221,6 +217,7 @@ class Login extends React.Component<Props, {}> {
 
           <div>
             <AutoComplete
+              listStyle={{ maxHeight: 200, overflow: 'auto' }}
               floatingLabelText="Country"
               hintText="Select Country"
               searchText={this.state.searchText}
