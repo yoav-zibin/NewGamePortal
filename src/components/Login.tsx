@@ -12,8 +12,14 @@ import MenuItem from 'material-ui/MenuItem';
 import { History } from 'history';
 import { Redirect } from 'react-router';
 import { connect } from 'react-redux';
-import { StoreState, parsePhoneNumber } from '../types/index';
+import { StoreState, PhoneNumInfo } from '../types/index';
+
 const data = require('../countrycode.json');
+require('../js/trans-compiled');
+declare function parsePhoneNumber(
+  phoneNumber: String,
+  regionCode: String
+): PhoneNumInfo;
 
 interface Country {
   name: string;
