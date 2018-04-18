@@ -4,7 +4,6 @@ import VideoArea from './VideoArea';
 import {
   StoreState,
   MatchInfo,
-  GameSpecs,
   GameSpec,
   UserIdToPhoneNumber,
   PhoneNumberToContact,
@@ -24,9 +23,8 @@ interface PlayingScreenProps {
   myUserId: string;
   userIdToPhoneNumber: UserIdToPhoneNumber;
   phoneNumberToContact: PhoneNumberToContact;
-  // Remove matchesList & gameSpecs, compute in mapStateToProps exactly what you need.
-  matchesList: MatchInfo[];
-  gameSpecs: GameSpecs;
+  matchInfo: MatchInfo;
+  gameSpec: GameSpec;
   match: RouterMatchParams;
   history: History;
 }
@@ -49,29 +47,14 @@ const styles: CSSPropertiesIndexer = {
 };
 
 class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
-  // todo: remove
-  matchInfo: MatchInfo;
-  gameSpec: GameSpec;
-
   render() {
-    let matchInfo: MatchInfo | undefined;
-    let gameSpec: GameSpec | undefined;
-
-    for (let match of this.props.matchesList) {
-      if (this.props.match.params.matchIdInRoute === match.matchId) {
-        matchInfo = match;
-        gameSpec = this.props.gameSpecs.gameSpecIdToGameSpec[
-          match.gameSpecId
-        ];
-      }
-    }
-
-    if (!matchInfo) {
+    if (!this.props.matchInfo) {
       return <div>The matchId doesn't exist.</div>;
-    } else if (!gameSpec) {
-      let gameSpecScreenShot = matchInfo!.game.screenShot.downloadURL;
-      let screenShotWidth = matchInfo!.game.screenShot.width;
-      let screenShotHeight = matchInfo!.game.screenShot.height;
+    } else if (!this.props.gameSpec) {
+      let gameSpecScreenShot = this.props.matchInfo!.game.screenShot
+        .downloadURL;
+      let screenShotWidth = this.props.matchInfo!.game.screenShot.width;
+      let screenShotHeight = this.props.matchInfo!.game.screenShot.height;
       const ratio = Math.min(
         window.innerWidth / screenShotWidth,
         window.innerHeight / screenShotHeight
@@ -97,8 +80,9 @@ class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
         </>
       );
     }
+
     document.getElementById('loadingSpinner')!.style.display = 'none';
-    const participantsUserIds = matchInfo!.participantsUserIds;
+    const participantsUserIds = this.props.matchInfo!.participantsUserIds;
     const opponents = getOpponents(
       participantsUserIds,
       this.props.myUserId,
@@ -114,12 +98,17 @@ class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
     );
     return (
       <div>
-        <Board matchInfo={matchInfo!} gameSpec={gameSpec} />
+        <Board
+          matchInfo={this.props.matchInfo!}
+          gameSpec={this.props.gameSpec}
+        />
         {videoArea}
         <FloatingActionButton
           style={{ marginRight: 20 }}
           onClick={() =>
-            this.props.history.push('/contactsList/' + matchInfo!.matchId)
+            this.props.history.push(
+              '/contactsList/' + this.props.matchInfo!.matchId
+            )
           }
         >
           <ContentAdd />
@@ -130,17 +119,17 @@ class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
 }
 
 const mapStateToProps = (state: StoreState, ownProps: PlayingScreenProps) => {
-  console.log("ownProps=", ownProps);
-  // TODO: filter here!!!
-  // use router props in mapStateToProps so this component will just
-  // need the current match and current game spec.
-  // const mapStateToProps = (state: StoreState, ownProps: PlayingScreenProps) => {
-  //     // Use props injected by React Router
-  //     const selectedSlugs = ownProps.params.selectedSlugs.split(';');
-  // }
+  let matchInfo: MatchInfo | undefined;
+  let gameSpec: GameSpec | undefined;
+  for (let match of state.matchesList) {
+    if (ownProps.match.params.matchIdInRoute === match.matchId) {
+      matchInfo = match;
+      gameSpec = state.gameSpecs.gameSpecIdToGameSpec[match.gameSpecId];
+    }
+  }
   return {
-    matchesList: state.matchesList,
-    gameSpecs: state.gameSpecs,
+    matchInfo: matchInfo,
+    gameSpec: gameSpec,
     myUserId: state.myUser.myUserId,
     userIdToPhoneNumber: state.userIdsAndPhoneNumbers.userIdToPhoneNumber,
     phoneNumberToContact: state.phoneNumberToContact
