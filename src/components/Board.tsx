@@ -123,6 +123,10 @@ class Board extends React.Component<BoardProps, BoardState> {
   shuffleDeck(index: number) {
     const match: MatchInfo = this.props.matchInfo;
     this.helper.shuffleDeck(index);
+    this.setState({
+      selectedPieceIndex: -1,
+      showCardOptions: false
+    });
     ourFirebase.updateMatchState(match);
     console.log('Shufle Deck for index:', index);
   }
@@ -241,10 +245,7 @@ class Board extends React.Component<BoardProps, BoardState> {
     // TODO: handle resizing so everything fits in the screen
     const width = this.props.gameSpec.board.width;
     const height = this.props.gameSpec.board.height;
-    const ratio = Math.min(
-      this.state.innerWidth / width,
-      this.state.innerHeight / height
-    );
+    const ratio = this.state.innerWidth / width;
 
     this.helper = new MatchStateHelper(this.props.matchInfo);
 
