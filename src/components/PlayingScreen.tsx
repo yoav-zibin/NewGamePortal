@@ -14,8 +14,6 @@ import { connect } from 'react-redux';
 import { FloatingActionButton } from 'material-ui';
 import ContentAdd from 'material-ui/svg-icons/content/add';
 import { History } from 'history';
-import CanvasImage from './CanvasImage';
-import { Layer, Stage } from 'react-konva';
 import { getOpponents } from '../globals';
 import { videoChat } from '../services/videoChat';
 
@@ -59,24 +57,15 @@ class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
         window.innerWidth / screenShotWidth,
         window.innerHeight / screenShotHeight
       );
-      // Don't need a canvas for the screenshot, just use HTML image
-      let screenShotLayer = (
-        <CanvasImage
-          height={screenShotHeight * ratio}
-          width={screenShotWidth * ratio}
-          src={gameSpecScreenShot}
-        />
-      );
       document.getElementById('loadingSpinner')!.style.display = 'block';
       return (
         <>
           <div>The Gamespec has not been loaded.</div>
-          <Stage
-            width={screenShotWidth * ratio}
+          <img
             height={screenShotHeight * ratio}
-          >
-            <Layer ref={() => 'screenShotLayer'}>{screenShotLayer}</Layer>
-          </Stage>
+            width={screenShotWidth * ratio}
+            src={gameSpecScreenShot}
+          />
         </>
       );
     }
