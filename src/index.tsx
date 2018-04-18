@@ -105,6 +105,7 @@ declare global {
   interface Window {
     cordova: any;
     device: any;
+    sms: any;
   }
   interface Navigator {
     contacts: any;

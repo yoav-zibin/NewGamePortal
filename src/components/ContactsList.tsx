@@ -14,7 +14,7 @@ import { ourFirebase } from '../services/firebase';
 import { connect } from 'react-redux';
 import { StoreState } from '../types/index';
 import { History } from 'history';
-import { checkNotNull } from '../globals';
+import { checkNotNull, isAndroid, isIos } from '../globals';
 
 const style: React.CSSProperties = {
   marginRight: 20
@@ -112,14 +112,58 @@ class ContactsList extends React.Component<Props, {}> {
   }
 
   handleAddNotUser = (contact: Contact) => {
-    console.log('Sending SMS to ', contact);
     // TODO: Herbert, send the SMS here in ios/android.
+    if (isAndroid || isIos) {
+      console.log('Sending SMS to ', contact);
+      // this.sendSms(contact, 'Your friend would like to invite you to GamePortal!');
+    }
     this.setState({ snackBarOpen: true });
     // let currentMatch = this.getMatch();
     console.log(!this.state.stay);
     // this.timer = setTimeout(() => {
     //   this.props.history.push('/matches/' + currentMatch.matchId)
     // }, 3000);
+  };
+
+  requestSMSPermission = () => {
+    const success = (hasPermission: boolean) => {
+      if (!hasPermission) {
+        window.sms.requestPermission(
+          () => {
+            console.log('[OK] Permission accepted');
+          },
+          () => {
+            console.log('[WARN] Permission not accepted');
+          }
+        );
+      }
+    };
+    const error = function(e: any) {
+      alert('Something went wrong:' + e);
+    };
+    window.sms.hasPermission(success, error);
+  };
+
+  sendSms = (contact: Contact, message: String) => {
+    const phoneNum = contact.phoneNumber;
+    console.log('number=' + phoneNum + ', message= ' + message);
+
+    const options = {
+      replaceLineBreaks: false, // true to replace \n by a new line, false by default
+      android: {
+        intent: '' // send SMS with the native android SMS messaging
+      }
+    };
+
+    const success = () => {
+      console.log('Message sent successfully');
+    };
+    const error = () => {
+      console.log('Message Failed');
+    };
+
+    this.requestSMSPermission();
+    window.sms.send(phoneNum, message, options, success, error);
   };
 
   handleActionClick = () => {

@@ -1,6 +1,11 @@
 import * as React from 'react';
 import { connect } from 'react-redux';
-import { StoreState, CSSPropertiesIndexer, Contact, parsePhoneNumber, PhoneNumInfo } from '../types/index';
+import {
+  StoreState,
+  CSSPropertiesIndexer,
+  Contact,
+  PhoneNumInfo
+} from '../types/index';
 import { MatchInfo, UserIdToPhoneNumber, PhoneNumberToContact } from '../types';
 import FloatingActionButton from 'material-ui/FloatingActionButton';
 import ContentAdd from 'material-ui/svg-icons/content/add';
@@ -10,6 +15,13 @@ import { Link } from 'react-router-dom';
 import { getOpponents, isIos, isAndroid } from '../globals';
 import { store } from '../stores';
 import { ourFirebase } from '../services/firebase';
+
+// for some reason I need to require and declare these things again?
+require('../js/trans-compiled');
+declare function parsePhoneNumber(
+  phoneNumber: String,
+  regionCode: String
+): PhoneNumInfo;
 
 declare let ContactFindOptions: any;
 
@@ -67,7 +79,7 @@ class MatchesList extends React.Component<Props, {}> {
         .map(opponent => opponent.name)
         .join(' ')
     );
-  }
+  };
 
   componentDidMount() {
     if (didFetchContacts) {
@@ -82,25 +94,24 @@ class MatchesList extends React.Component<Props, {}> {
   fetchContacts = () => {
     // TODO: show per-premission screen.
     if (!navigator.contacts) {
-      console.error("No navigator.contacts!")
+      console.error('No navigator.contacts!');
       return;
     }
     console.log('Fetching contacts');
 
-    // find all contacts with 'Bob' in any name field
     var options = new ContactFindOptions();
     options.filter = '';
     options.multiple = true;
     options.desiredFields = [
       navigator.contacts.fieldType.displayName,
-      navigator.contacts.fieldType.phoneNumbers,
+      navigator.contacts.fieldType.phoneNumbers
     ];
     options.hasPhoneNumber = true;
     navigator.contacts.find(['*'], this.onSuccess, this.onError, options);
   };
 
   onSuccess = (contacts: any[]) => {
-    console.log("Successfully got contacts: ", contacts);
+    console.log('Successfully got contacts: ', contacts);
     let myCountryCode = store.getState().myUser.myCountryCode;
     if (!myCountryCode) {
       console.error('Missing country code');
@@ -110,11 +121,21 @@ class MatchesList extends React.Component<Props, {}> {
     for (let contact of contacts) {
       for (let phoneNumber of contact.phoneNumbers) {
         const localNumber = phoneNumber['value'].replace(/[^0-9]/g, '');
-        const phoneInfo: PhoneNumInfo = parsePhoneNumber(localNumber, myCountryCode);
-        if (phoneInfo.isPossibleNumber && phoneInfo.isValidNumber && phoneInfo.maybeMobileNumber) {
+        const phoneInfo: PhoneNumInfo = parsePhoneNumber(
+          localNumber,
+          myCountryCode
+        );
+        if (
+          phoneInfo.isPossibleNumber &&
+          phoneInfo.isValidNumber &&
+          phoneInfo.maybeMobileNumber
+        ) {
           const internationalNumber = phoneInfo.e164Format;
           if (ourFirebase.checkPhoneNum(internationalNumber)) {
-            console.error("e164Format returned illegal phone number:", internationalNumber);
+            console.error(
+              'e164Format returned illegal phone number:',
+              internationalNumber
+            );
             continue;
           }
           const newContact: Contact = {
@@ -126,11 +147,11 @@ class MatchesList extends React.Component<Props, {}> {
       }
     }
     ourFirebase.storeContacts(currentContacts);
-  }
+  };
 
   onError = () => {
     console.error('Error fetching contacts');
-  }
+  };
 
   render() {
     return (
