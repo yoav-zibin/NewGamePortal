@@ -14,7 +14,7 @@ import { ourFirebase } from '../services/firebase';
 import { connect } from 'react-redux';
 import { StoreState } from '../types/index';
 import { History } from 'history';
-import { checkNotNull, isIos, isAndroid } from '../globals';
+import { checkNotNull, isIos, isAndroid, checkCondition } from '../globals';
 
 const style: React.CSSProperties = {
   marginRight: 20
@@ -68,7 +68,10 @@ class ContactsList extends React.Component<Props, {}> {
   };
 
   componentDidMount() {
-    this.getContacts();
+    // get phone contacts using cordova
+    if (isIos || isAndroid) {
+      this.getContacts();
+    }
   }
 
   handleRequest = (chosenRequest: DataSourceConfig, index: number) => {
@@ -98,10 +101,8 @@ class ContactsList extends React.Component<Props, {}> {
   };
 
   getContacts = () => {
-    if (!navigator.contacts) {
-      return;
-    }
-
+    checkCondition("Check that we're on mobile", isIos || isAndroid);
+    checkNotNull(navigator.contacts);
     // find all contacts with 'Bob' in any name field
     var options = new ContactFindOptions();
     options.filter = '';
@@ -120,11 +121,10 @@ class ContactsList extends React.Component<Props, {}> {
     let currentContacts: PhoneNumberToContact = {};
     for (let contact of contacts) {
       for (let phoneNumber of contact.phoneNumbers) {
-        const parsed = phoneNumber['value'].replace(/[() -]/g, '');
-        console.log(parsed);
+        const parsed = phoneNumber['value'].replace(/[^0-9]/g, '');
         if (isIos) {
           const newContact: Contact = {
-            name: contact.displayName,
+            name: contact.nickname,
             phoneNumber: parsed
           };
           currentContacts[parsed] = newContact;
@@ -137,6 +137,7 @@ class ContactsList extends React.Component<Props, {}> {
         }
       }
     }
+    console.log(currentContacts);
     // ourFirebase.storeContacts(currentContacts);
   }
 
