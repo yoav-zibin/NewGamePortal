@@ -62,6 +62,7 @@ class ContactsList extends React.Component<Props, {}> {
     filterValue: '',
     stay: false,
     message: 'Message sent',
+    autoHideDuration: 3000,
     snackBarOpen: false
   };
 
@@ -114,18 +115,28 @@ class ContactsList extends React.Component<Props, {}> {
     console.log('Sending SMS to ', contact);
     // TODO: Herbert, send the SMS here in ios/android.
     this.setState({ snackBarOpen: true });
-    let currentMatch = this.getMatch();
+    // let currentMatch = this.getMatch();
     console.log(!this.state.stay);
-    this.timer = setTimeout(() => {
-      this.props.history.push('/matches/' + currentMatch.matchId);
-    }, 3000);
+    // this.timer = setTimeout(() => {
+    //   this.props.history.push('/matches/' + currentMatch.matchId)
+    // }, 3000);
   };
 
   handleActionClick = () => {
     this.setState({
-      open: false
+      snackBarOpen: false
     });
-    clearTimeout(this.timer);
+    // clearTimeout(this.timer);
+  };
+
+  handleRequestClose = () => {
+    if (this.state.snackBarOpen) {
+      let currentMatch = this.getMatch();
+      this.props.history.push('/matches/' + currentMatch.matchId);
+    }
+    this.setState({
+      snackBarOpen: false
+    });
   };
 
   filterParticipants(contacts: ContactWithUserId[]): ContactWithUserId[] {
@@ -208,7 +219,8 @@ class ContactsList extends React.Component<Props, {}> {
           open={this.state.snackBarOpen}
           message={this.state.message}
           action="stay"
-          autoHideDuration={3000}
+          autoHideDuration={this.state.autoHideDuration}
+          onRequestClose={this.handleRequestClose}
           onActionClick={this.handleActionClick}
         />
       </div>
