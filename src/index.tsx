@@ -12,7 +12,6 @@ import { ourFirebase } from './services/firebase';
 import { Contact, PhoneNumberToContact } from './types';
 import * as Raven from 'raven-js';
 import * as sentryRelease from './sentry-config.json';
-require('./js/trans-compiled');
 
 function reactRender() {
   document.getElementById('loadingSpinner')!.style.display = 'none';

@@ -16,7 +16,6 @@ import { getOpponents, isIos, isAndroid } from '../globals';
 import { store } from '../stores';
 import { ourFirebase } from '../services/firebase';
 
-// for some reason I need to require and declare these things again?
 require('../js/trans-compiled');
 declare function parsePhoneNumber(
   phoneNumber: String,
