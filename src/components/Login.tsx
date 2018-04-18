@@ -11,13 +11,7 @@ import MenuItem from 'material-ui/MenuItem';
 // import ContentClear from 'material-ui/svg-icons/content/clear';
 import { History } from 'history';
 import { Redirect } from 'react-router';
-require('../js/trans-compiled');
 const data = require('../countrycode.json');
-
-declare function parsePhoneNumber(
-  phoneNumber: String,
-  regionCode: String
-): PhoneNumInfo;
 
 interface Country {
   name: string;
@@ -36,16 +30,6 @@ interface Props {
 interface DataSourceNode {
   text: string;
   value: object;
-}
-
-interface PhoneNumInfo {
-  number: string;
-  isPossibleNumber: boolean;
-  isValidNumber: boolean;
-  isValidNumberForRegion: boolean;
-  maybeMobileNumber: boolean;
-  internationalFormat: string;
-  e164Format: string;
 }
 
 enum loadingType {
@@ -294,7 +278,7 @@ class Login extends React.Component<Props, {}> {
 }
 
 import { connect } from 'react-redux';
-import { StoreState } from '../types/index';
+import { StoreState, parsePhoneNumber } from '../types/index';
 // import { bool } from 'prop-types';
 
 const mapStateToProps = (state: StoreState) => {

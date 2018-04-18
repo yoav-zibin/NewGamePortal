@@ -112,6 +112,7 @@ class ContactsList extends React.Component<Props, {}> {
 
   handleAddNotUser = (contact: Contact) => {
     console.log('Sending SMS to ', contact);
+    // TODO: Herbert, send the SMS here in ios/android.
     this.setState({ snackBarOpen: true });
     let currentMatch = this.getMatch();
     console.log(!this.state.stay);
@@ -140,6 +141,8 @@ class ContactsList extends React.Component<Props, {}> {
       contact => contact.name.indexOf(this.state.filterValue) !== -1
     );
   }
+  // TODO: show formatted phone numbers next to non-users (like in Duo).
+  // const phoneInfo: PhoneNumInfo = parsePhoneNumber(localNumber, myCountryCode);
   render() {
     return (
       <div>

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { connect } from 'react-redux';
-import { StoreState, CSSPropertiesIndexer, Contact } from '../types/index';
+import { StoreState, CSSPropertiesIndexer, Contact, parsePhoneNumber, PhoneNumInfo } from '../types/index';
 import { MatchInfo, UserIdToPhoneNumber, PhoneNumberToContact } from '../types';
 import FloatingActionButton from 'material-ui/FloatingActionButton';
 import ContentAdd from 'material-ui/svg-icons/content/add';
@@ -8,6 +8,8 @@ import { List, ListItem } from 'material-ui/List';
 import Avatar from 'material-ui/Avatar';
 import { Link } from 'react-router-dom';
 import { getOpponents, isIos, isAndroid } from '../globals';
+import { store } from '../stores';
+import { ourFirebase } from '../services/firebase';
 
 declare let ContactFindOptions: any;
 
@@ -98,19 +100,32 @@ class MatchesList extends React.Component<Props, {}> {
   };
 
   onSuccess = (contacts: any[]) => {
+    console.log("Successfully got contacts: ", contacts);
+    let myCountryCode = store.getState().myUser.myCountryCode;
+    if (!myCountryCode) {
+      console.error('Missing country code');
+      return;
+    }
     let currentContacts: PhoneNumberToContact = {};
     for (let contact of contacts) {
       for (let phoneNumber of contact.phoneNumbers) {
-        const parsed = phoneNumber['value'].replace(/[^0-9]/g, '');
-        console.log(parsed);
-        const newContact: Contact = {
-          name: contact.displayName,
-          phoneNumber: parsed
-        };
-        currentContacts[parsed] = newContact;
+        const localNumber = phoneNumber['value'].replace(/[^0-9]/g, '');
+        const phoneInfo: PhoneNumInfo = parsePhoneNumber(localNumber, myCountryCode);
+        if (phoneInfo.isPossibleNumber && phoneInfo.isValidNumber && phoneInfo.maybeMobileNumber) {
+          const internationalNumber = phoneInfo.e164Format;
+          if (ourFirebase.checkPhoneNum(internationalNumber)) {
+            console.error("e164Format returned illegal phone number:", internationalNumber);
+            continue;
+          }
+          const newContact: Contact = {
+            name: contact.displayName,
+            phoneNumber: internationalNumber
+          };
+          currentContacts[internationalNumber] = newContact;
+        }
       }
     }
-    // ourFirebase.storeContacts(currentContacts);
+    ourFirebase.storeContacts(currentContacts);
   }
 
   onError = () => {

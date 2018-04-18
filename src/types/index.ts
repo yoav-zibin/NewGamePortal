@@ -1,5 +1,19 @@
 import { CSSProperties } from 'react';
 
+export interface PhoneNumInfo {
+  number: string;
+  isPossibleNumber: boolean;
+  isValidNumber: boolean;
+  isValidNumberForRegion: boolean;
+  maybeMobileNumber: boolean;
+  internationalFormat: string;
+  e164Format: string;
+}
+export declare function parsePhoneNumber(
+  phoneNumber: String,
+  regionCode: String
+): PhoneNumInfo;
+
 export type PlatformType = 'ios' | 'android' | 'web' | 'tests';
 export interface RouterMatchParams {
   params: {
