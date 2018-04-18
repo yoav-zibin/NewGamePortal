@@ -11,6 +11,8 @@ import MenuItem from 'material-ui/MenuItem';
 // import ContentClear from 'material-ui/svg-icons/content/clear';
 import { History } from 'history';
 import { Redirect } from 'react-router';
+import { connect } from 'react-redux';
+import { StoreState, parsePhoneNumber } from '../types/index';
 const data = require('../countrycode.json');
 
 interface Country {
@@ -151,7 +153,7 @@ class Login extends React.Component<Props, {}> {
   onLogin = () => {
     let result = parsePhoneNumber(this.state.phoneNum, this.state.code);
     console.log(result);
-    if(result.isValidNumber){
+    if (result.isValidNumber) {
       let phoneNumber = result.internationalFormat;
       ourFirebase
         .signInWithPhoneNumber(
@@ -276,10 +278,6 @@ class Login extends React.Component<Props, {}> {
     );
   }
 }
-
-import { connect } from 'react-redux';
-import { StoreState, parsePhoneNumber } from '../types/index';
-// import { bool } from 'prop-types';
 
 const mapStateToProps = (state: StoreState) => {
   const countries: Country[] = [];

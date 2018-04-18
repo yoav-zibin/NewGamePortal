@@ -1,6 +1,8 @@
 import * as React from 'react';
 import { GridList, GridTile } from 'material-ui/GridList';
 import { GameInfo, CSSPropertiesIndexer } from '../types';
+import { connect } from 'react-redux';
+import { StoreState } from '../types/index';
 
 const styles: CSSPropertiesIndexer = {
   root: {
@@ -50,9 +52,6 @@ class GamesList extends React.Component<Props, {}> {
     );
   }
 }
-
-import { connect } from 'react-redux';
-import { StoreState } from '../types/index';
 
 const mapStateToProps = (state: StoreState) => ({
   gamesList: state.gamesList
