@@ -13,7 +13,7 @@ import { ourFirebase } from '../services/firebase';
 import { connect } from 'react-redux';
 import { StoreState } from '../types/index';
 import { History } from 'history';
-import { checkNotNull, isIos, isAndroid } from '../globals';
+import { checkNotNull } from '../globals';
 
 const style: React.CSSProperties = {
   marginRight: 20

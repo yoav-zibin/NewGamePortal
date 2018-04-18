@@ -103,19 +103,11 @@ class MatchesList extends React.Component<Props, {}> {
       for (let phoneNumber of contact.phoneNumbers) {
         const parsed = phoneNumber['value'].replace(/[^0-9]/g, '');
         console.log(parsed);
-        if (isIos) {
-          const newContact: Contact = {
-            name: contact.displayName,
-            phoneNumber: parsed
-          };
-          currentContacts[parsed] = newContact;
-        } else if (isAndroid) {
-          const newContact: Contact = {
-            name: contact.displayName,
-            phoneNumber: parsed
-          };
-          currentContacts[parsed] = newContact;
-        }
+        const newContact: Contact = {
+          name: contact.displayName,
+          phoneNumber: parsed
+        };
+        currentContacts[parsed] = newContact;
       }
     }
     // ourFirebase.storeContacts(currentContacts);
