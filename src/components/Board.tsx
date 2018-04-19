@@ -203,8 +203,12 @@ class Board extends React.Component<BoardProps, BoardState> {
   }
 
   toggleCardOptions(refString: string, cardIndex: number) {
-    if (this.state.selectedPieceIndex === cardIndex) {
-      // if we click on an already selected piece, hide the tooltip
+    if (
+      this.state.showCardOptions &&
+      this.state.selectedPieceIndex === cardIndex
+    ) {
+      // if we click on an already selected piece,
+      // and the tooltip is not hided due to drag, then hide it
       this.hideCardOptions();
     } else {
       let position = (this.refs[
@@ -303,7 +307,9 @@ class Board extends React.Component<BoardProps, BoardState> {
           }}
           onDragStart={() => {
             console.log('onDragStart');
-            // this.hideCardOptions();
+            this.setState({
+              showCardOptions: false
+            });
           }}
           onDragEnd={() => {
             console.log('onDragEnd');
