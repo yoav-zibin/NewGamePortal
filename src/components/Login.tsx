@@ -74,7 +74,8 @@ class Login extends React.Component<Props, {}> {
     onSelect: false,
     clearVisibility: visibilityType.visible,
     countries: [],
-    countryNames: []
+    countryNames: [],
+    loginOnce: false,
   };
 
   // clearStyle: React.CSSProperties = {
@@ -160,8 +161,10 @@ class Login extends React.Component<Props, {}> {
     let result = parsePhoneNumber(this.state.phoneNum, this.state.code);
     console.log(result);
     if (result.isValidNumber) {
+      this.setState({ loginOnce : true, veriDisabled: false });
       let phoneNumber = result.internationalFormat;
-      ourFirebase
+      if(!this.state.loginOnce){
+        ourFirebase
         .signInWithPhoneNumber(
           phoneNumber,
           this.state.code,
@@ -172,8 +175,8 @@ class Login extends React.Component<Props, {}> {
         .then((_confirmationResult: any) => {
           this.confirmationResult = _confirmationResult;
         });
-
-      this.setState({ veriDisabled: false });
+      }
+     
     } else {
       this.setState({ errorText: 'invalid phone number' });
     }
