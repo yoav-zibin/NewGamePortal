@@ -16,7 +16,7 @@ import * as H from 'history';
 import { getOpponents } from '../globals';
 
 interface Props {
-  matchInfo: MatchInfo;
+  matchInfo: MatchInfo | undefined;
   userIdsAndPhoneNumbers: UserIdsAndPhoneNumbers;
   phoneNumberToContact: PhoneNumberToContact;
   myUser: MyUser;
@@ -103,6 +103,7 @@ const mapStateToProps = (state: StoreState, ownProps: Props) => {
   } else {
     // We're not on a match
     return {
+      matchInfo: undefined,
       userIdsAndPhoneNumbers: state.userIdsAndPhoneNumbers,
       phoneNumberToContact: state.phoneNumberToContact,
       myUser: state.myUser
@@ -111,4 +112,4 @@ const mapStateToProps = (state: StoreState, ownProps: Props) => {
 };
 
 // export default connect(mapStateToProps)(withRouter(AppHeader));
-export default connect(mapStateToProps)(withRouter(AppHeader));
+export default withRouter(connect(mapStateToProps)(AppHeader));
