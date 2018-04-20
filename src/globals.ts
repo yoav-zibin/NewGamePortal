@@ -107,6 +107,9 @@ export function mapUserIdToName(
   return 'Unknown contact';
 }
 
-export function findMatch(matchesList: MatchInfo[], matchId: string): MatchInfo | undefined {
+export function findMatch(
+  matchesList: MatchInfo[],
+  matchId: string
+): MatchInfo | undefined {
   return matchesList.find(match => match.matchId === matchId);
 }

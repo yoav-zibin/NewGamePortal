@@ -14,7 +14,7 @@ import { ourFirebase } from '../services/firebase';
 import { connect } from 'react-redux';
 import { StoreState } from '../types/index';
 import { History } from 'history';
-import { checkNotNull, isAndroid, isIos } from '../globals';
+import { checkNotNull, isAndroid, isIos, findMatch } from '../globals';
 
 const style: React.CSSProperties = {
   marginRight: 20
@@ -301,12 +301,9 @@ const mapStateToProps = (state: StoreState, ownProps: Props) => {
   users.sort((c1, c2) => c1.name.localeCompare(c2.name));
   notUsers.sort((c1, c2) => c1.name.localeCompare(c2.name));
 
-  console.log('ownProps=', ownProps);
-  // TODO: filter here!!! Use ownProps. Don't pass the entire matchesList.
-  let currentMatchId: String = ownProps.match.params.matchIdInRoute;
-  let currentMatch = state.matchesList.find(
-    match => match.matchId === currentMatchId
-  );
+  let currentMatchId: string = ownProps.match.params.matchIdInRoute;
+  let currentMatch = findMatch(state.matchesList, currentMatchId);
+
   return {
     users,
     notUsers,
