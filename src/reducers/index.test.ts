@@ -39,6 +39,7 @@ const matchInfo: MatchInfo = {
 };
 
 const userInfo: MyUser = {
+  myName: 'Some name',
   myUserId: '7UbETkgeXxe0RId6KxYioSJdARs1',
   myPhoneNumber: 'Some phone number',
   myCountryCode: ''
@@ -124,6 +125,7 @@ const initialState: StoreState = {
     }
   },
   myUser: {
+    myName: 'Name 111',
     myPhoneNumber: '111111111',
     myCountryCode: '',
     myUserId: '7UbETkgeXxe0RId6KxYioSJdARs1'

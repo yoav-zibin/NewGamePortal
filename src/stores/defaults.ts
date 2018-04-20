@@ -14,6 +14,7 @@ export const storeStateDefault: StoreState = {
     userIdToPhoneNumber: {}
   },
   myUser: {
+    myName: '',
     myPhoneNumber: '',
     myCountryCode: '',
     myUserId: ''
