@@ -116,8 +116,15 @@ class MatchesList extends React.Component<Props, {}> {
       console.error('Missing country code');
       return;
     }
+    if (!contacts) {
+      console.error('Missing contacts');
+      return;
+    }
     let currentContacts: PhoneNumberToContact = {};
     for (let contact of contacts) {
+      if (!contact.phoneNumbers) {
+        continue;
+      }
       for (let phoneNumber of contact.phoneNumbers) {
         const localNumber = phoneNumber['value'].replace(/[^0-9]/g, '');
         const phoneInfo: PhoneNumInfo = parsePhoneNumber(
