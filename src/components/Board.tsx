@@ -111,6 +111,7 @@ class Board extends React.Component<BoardProps, BoardState> {
     console.log('toggle Piece index:', index);
   }
 
+  // TODO: add animation for dice roll.
   rollDice(index: number) {
     console.log('Roll Dice for index:', index);
     const match: MatchInfo = this.props.matchInfo;
