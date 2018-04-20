@@ -150,7 +150,7 @@ class Board extends React.Component<BoardProps, BoardState> {
     );
 
     console.log('distance' + distance);
-    if (distance < 1) {
+    if (distance === 0) {
       // it's a touch instead of drag
       if (kind === 'toggable') {
         this.togglePiece(index);
@@ -159,24 +159,12 @@ class Board extends React.Component<BoardProps, BoardState> {
       } else if (kind === 'card') {
         this.toggleCardOptions('canvasImage' + index, index);
       }
+    } else {
+      // it's a drag
+      this.helper.dragTo(index, endX, endY);
+      const match: MatchInfo = this.props.matchInfo;
+      ourFirebase.updatePieceState(match, index);
     }
-  };
-  handleDragEnd = (index: number, ratio: number) => {
-    console.log('handleDragEnd' + index);
-    let position = (this.refs[
-      'canvasImage' + index
-    ] as CanvasImage).imageNode.getAbsolutePosition();
-
-    const width = this.props.gameSpec.board.width;
-    const height = this.props.gameSpec.board.height;
-
-    const x = position.x / ratio / width * 100;
-    const y = position.y / ratio / height * 100;
-
-    console.log(x, y);
-    const match: MatchInfo = this.props.matchInfo;
-    this.helper.dragTo(index, x, y);
-    ourFirebase.updatePieceState(match, index);
   };
 
   makeCardVisibleToSelf(index: number) {
@@ -270,10 +258,10 @@ class Board extends React.Component<BoardProps, BoardState> {
       let isVisible =
         piece.cardVisibilityPerIndex[this.state.selfParticipantIndex];
       let imageIndex: number =
-      pieceSpec.element.elementKind === 'card' ?
-         (isVisible ? 0 : 1) : piece.currentImageIndex;
+        pieceSpec.element.elementKind === 'card'
+          ? isVisible ? 0 : 1
+          : piece.currentImageIndex;
       let imageSrc: string = pieceSpec.element.images[imageIndex].downloadURL;
-      // TODO: remove onDragStart & onDragEnd
       return (
         <CanvasImage
           ref={'canvasImage' + index}
@@ -301,7 +289,6 @@ class Board extends React.Component<BoardProps, BoardState> {
           }}
           onDragEnd={() => {
             console.log('onDragEnd');
-            this.handleDragEnd(index, ratio);
           }}
         />
       );
