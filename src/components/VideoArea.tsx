@@ -2,8 +2,6 @@ import * as React from 'react';
 import { CSSPropertiesIndexer, Opponent } from '../types/index';
 import { videoChat } from '../services/videoChat';
 import { checkCondition } from '../globals';
-import Dialog from 'material-ui/Dialog';
-import FlatButton from 'material-ui/FlatButton';
 
 const styles: CSSPropertiesIndexer = {
   displayInline: {
@@ -39,34 +37,10 @@ interface Props {
   opponents: Opponent[];
 }
 
-// TODO: sorry, let's remove pre-premissions!
-interface VideoAreaState {
-  openDialog: boolean;
-  permissionForVideo: boolean;
-}
-
-class VideoArea extends React.Component<Props, VideoAreaState> {
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      openDialog: true,
-      permissionForVideo: false
-    };
-  }
-
+class VideoArea extends React.Component<Props> {
   componentDidMount() {
     videoChat.getUserMedia().then(() => {
-      if (this.state.permissionForVideo && videoChat.isSupported()) {
-        videoChat.updateOpponents(
-          this.props.opponents.map(opponent => opponent.userId)
-        );
-      }
-    });
-  }
-
-  componentDidUpdate() {
-    videoChat.getUserMedia().then(() => {
-      if (this.state.permissionForVideo && videoChat.isSupported()) {
+      if (videoChat.isSupported()) {
         videoChat.updateOpponents(
           this.props.opponents.map(opponent => opponent.userId)
         );
@@ -78,20 +52,6 @@ class VideoArea extends React.Component<Props, VideoAreaState> {
     videoChat.stopUserMedia();
   }
 
-  handleAllow = () => {
-    this.setState({
-      permissionForVideo: true,
-      openDialog: false
-    });
-  };
-
-  handleDeny = () => {
-    this.setState({
-      permissionForVideo: false,
-      openDialog: false
-    });
-  };
-
   render() {
     const opponents = this.props.opponents;
     checkCondition('VideoArea', opponents.length >= 1);
@@ -101,35 +61,8 @@ class VideoArea extends React.Component<Props, VideoAreaState> {
     const participants = opponents.concat();
     participants.unshift({ userId: 'Me', name: 'Me' });
 
-    const action1 = (
-      <FlatButton
-        key="denyPermission"
-        label="No"
-        primary={true}
-        onClick={this.handleDeny}
-      />
-    );
-    const action2 = (
-      <FlatButton
-        key="allowPermission"
-        label="Yes"
-        primary={true}
-        keyboardFocused={true}
-        onClick={this.handleAllow}
-      />
-    );
-    const actions = [action1, action2];
-
     return (
       <>
-        <Dialog
-          title="Access for video"
-          actions={actions}
-          modal={true}
-          open={this.state.openDialog}
-        >
-          GamePortal needs access to your camera for video chat.
-        </Dialog>
         {participants.map((participant, index) => (
           <div
             key={participant.userId}
