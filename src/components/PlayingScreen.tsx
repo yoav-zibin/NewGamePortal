@@ -14,7 +14,7 @@ import { connect } from 'react-redux';
 import { FloatingActionButton } from 'material-ui';
 import ContentAdd from 'material-ui/svg-icons/content/add';
 import { History } from 'history';
-import { getOpponents } from '../globals';
+import { getOpponents, findMatch } from '../globals';
 import { videoChat } from '../services/videoChat';
 
 interface PlayingScreenProps {
@@ -110,13 +110,10 @@ class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
 }
 
 const mapStateToProps = (state: StoreState, ownProps: PlayingScreenProps) => {
-  let matchInfo: MatchInfo | undefined;
+  let matchInfo: MatchInfo | undefined = findMatch(state.matchesList, ownProps.match.params.matchIdInRoute);
   let gameSpec: GameSpec | undefined;
-  for (let match of state.matchesList) {
-    if (ownProps.match.params.matchIdInRoute === match.matchId) {
-      matchInfo = match;
-      gameSpec = state.gameSpecs.gameSpecIdToGameSpec[match.gameSpecId];
-    }
+  if (matchInfo) {
+    gameSpec = state.gameSpecs.gameSpecIdToGameSpec[matchInfo.gameSpecId];
   }
   return {
     matchInfo: matchInfo,

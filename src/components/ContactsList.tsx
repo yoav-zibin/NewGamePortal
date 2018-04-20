@@ -73,15 +73,15 @@ class ContactsList extends React.Component<Props, {}> {
     console.log(chosenRequest);
 
     if (chosenRequest.value.props.secondaryText === 'Existing user') {
-      let chosenUser: any = this.props.users.find(
+      let chosenUser = this.props.users.find(
         user => user.name === chosenRequest.text
       );
-      this.handleAddUser(chosenUser.userId);
+      this.handleAddUser(chosenUser!.userId);
     } else {
-      let chosenUser: any = this.props.notUsers.find(
+      let chosenUser = this.props.notUsers.find(
         user => user.name === chosenRequest.text
       );
-      this.handleAddNotUser(chosenUser);
+      this.handleAddNotUser(chosenUser!);
     }
     return index;
   };

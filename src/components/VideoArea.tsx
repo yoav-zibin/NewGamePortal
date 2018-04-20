@@ -41,7 +41,7 @@ interface Props {
 
 interface VideoAreaState {
   openDialog: boolean;
-  permissionForViedeo: boolean;
+  permissionForVideo: boolean;
 }
 
 class VideoArea extends React.Component<Props, VideoAreaState> {
@@ -49,7 +49,7 @@ class VideoArea extends React.Component<Props, VideoAreaState> {
     super(props);
     this.state = {
       openDialog: true,
-      permissionForViedeo: false
+      permissionForVideo: false
     };
   }
 
@@ -58,7 +58,7 @@ class VideoArea extends React.Component<Props, VideoAreaState> {
     // Similar permission explanation before getting the contacts or push notification.
 
     videoChat.getUserMedia().then(() => {
-      if (this.state.permissionForViedeo && videoChat.isSupported()) {
+      if (this.state.permissionForVideo && videoChat.isSupported()) {
         videoChat.updateOpponents(
           this.props.opponents.map(opponent => opponent.userId)
         );
@@ -68,7 +68,7 @@ class VideoArea extends React.Component<Props, VideoAreaState> {
 
   componentDidUpdate() {
     videoChat.getUserMedia().then(() => {
-      if (this.state.permissionForViedeo && videoChat.isSupported()) {
+      if (this.state.permissionForVideo && videoChat.isSupported()) {
         videoChat.updateOpponents(
           this.props.opponents.map(opponent => opponent.userId)
         );
@@ -82,14 +82,14 @@ class VideoArea extends React.Component<Props, VideoAreaState> {
 
   handleAllow = () => {
     this.setState({
-      permissionForViedeo: true,
+      permissionForVideo: true,
       openDialog: false
     });
   };
 
   handleDeny = () => {
     this.setState({
-      permissionForViedeo: false,
+      permissionForVideo: false,
       openDialog: false
     });
   };

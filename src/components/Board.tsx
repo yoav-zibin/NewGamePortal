@@ -269,17 +269,11 @@ class Board extends React.Component<BoardProps, BoardState> {
       let kind = pieceSpec.element.elementKind;
       let isVisible =
         piece.cardVisibilityPerIndex[this.state.selfParticipantIndex];
-      let imageSrc: string = '';
-      if (pieceSpec.element.elementKind === 'card') {
-        if (isVisible) {
-          imageSrc = pieceSpec.element.images[0].downloadURL;
-        } else {
-          imageSrc = pieceSpec.element.images[1].downloadURL;
-        }
-      } else {
-        imageSrc =
-          pieceSpec.element.images[piece.currentImageIndex].downloadURL;
-      }
+      let imageIndex: number =
+      pieceSpec.element.elementKind === 'card' ?
+         (isVisible ? 0 : 1) : piece.currentImageIndex;
+      let imageSrc: string = pieceSpec.element.images[imageIndex].downloadURL;
+      // TODO: remove onDragStart & onDragEnd
       return (
         <CanvasImage
           ref={'canvasImage' + index}

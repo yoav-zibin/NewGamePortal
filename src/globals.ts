@@ -3,7 +3,8 @@ import {
   UserIdToPhoneNumber,
   PhoneNumberToContact,
   Opponent,
-  PlatformType
+  PlatformType,
+  MatchInfo
 } from './types';
 
 export const platform: PlatformType =
@@ -86,4 +87,8 @@ export function mapUserIdToName(
     }
   }
   return 'Unknown contact';
+}
+
+export function findMatch(matchesList: MatchInfo[], matchId: string): MatchInfo | undefined {
+  return matchesList.find(match => match.matchId === matchId);
 }
