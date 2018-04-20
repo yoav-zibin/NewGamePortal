@@ -30,7 +30,7 @@ jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 });
 
 // If you remove all gamePortalUsers, then remember to create one for the test.
-const existingUserId = '1DkjALsO65UkFT68kE7Ll5LYkET2';
+const existingUserId = 'wnSB3rTfCLRHkgfGM6jZtaw7EpB3';
 
 function createMatch() {
   const state = store.getState();
