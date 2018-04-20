@@ -40,8 +40,6 @@ interface BoardState {
  * Should also add drag and drop functionality later on.
  */
 class Board extends React.Component<BoardProps, BoardState> {
-  // TODO CARD
-
   helper: MatchStateHelper;
 
   constructor(props: BoardProps) {
@@ -244,13 +242,10 @@ class Board extends React.Component<BoardProps, BoardState> {
   // in another layer (that is above the first layer), so dragging will correctly pick card B.
 
   render() {
-    // TODO: Complete layer for board
     let boardImage = this.props.gameSpec.board.downloadURL;
-    // TODO: handle resizing so everything fits in the screen
     const width = this.props.gameSpec.board.width;
     const height = this.props.gameSpec.board.height;
     const ratio = this.state.innerWidth / width;
-
     this.helper = new MatchStateHelper(this.props.matchInfo);
 
     let boardLayer = (
@@ -269,7 +264,6 @@ class Board extends React.Component<BoardProps, BoardState> {
       ourFirebase.updateMatchState(this.props.matchInfo);
     }
 
-    // // TODO: Complete layer for pieces
     let piecesLayer = this.props.matchInfo.matchState.map((piece, index) => {
       const pieceSpec = this.props.gameSpec.pieces[index];
       let kind = pieceSpec.element.elementKind;
