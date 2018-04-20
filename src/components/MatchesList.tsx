@@ -76,7 +76,7 @@ class MatchesList extends React.Component<Props, {}> {
         this.props.phoneNumberToContact
       )
         .map(opponent => opponent.name)
-        .join(' ')
+        .join(', ')
     );
   };
 
