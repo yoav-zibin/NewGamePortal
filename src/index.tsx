@@ -91,7 +91,7 @@ if (window.location.search.match('^[?][0-9]$')) {
   ];
   const myUser = testUsers[myUserIndex] || testUsers[0];
   console.log('My fake user is: ', myUser);
-  ourFirebase.signInAnonymously(myUser.phoneNumber);
+  ourFirebase.signInAnonymously(myUser.phoneNumber, 'Test user ' + myUserIndex);
 
   let currentContacts: PhoneNumberToContact = {};
   for (let contact of testUsers.concat(realUsers)) {
@@ -150,3 +150,6 @@ if (isIos) {
 } else {
   delayReactRender();
 }
+
+// TODO: create a trivial site (like https://tribe.pm/) with two buttons for downloading
+// the app from PlayStore / AppStore.

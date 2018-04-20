@@ -39,6 +39,7 @@ export interface UserIdsAndPhoneNumbers {
 }
 
 export interface MyUser {
+  myName: string;
   myUserId: string;
   myPhoneNumber: string;
   myCountryCode: string; // 2-letter country code

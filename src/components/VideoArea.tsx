@@ -39,6 +39,7 @@ interface Props {
   opponents: Opponent[];
 }
 
+// TODO: sorry, let's remove pre-premissions!
 interface VideoAreaState {
   openDialog: boolean;
   permissionForVideo: boolean;
@@ -54,9 +55,6 @@ class VideoArea extends React.Component<Props, VideoAreaState> {
   }
 
   componentDidMount() {
-    // TODO: Permission Explanation, e.g. "GamePortal needs access to your camera for video chat"
-    // Similar permission explanation before getting the contacts or push notification.
-
     videoChat.getUserMedia().then(() => {
       if (this.state.permissionForVideo && videoChat.isSupported()) {
         videoChat.updateOpponents(

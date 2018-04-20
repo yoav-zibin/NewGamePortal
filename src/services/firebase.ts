@@ -80,14 +80,17 @@ export namespace ourFirebase {
 
   // See https://firebase.google.com/docs/auth/web/phone-auth
   let myCountryCodeForSignInWithPhoneNumber = '';
+  let displayNameForSignIn = '';
   export function signInWithPhoneNumber(
     phoneNumber: string,
     countryCode: string,
+    displayName: string,
     applicationVerifier: firebase.auth.ApplicationVerifier
   ): Promise<any> {
     checkFunctionIsCalledOnce('signInWithPhoneNumber');
     checkCondition('countryCode', countryCode.length === 2);
     myCountryCodeForSignInWithPhoneNumber = countryCode;
+    displayNameForSignIn = displayName;
     return firebase
       .auth()
       .signInWithPhoneNumber(phoneNumber, applicationVerifier);
@@ -100,8 +103,9 @@ export namespace ourFirebase {
   let phoneNumberForSignInAnonymously: string = '';
   let resolveAfterLoginForTests: (() => void) | null = null;
   export let allPromisesForTests: Promise<any>[] | null = null;
-  export function signInAnonymously(phoneNumberForTest: string) {
+  export function signInAnonymously(phoneNumberForTest: string, displayName: string) {
     phoneNumberForSignInAnonymously = phoneNumberForTest;
+    displayNameForSignIn = displayName;
     addPromiseForTests(firebase.auth().signInAnonymously());
     if (allPromisesForTests) {
       allPromisesForTests.push(
@@ -125,6 +129,9 @@ export namespace ourFirebase {
         myCountryCodeForSignInWithPhoneNumber =
           persistedOldStore.myUser.myCountryCode;
       }
+      if (!displayNameForSignIn) {
+        displayNameForSignIn = persistedOldStore.myUser.myName;
+      }
     }
     if (phoneNumberForSignInAnonymously) {
       user.updateProfile({
@@ -145,6 +152,7 @@ export namespace ourFirebase {
     updatePrivateFieldsAfterLogin(uid, phoneNumber);
     dispatch({
       setMyUser: {
+        myName: displayNameForSignIn,
         myUserId: uid,
         myCountryCode: myCountryCodeForSignInWithPhoneNumber,
         myPhoneNumber: phoneNumber
@@ -167,19 +175,14 @@ export namespace ourFirebase {
   }
 
   function updatePrivateFieldsAfterLogin(uid: string, phoneNumber: string) {
-    const userFbr: fbr.PrivateFields = {
-      createdOn: getTimestamp(), // It's actually "last logged in on timestamp"
-      fcmTokens: {},
-      contacts: {},
-      phoneNumber: phoneNumber,
-      countryCode: myCountryCodeForSignInWithPhoneNumber
-    };
-    // I don't want to update these.
-    delete userFbr.fcmTokens;
-    delete userFbr.contacts;
+    const updates: AnyIndexer = {};
+    updates['privateFields/createdOn'] = getTimestamp(); // It's actually "last logged in on timestamp"
+    updates['privateFields/phoneNumber'] = phoneNumber;
+    updates['privateFields/countryCode'] = myCountryCodeForSignInWithPhoneNumber;
+    updates['publicFields/displayName'] = displayNameForSignIn;
     refUpdate(
-      getRef(`/gamePortal/gamePortalUsers/${uid}/privateFields`),
-      userFbr
+      getRef(`/gamePortal/gamePortalUsers/${uid}`),
+      updates
     );
 
     const phoneNumberFbr: fbr.PhoneNumber = {

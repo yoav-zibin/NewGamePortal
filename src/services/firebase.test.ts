@@ -123,7 +123,7 @@ const magicPhoneNumberForTest = '+11111111111';
 
 beforeAll(done => {
   console.log('beforeAll: call signInAnonymously');
-  ourFirebase.signInAnonymously(magicPhoneNumberForTest);
+  ourFirebase.signInAnonymously(magicPhoneNumberForTest, 'Unit tests user');
   getAllPromisesForTests().then(() => {
     // We need to do it twice because after all our promises resolved, we created some more.
     getAllPromisesForTests().then(() => {

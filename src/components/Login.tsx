@@ -55,6 +55,7 @@ class Login extends React.Component<Props, {}> {
   confirmationResult: any = null;
 
   state = {
+    displayName: '',
     selectField: { value: '', label: '' },
     code: '',
     defaultCode: 'US',
@@ -127,6 +128,10 @@ class Login extends React.Component<Props, {}> {
     }
   };
 
+  displayNameChanged = (event: any) => {
+    this.setState({displayName: event.target.value || ''});
+  };
+
   handleInput = (event: any) => {
     if (!event.target.value) {
       this.setState({
@@ -164,6 +169,7 @@ class Login extends React.Component<Props, {}> {
           .signInWithPhoneNumber(
             phoneNumber,
             this.state.code,
+            this.state.displayName,
             new firebase.auth.RecaptchaVerifier('recaptcha-container', {
               size: 'invisible'
             })
@@ -206,7 +212,14 @@ class Login extends React.Component<Props, {}> {
       <div>
         <div style={style}>
           <div id="recaptcha-container" />
-
+          <br />
+            <TextField
+              id="displayName"
+              floatingLabelText="Your name"
+              hintText="Enter your name"
+              onChange={this.displayNameChanged}
+            />
+          <br />
           <div>
             <AutoComplete
               listStyle={{ maxHeight: 200, overflow: 'auto' }}
