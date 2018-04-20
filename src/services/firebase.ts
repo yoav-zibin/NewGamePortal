@@ -103,7 +103,10 @@ export namespace ourFirebase {
   let phoneNumberForSignInAnonymously: string = '';
   let resolveAfterLoginForTests: (() => void) | null = null;
   export let allPromisesForTests: Promise<any>[] | null = null;
-  export function signInAnonymously(phoneNumberForTest: string, displayName: string) {
+  export function signInAnonymously(
+    phoneNumberForTest: string,
+    displayName: string
+  ) {
     phoneNumberForSignInAnonymously = phoneNumberForTest;
     displayNameForSignIn = displayName;
     addPromiseForTests(firebase.auth().signInAnonymously());
@@ -132,6 +135,9 @@ export namespace ourFirebase {
       if (!displayNameForSignIn) {
         displayNameForSignIn = persistedOldStore.myUser.myName;
       }
+    }
+    if (!displayNameForSignIn) {
+      displayNameForSignIn = '';
     }
     if (phoneNumberForSignInAnonymously) {
       user.updateProfile({
@@ -178,12 +184,11 @@ export namespace ourFirebase {
     const updates: AnyIndexer = {};
     updates['privateFields/createdOn'] = getTimestamp(); // It's actually "last logged in on timestamp"
     updates['privateFields/phoneNumber'] = phoneNumber;
-    updates['privateFields/countryCode'] = myCountryCodeForSignInWithPhoneNumber;
+    updates[
+      'privateFields/countryCode'
+    ] = myCountryCodeForSignInWithPhoneNumber;
     updates['publicFields/displayName'] = displayNameForSignIn;
-    refUpdate(
-      getRef(`/gamePortal/gamePortalUsers/${uid}`),
-      updates
-    );
+    refUpdate(getRef(`/gamePortal/gamePortalUsers/${uid}`), updates);
 
     const phoneNumberFbr: fbr.PhoneNumber = {
       userId: uid,

@@ -104,7 +104,7 @@ class Login extends React.Component<Props, {}> {
   };
 
   handleNewRequest = (chosenRequest: DataSourceNode) => {
-    if (chosenRequest.text.indexOf('-') !== -1) {
+    if (chosenRequest.text && chosenRequest.text.indexOf('-') !== -1) {
       let searchWords = chosenRequest.text.split('-');
       console.log(searchWords);
       if (this.props.countryNames.indexOf(searchWords[1]) !== -1) {
@@ -129,7 +129,7 @@ class Login extends React.Component<Props, {}> {
   };
 
   displayNameChanged = (event: any) => {
-    this.setState({displayName: event.target.value || ''});
+    this.setState({ displayName: event.target.value || '' });
   };
 
   handleInput = (event: any) => {
@@ -213,12 +213,12 @@ class Login extends React.Component<Props, {}> {
         <div style={style}>
           <div id="recaptcha-container" />
           <br />
-            <TextField
-              id="displayName"
-              floatingLabelText="Your name"
-              hintText="Enter your name"
-              onChange={this.displayNameChanged}
-            />
+          <TextField
+            id="displayName"
+            floatingLabelText="Your name"
+            hintText="Enter your name"
+            onChange={this.displayNameChanged}
+          />
           <br />
           <div>
             <AutoComplete
