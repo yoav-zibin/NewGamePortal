@@ -11,20 +11,17 @@ import {
   MyUser
 } from '../types';
 import { connect } from 'react-redux';
-import { withRouter, match } from 'react-router-dom';
+import { withRouter } from 'react-router-dom';
 import * as H from 'history';
 import { getOpponents } from '../globals';
 
-type matchParams = {
-  matchId: string;
-};
-
 interface Props {
-  matchesList: MatchInfo[];
+  matchInfo: MatchInfo;
   userIdsAndPhoneNumbers: UserIdsAndPhoneNumbers;
   phoneNumberToContact: PhoneNumberToContact;
   myUser: MyUser;
-  match: match<matchParams>;
+  // react-router-dom says match<P> is the type, not sure what P should be
+  match: any;
   location: H.Location;
   history: H.History;
 }
@@ -39,35 +36,28 @@ class AppHeader extends React.Component<Props, {}> {
   // Header for AppBar
   getLocation() {
     let pathname: string = this.props.location.pathname;
-    let matchId = pathname.split('/')[2];
-
-    let matchInfo;
-    if (pathname.startsWith('/matches/')) {
-      for(let currMatch of this.props.matchesList) {
-        if (currMatch.matchId === matchId) {
-          matchInfo = currMatch;
-        }
-      }
-    }
     let result = this.routes[pathname];
     if (result) {
       return result;
     } else if (pathname.startsWith('/contactsList/')) {
       return 'Contacts List';
     } else if (pathname.startsWith('/matches/')) {
-      let title = 'Playing Game';
-      if (matchInfo) {
-        title = matchInfo.game.gameName; // String to build
-        if (matchInfo.participantsUserIds.length > 1) {
+      let gameInfo = this.props.matchInfo;
+      let title = '';
+
+      if (gameInfo) {
+        title = this.props.matchInfo.game.gameName; // String to build
+        if (this.props.matchInfo.participantsUserIds.length > 1) {
           title += ' with ';
-          getOpponents(
-            matchInfo.participantsUserIds,
+
+          title += getOpponents(
+            this.props.matchInfo.participantsUserIds,
             this.props.myUser.myUserId,
             this.props.userIdsAndPhoneNumbers.userIdToPhoneNumber,
             this.props.phoneNumberToContact
-          ).forEach((opponent: any) => {
-            title += opponent.name;
-          });
+          )
+            .map(opponent => opponent.name)
+            .join(', ');
         }
       }
       return title;
@@ -82,7 +72,6 @@ class AppHeader extends React.Component<Props, {}> {
   };
 
   render() {
-    const title = this.getLocation();
     return (
       <AppBar
         iconElementLeft={
@@ -90,19 +79,40 @@ class AppHeader extends React.Component<Props, {}> {
             <NavigationArrowBack />
           </FloatingActionButton>
         }
-        title={title}
+        title={this.getLocation()}
         iconClassNameRight="muidocs-icon-navigation-expand-more"
       />
     );
   }
 }
 
-const mapStateToProps = (state: StoreState) => ({
-    matchesList: state.matchesList,
+const mapStateToProps = (state: StoreState, ownProps: Props) => {
+  let matchInfo;
+  let pathname = ownProps.location.pathname;
+  // We need match info for title
+  if (pathname.startsWith('/matches/')) {
+    let matchId = pathname.split('/')[2];
+
+    matchInfo = state.matchesList.find((match: any) => {
+      return matchId === match.matchId;
+    });
+
+    if (matchInfo) {
+      return {
+        matchInfo: matchInfo,
+        userIdsAndPhoneNumbers: state.userIdsAndPhoneNumbers,
+        phoneNumberToContact: state.phoneNumberToContact,
+        myUser: state.myUser
+      };
+    }
+  }
+  // We're not on a match or matchInfo is not found
+  return {
     userIdsAndPhoneNumbers: state.userIdsAndPhoneNumbers,
     phoneNumberToContact: state.phoneNumberToContact,
     myUser: state.myUser
-});
+  };
+};
 
 // export default connect(mapStateToProps)(withRouter(AppHeader));
 export default withRouter(connect(mapStateToProps)(AppHeader));
