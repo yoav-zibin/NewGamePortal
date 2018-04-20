@@ -72,6 +72,8 @@ class AppHeader extends React.Component<Props, {}> {
   };
 
   render() {
+    // TODO: do NOT use FloatingActionButton! (look at how the back button looks in every other app out there.)
+    // TODO: do not show back button for the login AND the main page (list of matches).
     return (
       <AppBar
         iconElementLeft={

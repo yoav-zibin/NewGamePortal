@@ -201,6 +201,8 @@ class Login extends React.Component<Props, {}> {
     this.props.history.push('/');
   };
 
+  // TODO: the initial state should have the country set as United States.
+  // TODO: ask the user for it's name (Yoav needs to add it to firebase).
   render() {
     if (this.props.myUserId) {
       return <Redirect to="/" />;
@@ -229,7 +231,7 @@ class Login extends React.Component<Props, {}> {
                 value: (
                   <MenuItem
                     primaryText={
-                      country.name + '(+' + country.callingCode + ')'
+                      country.name + ' (+' + country.callingCode + ')'
                     }
                     secondaryText={country.emojiCode}
                   />
