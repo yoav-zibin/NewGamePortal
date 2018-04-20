@@ -175,12 +175,10 @@ class ContactsList extends React.Component<Props, {}> {
 
   handleRequestClose = () => {
     if (this.state.snackBarOpen) {
-      let currentMatch = this.getMatch();
-      this.props.history.push('/matches/' + currentMatch.matchId);
+      // let currentMatch = this.getMatch();
+      // this.props.history.push('/matches/' + currentMatch.matchId);
+      this.props.history.goBack();
     }
-    this.setState({
-      snackBarOpen: false
-    });
   };
 
   filterParticipants(contacts: ContactWithUserId[]): ContactWithUserId[] {
