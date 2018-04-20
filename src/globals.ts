@@ -4,8 +4,26 @@ import {
   PhoneNumberToContact,
   Opponent,
   PlatformType,
-  MatchInfo
+  MatchInfo,
+  PhoneNumInfo
 } from './types';
+
+require('./js/trans-compiled');
+declare function parsePhoneNumber(
+  phoneNumber: String,
+  regionCode: String
+): PhoneNumInfo;
+
+export function checkPhoneNumber(
+  phoneNumber: String,
+  regionCode: String
+): PhoneNumInfo | null {
+  try {
+    return parsePhoneNumber(phoneNumber, regionCode);
+  } catch (e) {
+    return null;
+  }
+}
 
 export const platform: PlatformType =
   typeof window === 'undefined'
@@ -89,6 +107,9 @@ export function mapUserIdToName(
   return 'Unknown contact';
 }
 
-export function findMatch(matchesList: MatchInfo[], matchId: string): MatchInfo | undefined {
+export function findMatch(
+  matchesList: MatchInfo[],
+  matchId: string
+): MatchInfo | undefined {
   return matchesList.find(match => match.matchId === matchId);
 }

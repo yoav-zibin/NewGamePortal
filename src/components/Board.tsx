@@ -111,6 +111,7 @@ class Board extends React.Component<BoardProps, BoardState> {
     console.log('toggle Piece index:', index);
   }
 
+  // TODO: add animation for dice roll.
   rollDice(index: number) {
     console.log('Roll Dice for index:', index);
     const match: MatchInfo = this.props.matchInfo;
@@ -219,16 +220,6 @@ class Board extends React.Component<BoardProps, BoardState> {
     });
   }
 
-  // TODO: the UI should show cards that are visible to you always at higher z-indices than
-  // cards that aren't visible to you, i.e., have two layers for pieces: one that
-  // is for cards that aren't visible to you and one for everything else.
-  // E.g., suppose that card A isn't visible to you and it has zDepth=10, and card B
-  // that is visible to you with zDepth=9, and they are both with the same x & y.
-  // If there is just one layer for pieces, then if you drag the card from that x&y then it would drag the piece with
-  // the highest zDepth (so card A).
-  // But if we use two layers for pieces, then card A will be in one layer and card B
-  // in another layer (that is above the first layer), so dragging will correctly pick card B.
-
   render() {
     let boardImage = this.props.gameSpec.board.downloadURL;
     const width = this.props.gameSpec.board.width;
@@ -261,7 +252,9 @@ class Board extends React.Component<BoardProps, BoardState> {
         pieceSpec.element.elementKind === 'card'
           ? isVisible ? 0 : 1
           : piece.currentImageIndex;
+      let zIndex = isVisible ? 50 : 1;
       let imageSrc: string = pieceSpec.element.images[imageIndex].downloadURL;
+      console.log('zIndex is: ', zIndex);
       return (
         <CanvasImage
           ref={'canvasImage' + index}
@@ -272,6 +265,7 @@ class Board extends React.Component<BoardProps, BoardState> {
           x={piece.x * width / 100 * ratio}
           y={piece.y * height / 100 * ratio}
           src={imageSrc}
+          z-index={zIndex}
           onTouchStart={() => {
             console.log('onTouchStart');
           }}
