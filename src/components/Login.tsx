@@ -12,14 +12,10 @@ import MenuItem from 'material-ui/MenuItem';
 import { History } from 'history';
 import { Redirect } from 'react-router';
 import { connect } from 'react-redux';
-import { StoreState, PhoneNumInfo } from '../types/index';
+import { StoreState } from '../types/index';
+import { checkPhoneNumber } from '../globals';
 
 const data = require('../countrycode.json');
-require('../js/trans-compiled');
-declare function parsePhoneNumber(
-  phoneNumber: String,
-  regionCode: String
-): PhoneNumInfo;
 
 interface Country {
   name: string;
@@ -75,7 +71,7 @@ class Login extends React.Component<Props, {}> {
     clearVisibility: visibilityType.visible,
     countries: [],
     countryNames: [],
-    loginOnce: false,
+    loginOnce: false
   };
 
   // clearStyle: React.CSSProperties = {
@@ -158,25 +154,24 @@ class Login extends React.Component<Props, {}> {
   };
 
   onLogin = () => {
-    let result = parsePhoneNumber(this.state.phoneNum, this.state.code);
+    let result = checkPhoneNumber(this.state.phoneNum, this.state.code);
     console.log(result);
-    if (result.isValidNumber) {
-      this.setState({ loginOnce : true, veriDisabled: false });
+    if (result && result.isValidNumber) {
+      this.setState({ loginOnce: true, veriDisabled: false });
       let phoneNumber = result.internationalFormat;
-      if(!this.state.loginOnce){
+      if (!this.state.loginOnce) {
         ourFirebase
-        .signInWithPhoneNumber(
-          phoneNumber,
-          this.state.code,
-          new firebase.auth.RecaptchaVerifier('recaptcha-container', {
-            size: 'invisible'
-          })
-        )
-        .then((_confirmationResult: any) => {
-          this.confirmationResult = _confirmationResult;
-        });
+          .signInWithPhoneNumber(
+            phoneNumber,
+            this.state.code,
+            new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+              size: 'invisible'
+            })
+          )
+          .then((_confirmationResult: any) => {
+            this.confirmationResult = _confirmationResult;
+          });
       }
-     
     } else {
       this.setState({ errorText: 'invalid phone number' });
     }

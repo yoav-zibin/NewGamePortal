@@ -12,15 +12,9 @@ import ContentAdd from 'material-ui/svg-icons/content/add';
 import { List, ListItem } from 'material-ui/List';
 import Avatar from 'material-ui/Avatar';
 import { Link } from 'react-router-dom';
-import { getOpponents, isIos, isAndroid } from '../globals';
+import { getOpponents, isIos, isAndroid, checkPhoneNumber } from '../globals';
 import { store } from '../stores';
 import { ourFirebase } from '../services/firebase';
-
-require('../js/trans-compiled');
-declare function parsePhoneNumber(
-  phoneNumber: String,
-  regionCode: String
-): PhoneNumInfo;
 
 declare let ContactFindOptions: any;
 
@@ -127,11 +121,12 @@ class MatchesList extends React.Component<Props, {}> {
       }
       for (let phoneNumber of contact.phoneNumbers) {
         const localNumber = phoneNumber['value'].replace(/[^0-9]/g, '');
-        const phoneInfo: PhoneNumInfo = parsePhoneNumber(
+        const phoneInfo: PhoneNumInfo | null = checkPhoneNumber(
           localNumber,
           myCountryCode
         );
         if (
+          phoneInfo &&
           phoneInfo.isPossibleNumber &&
           phoneInfo.isValidNumber &&
           phoneInfo.maybeMobileNumber
