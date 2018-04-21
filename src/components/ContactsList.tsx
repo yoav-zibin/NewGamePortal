@@ -58,6 +58,14 @@ interface Props {
 class ContactsList extends React.Component<Props, {}> {
   timer: any = undefined;
 
+  // TODO: if !state.gotContactsPermission (i.e., the user didn't give
+  // the permission to fetch contacts), then let's ALSO ask the user to enter his
+  // friends phone number (in addition to showing the regular UI because there user
+  // might have contacts from previously searching for phone number).
+  // Then we use parsePhoneNumber as usual to convert
+  // that number to an international number, and verify it's a valid mobile number.
+  // If so, call ourFirebase.searchPhoneNumber to see if that phone number is a user or not,
+  // and then either add that user as a participant or send invite SMS.
   state = {
     filterValue: '',
     stay: false,

@@ -27,6 +27,12 @@ export interface StoreState {
   matchesList: MatchInfo[];
 
   phoneNumberToContact: PhoneNumberToContact; // Coming from the phone contacts
+  // Did we get permission to get contacts?
+  // If not, we allow searching by phone number, and we add the results to
+  // phoneNumberToContact (so we can't deduce whether we have the permission or not
+  // by looking at whether phoneNumberToContact is empty or not)
+  gotContactsPermission: boolean; 
+
   userIdsAndPhoneNumbers: UserIdsAndPhoneNumbers; // Coming from firebase.
   myUser: MyUser;
 

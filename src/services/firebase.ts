@@ -211,11 +211,8 @@ export namespace ourFirebase {
   // Eventually dispatches the action setGamesList.
   function fetchGamesList() {
     assertLoggedIn();
-    return addPromiseForTests(
-      getRef('/gamePortal/gamesInfoAndSpec/gameInfos').once(
-        'value',
-        snapshot => {
-          const gameInfos: fbr.GameInfos = snapshot.val();
+    return getOnce('/gamePortal/gamesInfoAndSpec/gameInfos').then(
+      (gameInfos: fbr.GameInfos) => {
           if (!gameInfos) {
             throw new Error('no games!');
           }
@@ -234,8 +231,7 @@ export namespace ourFirebase {
           gameList.sort((g1, g2) => g1.gameName.localeCompare(g2.gameName));
           dispatch({ setGamesList: gameList });
         }
-      )
-    );
+      );
   }
 
   // Eventually dispatches the action updateGameSpecs.
@@ -253,14 +249,11 @@ export namespace ourFirebase {
       console.log('fetchGameSpec:', gameSpecId);
     }
     isFetchingGameSpec[gameSpecId] = true;
-    addPromiseForTests(
-      getRef(
-        `/gamePortal/gamesInfoAndSpec/gameSpecsForPortal/${gameSpecId}`
-      ).once('value', snapshot => {
+    getOnce(`/gamePortal/gamesInfoAndSpec/gameSpecsForPortal/${gameSpecId}`
+      ).then((gameSpecF: fbr.GameSpecForPortal) => {
         if (!isTests) {
           console.log('Got game spec for:', game);
         }
-        const gameSpecF: fbr.GameSpecForPortal = snapshot.val();
         if (!gameSpecF) {
           throw new Error('no game spec!');
         }
@@ -268,8 +261,7 @@ export namespace ourFirebase {
           updateGameSpecs: convertGameSpecForPortal(gameSpecId, gameSpecF)
         };
         dispatch(action);
-      })
-    );
+      });
   }
 
   function convertGameSpecForPortal(
@@ -694,7 +686,10 @@ export namespace ourFirebase {
       );
     }
 
-    dispatch({ updatePhoneNumberToContact: currentContacts });
+    dispatch({ updatePhoneNumberToContact: {
+      phoneNumberToContact: currentContacts,
+      gotContactsPermission: true}
+    });
   }
 
   function mapPhoneNumbersToUserIds(phoneNumbers: string[]) {
@@ -704,32 +699,40 @@ export namespace ourFirebase {
     };
     const promises: Promise<void>[] = [];
     phoneNumbers.forEach((phoneNumber: string) => {
-      promises.push(getPhoneNumberDetail(userIdsAndPhoneNumbers, phoneNumber));
+      promises.push(addToUserIdsAndPhoneNumbers(userIdsAndPhoneNumbers, phoneNumber));
     });
     Promise.all(promises).then(() => {
       dispatch({ updateUserIdsAndPhoneNumbers: userIdsAndPhoneNumbers });
     });
   }
 
-  function getPhoneNumberDetail(
+  function addToUserIdsAndPhoneNumbers(
     userIdsAndPhoneNumbers: UserIdsAndPhoneNumbers,
     phoneNumber: string
   ): Promise<void> {
-    return getRef(`/gamePortal/phoneNumberToUserId/` + phoneNumber)
-      .once('value')
-      .then(snap => {
-        if (!snap) {
-          return;
-        }
-        const phoneNumberFbrObj: fbr.PhoneNumber = snap.val();
+    return getUserIdFromPhoneNumber(phoneNumber).then( userId => {
+      if (!userId) {
+        return;
+      }
+      // Note that users may have their own number in their contacts.
+      // I don't want to exclude it here because then that number will show up in contactsList under "Invite".
+      userIdsAndPhoneNumbers.userIdToPhoneNumber[userId] = phoneNumber;
+      userIdsAndPhoneNumbers.phoneNumberToUserId[phoneNumber] = userId;
+    });
+  }
+
+  // TODO: export searchPhoneNumber returning userId+name.
+  function getUserIdFromPhoneNumber(phoneNumber: string): Promise<string | null> {
+    checkPhoneNum(phoneNumber);
+    return getOnce(`/gamePortal/phoneNumberToUserId/` + phoneNumber)
+      .then((phoneNumberFbrObj: fbr.PhoneNumber) => {
         if (!phoneNumberFbrObj) {
-          return;
+          return null;
         }
-        const userId = phoneNumberFbrObj.userId;
-        // Note that users may have their own number in their contacts.
-        // I don't want to exclude it here because then that number will show up in contactsList under "Invite".
-        userIdsAndPhoneNumbers.userIdToPhoneNumber[userId] = phoneNumber;
-        userIdsAndPhoneNumbers.phoneNumberToUserId[phoneNumber] = userId;
+        return phoneNumberFbrObj.userId;
+      }).catch(() => {
+        console.warn('Failed getUserIdFromPhoneNumber for=', phoneNumber);
+        return null;
       });
   }
 
@@ -815,16 +818,31 @@ export namespace ourFirebase {
     return promise;
   }
 
+  function getOnce(path: string): Promise<any> {
+    const promise = getRef(path).once('value')
+    .then(snap => {
+      if (!snap) {
+        return null;
+      }
+      return snap.val();
+    }).catch(() => {
+      console.warn('Failed fetching ref=', path);
+      return null;
+    });
+    addPromiseForTests(promise);
+    return promise;
+  }
+
   function refSet(ref: firebase.database.Reference, val: any) {
     addPromiseForTests(ref.set(val, getOnComplete(ref, val)));
   }
 
   function refUpdate(ref: firebase.database.Reference, val: AnyIndexer) {
-    // console.log('refUpdate', ref.toString(), " val=", prettyJson(val));
     addPromiseForTests(ref.update(val, getOnComplete(ref, val)));
   }
 
   function getOnComplete(ref: firebase.database.Reference, val: any) {
+    // console.log('Setting ref=', ref.toString(), " to value=", prettyJson(val));
     return (err: Error | null) => {
       // on complete
       if (err) {

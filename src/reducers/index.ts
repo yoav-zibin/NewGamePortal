@@ -22,7 +22,10 @@ export interface Action {
   setGamesList?: GameInfo[];
   updateGameSpecs?: GameSpecs;
   setMatchesList?: MatchInfo[];
-  updatePhoneNumberToContact?: PhoneNumberToContact;
+  updatePhoneNumberToContact?: {
+    phoneNumberToContact: PhoneNumberToContact;
+    gotContactsPermission: boolean;
+  };
   updateUserIdsAndPhoneNumbers?: UserIdsAndPhoneNumbers;
   setMyUser?: MyUser;
   setSignals?: SignalEntry[];
@@ -75,12 +78,15 @@ function reduce(state: StoreState, action: Action) {
   } else if (undefined !== action.setMyUser) {
     return { ...state, myUser: action.setMyUser };
   } else if (undefined !== action.updatePhoneNumberToContact) {
-    let { phoneNumberToContact, ...rest } = state;
+    let { phoneNumberToContact, gotContactsPermission, ...rest } = state;
+    let { phoneNumberToContact: newPhoneNumberToContact, gotContactsPermission: newGotContactsPermission} =
+      action.updatePhoneNumberToContact;
     return {
       phoneNumberToContact: mergeMaps(
         phoneNumberToContact,
-        action.updatePhoneNumberToContact
+        newPhoneNumberToContact
       ),
+      gotContactsPermission: gotContactsPermission || newGotContactsPermission,
       ...rest
     };
   } else if (undefined !== action.updateUserIdsAndPhoneNumbers) {

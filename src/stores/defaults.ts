@@ -8,6 +8,7 @@ export const storeStateDefault: StoreState = {
     gameSpecIdToGameSpec: {}
   },
   matchesList: [],
+  gotContactsPermission: false,
   phoneNumberToContact: {},
   userIdsAndPhoneNumbers: {
     phoneNumberToUserId: {},

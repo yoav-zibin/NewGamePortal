@@ -116,6 +116,7 @@ const initialState: StoreState = {
       name: 'someName'
     }
   },
+  gotContactsPermission: false,
   userIdsAndPhoneNumbers: {
     phoneNumberToUserId: {
       '+1234': '999'
@@ -215,7 +216,9 @@ it('updatePhoneNumberToContact', () => {
   newPhoneNumberToContact['+1234567890'] = someContact;
 
   let action: Action = {
-    updatePhoneNumberToContact: newPhoneNumberToContact
+    updatePhoneNumberToContact: {
+      phoneNumberToContact: newPhoneNumberToContact,
+      gotContactsPermission: true}
   };
 
   const expectedState = {
@@ -223,6 +226,7 @@ it('updatePhoneNumberToContact', () => {
       initialState.phoneNumberToContact,
       newPhoneNumberToContact
     ),
+    gotContactsPermission: true,
     ...rest
   };
 
