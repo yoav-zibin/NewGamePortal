@@ -111,7 +111,13 @@ class Board extends React.Component<BoardProps, BoardState> {
     console.log('toggle Piece index:', index);
   }
 
-  // TODO: add animation for dice roll.
+  // TODO: add animations for:
+  // - dice roll, toggable piece, cards shuffles, card flips, drag-and-drop.
+  // (note that the drag-and-drop animation should only happen for opponents, and not
+  // for the person that did the dragging.)
+  // TODO: add appropriate sounds for all the above, and add button in the AppHeader
+  // to turn sound on/off.
+
   rollDice(index: number) {
     console.log('Roll Dice for index:', index);
     const match: MatchInfo = this.props.matchInfo;
