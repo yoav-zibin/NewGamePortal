@@ -87,17 +87,22 @@ if (window.location.search.match('^[?][0-9]$')) {
     {
       phoneNumber: '+19174021465',
       name: 'Yiwei Wu'
+    },
+    {
+      phoneNumber: '+19123456789',
+      name: 'Testing SMS invite'
     }
   ];
   const myUser = testUsers[myUserIndex] || testUsers[0];
   console.log('My fake user is: ', myUser);
   ourFirebase.signInAnonymously(myUser.phoneNumber, 'Test user ' + myUserIndex);
-
-  let currentContacts: PhoneNumberToContact = {};
-  for (let contact of testUsers.concat(realUsers)) {
-    currentContacts[contact.phoneNumber] = contact;
+  if (myUserIndex >= 1) {
+    let currentContacts: PhoneNumberToContact = {};
+    for (let contact of testUsers.concat(realUsers)) {
+      currentContacts[contact.phoneNumber] = contact;
+    }
+    ourFirebase.storeContacts(currentContacts);
   }
-  ourFirebase.storeContacts(currentContacts);
 }
 
 declare global {

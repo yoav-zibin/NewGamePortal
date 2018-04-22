@@ -92,6 +92,7 @@ export function getOpponentIds(
   return opponentIds;
 }
 
+export const UNKNOWN_NAME = 'Unknown name';
 export function mapUserIdToName(
   userId: string,
   userIdToPhoneNumber: UserIdToPhoneNumber,
@@ -104,7 +105,7 @@ export function mapUserIdToName(
       return contact.name;
     }
   }
-  return 'Unknown contact';
+  return UNKNOWN_NAME;
 }
 
 export function findMatch(

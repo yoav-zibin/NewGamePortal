@@ -7,7 +7,8 @@ import {
   prettyJson,
   objectMap,
   checkNotNull,
-  isTests
+  isTests,
+  UNKNOWN_NAME
 } from '../globals';
 import {
   BooleanIndexer,
@@ -28,7 +29,9 @@ import {
   GameSpecs,
   PieceState,
   AnyIndexer,
-  CardVisibility
+  CardVisibility,
+  ContactWithUserId,
+  UserIdToInfo
 } from '../types';
 import { Action, checkMatchStateInStore } from '../reducers';
 
@@ -422,6 +425,7 @@ export namespace ourFirebase {
           participants[uid1].participantIndex -
           participants[uid2].participantIndex
       );
+      addMissingUserIdsToContacts(participantsUserIds);
 
       const gameInfo = checkNotNull(findGameInfo(gameSpecId));
       fetchGameSpec(gameInfo);
@@ -437,6 +441,26 @@ export namespace ourFirebase {
       receivedMatches[matchId] = match;
       if (Object.keys(receivedMatches).length >= listeningToMatchIds.length) {
         dispatchSetMatchesList();
+      }
+    });
+  }
+
+  const fetchedDisplayNameForUserIds: BooleanIndexer = {};
+  function fetchDisplayNameForUserId(userId: string) {
+    if (fetchedDisplayNameForUserIds[userId]) {
+      return;
+    }
+    fetchedDisplayNameForUserIds[userId] = true;
+    getDisplayNameForUserId(userId).then(displayName => {
+      addUserInfo(userId, displayName)
+    })
+  }
+  function addMissingUserIdsToContacts(participantsUserIds: string[]) {
+    const uid = assertLoggedIn().uid;
+    const contacts = store.getState().phoneNumberToContact;
+    participantsUserIds.forEach(userId => {
+      if (userId !== uid && !contacts[userId]) {
+        fetchDisplayNameForUserId(userId);
       }
     });
   }
@@ -655,7 +679,7 @@ export namespace ourFirebase {
         contact.name = contact.name.substr(0, 17) + '…';
       }
       if (contact.name.length === 0) {
-        contact.name = 'Unknown name';
+        contact.name = UNKNOWN_NAME;
       }
     });
     const state = store.getState();
@@ -686,10 +710,7 @@ export namespace ourFirebase {
       );
     }
 
-    dispatch({ updatePhoneNumberToContact: {
-      phoneNumberToContact: currentContacts,
-      gotContactsPermission: true}
-    });
+    dispatch({ updatePhoneNumberToContact: currentContacts});
   }
 
   function mapPhoneNumbersToUserIds(phoneNumbers: string[]) {
@@ -721,7 +742,36 @@ export namespace ourFirebase {
     });
   }
 
-  // TODO: export searchPhoneNumber returning userId+name.
+  function addUserInfo(userId: string, displayName: string) {
+    const userIdInfo: UserIdToInfo = {
+      [userId]: {userId, displayName}
+    };
+    
+    dispatch({ updateUserIdToInfo: userIdInfo});
+  }
+
+  export function searchPhoneNumber(phoneNumber: string): Promise<ContactWithUserId | null> {
+    return getUserIdFromPhoneNumber(phoneNumber).then( userId => {
+      if (!userId) {
+        return null;
+      }
+      let promise: Promise<ContactWithUserId | null> = getDisplayNameForUserId(userId).then(displayName => {
+        addUserInfo(userId, displayName);
+        return {
+          userId: userId,
+          phoneNumber: phoneNumber,
+          name: displayName,
+        };
+      });
+      return promise;
+    });
+  }
+
+  function getDisplayNameForUserId(userId: string): Promise<string> {
+    return getOnce(`/gamePortal/gamePortalUsers/${userId}/publicFields/displayName`)
+      .then(displayName => displayName || UNKNOWN_NAME);
+  }
+  
   function getUserIdFromPhoneNumber(phoneNumber: string): Promise<string | null> {
     checkPhoneNum(phoneNumber);
     return getOnce(`/gamePortal/phoneNumberToUserId/` + phoneNumber)
@@ -730,9 +780,6 @@ export namespace ourFirebase {
           return null;
         }
         return phoneNumberFbrObj.userId;
-      }).catch(() => {
-        console.warn('Failed getUserIdFromPhoneNumber for=', phoneNumber);
-        return null;
       });
   }
 

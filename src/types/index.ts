@@ -27,11 +27,10 @@ export interface StoreState {
   matchesList: MatchInfo[];
 
   phoneNumberToContact: PhoneNumberToContact; // Coming from the phone contacts
-  // Did we get permission to get contacts?
-  // If not, we allow searching by phone number, and we add the results to
-  // phoneNumberToContact (so we can't deduce whether we have the permission or not
-  // by looking at whether phoneNumberToContact is empty or not)
-  gotContactsPermission: boolean; 
+  // Not all users are in our contacts, e.g., if a user that isn't in my contacts
+  // added me to a match.
+  // In this case, the UI will show the name in publicFields/displayName.
+  userIdToInfo: UserIdToInfo; 
 
   userIdsAndPhoneNumbers: UserIdsAndPhoneNumbers; // Coming from firebase.
   myUser: MyUser;
@@ -39,6 +38,10 @@ export interface StoreState {
   signals: SignalEntry[];
 }
 
+export interface PublicUserInfo {
+  userId: string;
+  displayName: string;
+}
 export interface UserIdsAndPhoneNumbers {
   phoneNumberToUserId: PhoneNumberToUserId;
   userIdToPhoneNumber: UserIdToPhoneNumber; // Calculated whenever
@@ -62,6 +65,7 @@ export interface GameSpecs {
 export interface IdIndexer<T> {
   [id: string]: T;
 }
+export type UserIdToInfo = IdIndexer<PublicUserInfo>;
 export type StringIndexer = IdIndexer<string>;
 export type BooleanIndexer = IdIndexer<boolean>;
 export type CSSPropertiesIndexer = IdIndexer<CSSProperties>;
@@ -100,6 +104,9 @@ export type MatchState = PieceState[];
 export interface Contact {
   phoneNumber: string; // Must match /^[+][0-9]{5,20}$/
   name: string;
+}
+export interface ContactWithUserId extends Contact {
+  userId: string;
 }
 
 export interface Opponent {

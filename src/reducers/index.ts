@@ -9,7 +9,9 @@ import {
   SignalEntry,
   IdIndexer,
   MyUser,
-  MatchState
+  MatchState,
+  StringIndexer,
+  UserIdToInfo
 } from '../types';
 import { storeStateDefault } from '../stores/defaults';
 import { checkCondition } from '../globals';
@@ -22,10 +24,8 @@ export interface Action {
   setGamesList?: GameInfo[];
   updateGameSpecs?: GameSpecs;
   setMatchesList?: MatchInfo[];
-  updatePhoneNumberToContact?: {
-    phoneNumberToContact: PhoneNumberToContact;
-    gotContactsPermission: boolean;
-  };
+  updatePhoneNumberToContact?: PhoneNumberToContact;
+  updateUserIdToInfo?: UserIdToInfo;
   updateUserIdsAndPhoneNumbers?: UserIdsAndPhoneNumbers;
   setMyUser?: MyUser;
   setSignals?: SignalEntry[];
@@ -77,16 +77,23 @@ function reduce(state: StoreState, action: Action) {
     return { ...state, signals: action.setSignals };
   } else if (undefined !== action.setMyUser) {
     return { ...state, myUser: action.setMyUser };
+  } else if (undefined !== action.updateUserIdToInfo) {
+    let { userIdToInfo, ...rest } = state;
+    return {
+      userIdToInfo: mergeMaps(
+        userIdToInfo,
+        action.updateUserIdToInfo
+      ),
+      ...rest
+    };
   } else if (undefined !== action.updatePhoneNumberToContact) {
-    let { phoneNumberToContact, gotContactsPermission, ...rest } = state;
-    let { phoneNumberToContact: newPhoneNumberToContact, gotContactsPermission: newGotContactsPermission} =
-      action.updatePhoneNumberToContact;
+    let { phoneNumberToContact, ...rest } = state;
+    let newPhoneNumberToContact = action.updatePhoneNumberToContact;
     return {
       phoneNumberToContact: mergeMaps(
         phoneNumberToContact,
         newPhoneNumberToContact
       ),
-      gotContactsPermission: gotContactsPermission || newGotContactsPermission,
       ...rest
     };
   } else if (undefined !== action.updateUserIdsAndPhoneNumbers) {

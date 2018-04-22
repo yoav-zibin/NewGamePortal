@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Contact, RouterMatchParams } from '../types';
-import { MatchInfo } from '../types';
+import { MatchInfo, ContactWithUserId } from '../types';
 import { List, ListItem } from 'material-ui/List';
 import Divider from 'material-ui/Divider';
 import Subheader from 'material-ui/Subheader';
@@ -24,10 +24,6 @@ const searchStyle: React.CSSProperties = {
   marginLeft: 17,
   marginRight: 23
 };
-
-interface ContactWithUserId extends Contact {
-  userId: string;
-}
 
 interface UserName {
   name: string;
@@ -58,7 +54,7 @@ interface Props {
 class ContactsList extends React.Component<Props, {}> {
   timer: any = undefined;
 
-  // TODO: if !state.gotContactsPermission (i.e., the user didn't give
+  // TODO: if Object.keys(state.phoneNumberToContact)=[] (i.e., the user didn't give
   // the permission to fetch contacts), then let's ALSO ask the user to enter his
   // friends phone number (in addition to showing the regular UI because there user
   // might have contacts from previously searching for phone number).
