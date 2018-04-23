@@ -60,6 +60,14 @@ class Board extends React.Component<BoardProps, BoardState> {
       throttled: false
     };
   }
+  componentWillMount() {
+    if (this.props.matchInfo.matchState.length === 0) {
+      this.props.matchInfo.matchState = MatchStateHelper.createInitialState(
+        this.props.gameSpec
+      );
+      ourFirebase.updateMatchState(this.props.matchInfo);
+    }
+  }
 
   // resize the board (also for correctly displaying on mobile)
   componentDidMount() {
@@ -242,15 +250,6 @@ class Board extends React.Component<BoardProps, BoardState> {
       />
     );
 
-    if (this.props.matchInfo.matchState.length === 0) {
-      this.props.matchInfo.matchState = MatchStateHelper.createInitialState(
-        this.props.gameSpec
-      );
-      // @TODO: Get console warning from this line - "cannot update during an existing"
-      // "state transition, like render"
-      ourFirebase.updateMatchState(this.props.matchInfo);
-    }
-
     let piecesLayer = this.props.matchInfo.matchState.map((piece, index) => {
       const pieceSpec = this.props.gameSpec.pieces[index];
       let kind = pieceSpec.element.elementKind;
@@ -258,7 +257,9 @@ class Board extends React.Component<BoardProps, BoardState> {
         piece.cardVisibilityPerIndex[this.state.selfParticipantIndex];
       let imageIndex: number =
         pieceSpec.element.elementKind === 'card'
-          ? isVisible ? 0 : 1
+          ? isVisible
+            ? 0
+            : 1
           : piece.currentImageIndex;
       let zIndex = isVisible ? 50 : 1;
       let imageSrc: string = pieceSpec.element.images[imageIndex].downloadURL;
