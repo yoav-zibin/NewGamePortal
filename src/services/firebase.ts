@@ -216,25 +216,25 @@ export namespace ourFirebase {
     assertLoggedIn();
     return getOnce('/gamePortal/gamesInfoAndSpec/gameInfos').then(
       (gameInfos: fbr.GameInfos) => {
-          if (!gameInfos) {
-            throw new Error('no games!');
-          }
-          const gameList: GameInfo[] = getValues(gameInfos).map(gameInfoFbr => {
-            const screenShotImage = gameInfoFbr.screenShotImage;
-            const gameInfo: GameInfo = {
-              gameSpecId: gameInfoFbr.gameSpecId,
-              gameName: gameInfoFbr.gameName,
-              screenShot: convertImage(
-                gameInfoFbr.screenShotImageId,
-                screenShotImage
-              )
-            };
-            return gameInfo;
-          });
-          gameList.sort((g1, g2) => g1.gameName.localeCompare(g2.gameName));
-          dispatch({ setGamesList: gameList });
+        if (!gameInfos) {
+          throw new Error('no games!');
         }
-      );
+        const gameList: GameInfo[] = getValues(gameInfos).map(gameInfoFbr => {
+          const screenShotImage = gameInfoFbr.screenShotImage;
+          const gameInfo: GameInfo = {
+            gameSpecId: gameInfoFbr.gameSpecId,
+            gameName: gameInfoFbr.gameName,
+            screenShot: convertImage(
+              gameInfoFbr.screenShotImageId,
+              screenShotImage
+            )
+          };
+          return gameInfo;
+        });
+        gameList.sort((g1, g2) => g1.gameName.localeCompare(g2.gameName));
+        dispatch({ setGamesList: gameList });
+      }
+    );
   }
 
   // Eventually dispatches the action updateGameSpecs.
@@ -252,19 +252,20 @@ export namespace ourFirebase {
       console.log('fetchGameSpec:', gameSpecId);
     }
     isFetchingGameSpec[gameSpecId] = true;
-    getOnce(`/gamePortal/gamesInfoAndSpec/gameSpecsForPortal/${gameSpecId}`
-      ).then((gameSpecF: fbr.GameSpecForPortal) => {
-        if (!isTests) {
-          console.log('Got game spec for:', game);
-        }
-        if (!gameSpecF) {
-          throw new Error('no game spec!');
-        }
-        const action: Action = {
-          updateGameSpecs: convertGameSpecForPortal(gameSpecId, gameSpecF)
-        };
-        dispatch(action);
-      });
+    getOnce(
+      `/gamePortal/gamesInfoAndSpec/gameSpecsForPortal/${gameSpecId}`
+    ).then((gameSpecF: fbr.GameSpecForPortal) => {
+      if (!isTests) {
+        console.log('Got game spec for:', game);
+      }
+      if (!gameSpecF) {
+        throw new Error('no game spec!');
+      }
+      const action: Action = {
+        updateGameSpecs: convertGameSpecForPortal(gameSpecId, gameSpecF)
+      };
+      dispatch(action);
+    });
   }
 
   function convertGameSpecForPortal(
@@ -299,10 +300,10 @@ export namespace ourFirebase {
   function convertObjectToArray<T>(obj: IdIndexer<T>): T[] {
     let vals: T[] = [];
     let count = 0;
-    for (let key of Object.keys(obj)) {
+    for (let [key, val] of Object.entries(obj)) {
       checkCondition('index is int', /^(0|[1-9]\d*)$/.test(key));
       checkCondition('no duplicate index', !(key in vals));
-      vals[Number(key)] = obj[key];
+      vals[Number(key)] = val;
       count++;
     }
     checkCondition('no missing index', count === vals.length);
@@ -452,8 +453,8 @@ export namespace ourFirebase {
     }
     fetchedDisplayNameForUserIds[userId] = true;
     getDisplayNameForUserId(userId).then(displayName => {
-      addUserInfo(userId, displayName)
-    })
+      addUserInfo(userId, displayName);
+    });
   }
   function addMissingUserIdsToContacts(participantsUserIds: string[]) {
     const uid = assertLoggedIn().uid;
@@ -709,7 +710,7 @@ export namespace ourFirebase {
       );
     }
 
-    dispatch({ updatePhoneNumberToContact: currentContacts});
+    dispatch({ updatePhoneNumberToContact: currentContacts });
   }
 
   function mapPhoneNumbersToUserIds(phoneNumbers: string[]) {
@@ -727,36 +728,43 @@ export namespace ourFirebase {
     userIdToInfo: UserIdToInfo,
     phoneNumber: string
   ): Promise<void> {
-    return getUserIdFromPhoneNumber(phoneNumber).then( userId => {
+    return getUserIdFromPhoneNumber(phoneNumber).then(userId => {
       if (!userId) {
         return;
       }
       // Note that users may have their own number in their contacts.
       // I don't want to exclude it here because then that number will show up in contactsList under "Invite".
       userIdToInfo[userId] = {
-        phoneNumber, displayName: '', userId};
+        phoneNumber,
+        displayName: '',
+        userId
+      };
     });
   }
 
   function addUserInfo(userId: string, displayName: string) {
     const userIdInfo: UserIdToInfo = {
-      [userId]: {userId, displayName}
+      [userId]: { userId, displayName }
     };
-    
-    dispatch({ updateUserIdToInfo: userIdInfo});
+
+    dispatch({ updateUserIdToInfo: userIdInfo });
   }
 
-  export function searchPhoneNumber(phoneNumber: string): Promise<ContactWithUserId | null> {
-    return getUserIdFromPhoneNumber(phoneNumber).then( userId => {
+  export function searchPhoneNumber(
+    phoneNumber: string
+  ): Promise<ContactWithUserId | null> {
+    return getUserIdFromPhoneNumber(phoneNumber).then(userId => {
       if (!userId) {
         return null;
       }
-      let promise: Promise<ContactWithUserId | null> = getDisplayNameForUserId(userId).then(displayName => {
+      let promise: Promise<ContactWithUserId | null> = getDisplayNameForUserId(
+        userId
+      ).then(displayName => {
         addUserInfo(userId, displayName);
         return {
           userId: userId,
           phoneNumber: phoneNumber,
-          name: displayName,
+          name: displayName
         };
       });
       return promise;
@@ -764,19 +772,23 @@ export namespace ourFirebase {
   }
 
   function getDisplayNameForUserId(userId: string): Promise<string> {
-    return getOnce(`/gamePortal/gamePortalUsers/${userId}/publicFields/displayName`)
-      .then(displayName => displayName || UNKNOWN_NAME);
+    return getOnce(
+      `/gamePortal/gamePortalUsers/${userId}/publicFields/displayName`
+    ).then(displayName => displayName || UNKNOWN_NAME);
   }
-  
-  function getUserIdFromPhoneNumber(phoneNumber: string): Promise<string | null> {
+
+  function getUserIdFromPhoneNumber(
+    phoneNumber: string
+  ): Promise<string | null> {
     checkPhoneNum(phoneNumber);
-    return getOnce(`/gamePortal/phoneNumberToUserId/` + phoneNumber)
-      .then((phoneNumberFbrObj: fbr.PhoneNumber) => {
+    return getOnce(`/gamePortal/phoneNumberToUserId/` + phoneNumber).then(
+      (phoneNumberFbrObj: fbr.PhoneNumber) => {
         if (!phoneNumberFbrObj) {
           return null;
         }
         return phoneNumberFbrObj.userId;
-      });
+      }
+    );
   }
 
   // Dispatches setSignals.
@@ -862,16 +874,18 @@ export namespace ourFirebase {
   }
 
   function getOnce(path: string): Promise<any> {
-    const promise = getRef(path).once('value')
-    .then(snap => {
-      if (!snap) {
+    const promise = getRef(path)
+      .once('value')
+      .then(snap => {
+        if (!snap) {
+          return null;
+        }
+        return snap.val();
+      })
+      .catch(() => {
+        console.warn('Failed fetching ref=', path);
         return null;
-      }
-      return snap.val();
-    }).catch(() => {
-      console.warn('Failed fetching ref=', path);
-      return null;
-    });
+      });
     addPromiseForTests(promise);
     return promise;
   }

@@ -49,8 +49,8 @@ export function checkNotNull<T>(val: T): T {
 
 export function getValues<T>(obj: IdIndexer<T>): T[] {
   let vals: T[] = [];
-  for (let key of Object.keys(obj)) {
-    vals.push(obj[key]);
+  for (let [_key, val] of Object.entries(obj)) {
+    vals.push(val);
   }
   return vals;
 }
@@ -120,4 +120,16 @@ export function getPhoneNumberToUserInfo(
     }
   }
   return phoneNumberToUserInfo;
+}
+
+if (!Object.entries) {
+  Object.entries = function(obj: any) {
+    var ownProps = Object.keys(obj),
+      i = ownProps.length,
+      resArray = new Array(i); // preallocate the Array
+    while (i--) {
+      resArray[i] = [ownProps[i], obj[ownProps[i]]];
+    }
+    return resArray;
+  };
 }
