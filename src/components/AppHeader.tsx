@@ -8,6 +8,8 @@ import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
 import * as H from 'history';
 import { getOpponents, findMatch } from '../globals';
+import { FloatingActionButton } from 'material-ui';
+import ContentAdd from 'material-ui/svg-icons/content/add';
 
 interface Props {
   matchInfo: MatchInfo;
@@ -25,6 +27,14 @@ class AppHeader extends React.Component<Props, {}> {
     '/addMatch': 'Create a new game',
     '/': 'My games'
   };
+
+  onPlayingScreen() {
+    let pathname: string = this.props.location.pathname;
+    if (pathname.startsWith('/matches/')) {
+      return true;
+    }
+    return false;
+  }
 
   showBackButton() {
     let pathname: string = this.props.location.pathname;
@@ -71,7 +81,35 @@ class AppHeader extends React.Component<Props, {}> {
   };
 
   render() {
-    if (this.showBackButton()) {
+    if (this.onPlayingScreen()) {
+      // We're on Playing Screen, which needs 'add' button
+      console.log('ON PLAYING SCREEN');
+      return (
+        <AppBar
+          iconElementLeft={
+            <IconButton>
+              <NavigationArrowBack onClick={this.handleOnClick} />
+            </IconButton>
+          }
+          iconElementRight={
+            <FloatingActionButton
+              style={{ marginRight: 20 }}
+              mini={true}
+              onClick={() =>
+                this.props.history.push(
+                  '/contactsList/' + this.props.matchInfo!.matchId
+                )
+              }
+            >
+              <ContentAdd />
+            </FloatingActionButton>
+          }
+          title={this.getLocation()}
+        />
+      );
+    } else if (this.showBackButton()) {
+      // We're on a page that needs back button
+      console.log('SHOWING BACK BUTTON');
       return (
         <AppBar
           iconElementLeft={
@@ -80,10 +118,11 @@ class AppHeader extends React.Component<Props, {}> {
             </IconButton>
           }
           title={this.getLocation()}
-          iconClassNameRight="muidocs-icon-navigation-expand-more"
         />
       );
     } else {
+      // We're on login or matches page
+      console.log('ON LOGIN/HOME PAGE');
       return (
         <AppBar
           title={this.getLocation()}

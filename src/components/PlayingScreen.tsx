@@ -10,8 +10,6 @@ import {
   RouterMatchParams
 } from '../types/index';
 import { connect } from 'react-redux';
-import { FloatingActionButton } from 'material-ui';
-import ContentAdd from 'material-ui/svg-icons/content/add';
 import { History } from 'history';
 import { getOpponents, findMatch } from '../globals';
 import { videoChat } from '../services/videoChat';
@@ -91,23 +89,16 @@ class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
           gameSpec={this.props.gameSpec}
         />
         {videoArea}
-        <FloatingActionButton
-          style={{ marginRight: 20 }}
-          onClick={() =>
-            this.props.history.push(
-              '/contactsList/' + this.props.matchInfo!.matchId
-            )
-          }
-        >
-          <ContentAdd />
-        </FloatingActionButton>
       </div>
     );
   }
 }
 
 const mapStateToProps = (state: StoreState, ownProps: PlayingScreenProps) => {
-  let matchInfo: MatchInfo | undefined = findMatch(state.matchesList, ownProps.match.params.matchIdInRoute);
+  let matchInfo: MatchInfo | undefined = findMatch(
+    state.matchesList,
+    ownProps.match.params.matchIdInRoute
+  );
   let gameSpec: GameSpec | undefined;
   if (matchInfo) {
     gameSpec = state.gameSpecs.gameSpecIdToGameSpec[matchInfo.gameSpecId];
@@ -116,7 +107,7 @@ const mapStateToProps = (state: StoreState, ownProps: PlayingScreenProps) => {
     matchInfo: matchInfo,
     gameSpec: gameSpec,
     myUserId: state.myUser.myUserId,
-    userIdToInfo: state.userIdToInfo,
+    userIdToInfo: state.userIdToInfo
   };
 };
 
