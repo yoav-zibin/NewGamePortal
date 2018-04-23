@@ -77,7 +77,12 @@ class AppHeader extends React.Component<Props, {}> {
 
   // When back button is clicked
   handleOnClick = () => {
-    this.props.history.goBack();
+    let pathname: string = this.props.location.pathname;
+    if (pathname.startsWith('/matches/')) {
+      this.props.history.replace('/');
+    } else {
+      this.props.history.goBack();
+    }
   };
 
   render() {
