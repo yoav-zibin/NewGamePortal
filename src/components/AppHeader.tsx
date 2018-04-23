@@ -1,14 +1,9 @@
 import * as React from 'react';
 import AppBar from 'material-ui/AppBar';
-import FloatingActionButton from 'material-ui/FloatingActionButton';
+import IconButton from 'material-ui/IconButton';
 import NavigationArrowBack from 'material-ui/svg-icons/navigation/arrow-back';
 import { StringIndexer } from '../types';
-import {
-  MatchInfo,
-  StoreState,
-  UserIdToInfo,
-  MyUser
-} from '../types';
+import { MatchInfo, StoreState, UserIdToInfo, MyUser } from '../types';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
 import * as H from 'history';
@@ -31,6 +26,13 @@ class AppHeader extends React.Component<Props, {}> {
     '/': 'My games'
   };
 
+  showBackButton() {
+    let pathname: string = this.props.location.pathname;
+    if (pathname === '/login' || pathname === '/') {
+      return false;
+    }
+    return true;
+  }
   // Header for AppBar
   getLocation() {
     let pathname: string = this.props.location.pathname;
@@ -69,20 +71,27 @@ class AppHeader extends React.Component<Props, {}> {
   };
 
   render() {
-    // TODO: do NOT use FloatingActionButton! (look at how the back button looks in every other app out there.)
-    // TODO: do not show back button for the login AND the main page (list of matches).
-    // TODO: back button should be smarter
-    return (
-      <AppBar
-        iconElementLeft={
-          <FloatingActionButton mini={true} onClick={this.handleOnClick}>
-            <NavigationArrowBack />
-          </FloatingActionButton>
-        }
-        title={this.getLocation()}
-        iconClassNameRight="muidocs-icon-navigation-expand-more"
-      />
-    );
+    if (this.showBackButton()) {
+      return (
+        <AppBar
+          iconElementLeft={
+            <IconButton>
+              <NavigationArrowBack onClick={this.handleOnClick} />
+            </IconButton>
+          }
+          title={this.getLocation()}
+          iconClassNameRight="muidocs-icon-navigation-expand-more"
+        />
+      );
+    } else {
+      return (
+        <AppBar
+          title={this.getLocation()}
+          iconClassNameRight="muidocs-icon-navigation-expand-more"
+          showMenuIconButton={false}
+        />
+      );
+    }
   }
 }
 
