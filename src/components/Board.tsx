@@ -246,6 +246,8 @@ class Board extends React.Component<BoardProps, BoardState> {
       this.props.matchInfo.matchState = MatchStateHelper.createInitialState(
         this.props.gameSpec
       );
+      // @TODO: Get console warning from this line - "cannot update during an existing"
+      // "state transition, like render"
       ourFirebase.updateMatchState(this.props.matchInfo);
     }
 
