@@ -1,11 +1,10 @@
 import {
   IdIndexer,
-  UserIdToPhoneNumber,
-  PhoneNumberToContact,
   Opponent,
   PlatformType,
   MatchInfo,
-  PhoneNumInfo
+  PhoneNumInfo,
+  UserIdToInfo
 } from './types';
 
 require('./js/trans-compiled');
@@ -72,13 +71,12 @@ export function prettyJson(obj: any): string {
 export function getOpponents(
   participantsUserIds: string[],
   myUserId: string,
-  userIdToPhoneNumber: UserIdToPhoneNumber,
-  phoneNumberToContact: PhoneNumberToContact
+  userIdToInfo: UserIdToInfo
 ): Opponent[] {
   const opponentIds = getOpponentIds(participantsUserIds, myUserId);
   return opponentIds.map(userId => ({
     userId: userId,
-    name: mapUserIdToName(userId, userIdToPhoneNumber, phoneNumberToContact)
+    name: mapUserIdToName(userId, userIdToInfo)
   }));
 }
 
@@ -95,15 +93,11 @@ export function getOpponentIds(
 export const UNKNOWN_NAME = 'Unknown name';
 export function mapUserIdToName(
   userId: string,
-  userIdToPhoneNumber: UserIdToPhoneNumber,
-  phoneNumberToContact: PhoneNumberToContact
+  userIdToInfo: UserIdToInfo
 ): string {
-  const phone: string = userIdToPhoneNumber[userId];
-  if (phone) {
-    const contact = phoneNumberToContact[phone];
-    if (contact) {
-      return contact.name;
-    }
+  const info = userIdToInfo[userId];
+  if (info) {
+    return info.displayName;
   }
   return UNKNOWN_NAME;
 }
@@ -113,4 +107,17 @@ export function findMatch(
   matchId: string
 ): MatchInfo | undefined {
   return matchesList.find(match => match.matchId === matchId);
+}
+
+export function getPhoneNumberToUserInfo(
+  userIdToInfo: UserIdToInfo
+): UserIdToInfo {
+  const phoneNumberToUserInfo: UserIdToInfo = {};
+  for (let [_userId, userInfo] of Object.entries(userIdToInfo)) {
+    const phoneNumber = userInfo.phoneNumber;
+    if (phoneNumber) {
+      phoneNumberToUserInfo[phoneNumber] = userInfo;
+    }
+  }
+  return phoneNumberToUserInfo;
 }

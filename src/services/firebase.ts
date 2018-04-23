@@ -8,7 +8,8 @@ import {
   objectMap,
   checkNotNull,
   isTests,
-  UNKNOWN_NAME
+  UNKNOWN_NAME,
+  getPhoneNumberToUserInfo
 } from '../globals';
 import {
   BooleanIndexer,
@@ -16,7 +17,6 @@ import {
   GameInfo,
   MatchState,
   IdIndexer,
-  UserIdsAndPhoneNumbers,
   SignalEntry,
   PhoneNumberToContact,
   Image,
@@ -46,7 +46,7 @@ export namespace ourFirebase {
     calledFunctions[functionName] = true;
   }
 
-  // Stores my contacts in firebase and eventually dispatches updateUserIdsAndPhoneNumbers.
+  // Stores my contacts in firebase and eventually dispatches updateUserIdToInfo.
   // storeContacts can be called even before the login finished.
   let contactsToBeStored: PhoneNumberToContact | null = null;
   export function storeContacts(currentContacts: PhoneNumberToContact) {
@@ -685,10 +685,9 @@ export namespace ourFirebase {
     const state = store.getState();
 
     // Mapping phone number to userId for those numbers that don't have a userId.
-    const phoneNumberToUserId =
-      state.userIdsAndPhoneNumbers.phoneNumberToUserId;
+    const phoneNumberToInfo = getPhoneNumberToUserInfo(state.userIdToInfo);
     const numbersWithoutUserId = currentPhoneNumbers.filter(
-      phoneNumber => phoneNumberToUserId[phoneNumber] === undefined
+      phoneNumber => phoneNumberToInfo[phoneNumber] === undefined
     );
     mapPhoneNumbersToUserIds(numbersWithoutUserId);
 
@@ -714,21 +713,18 @@ export namespace ourFirebase {
   }
 
   function mapPhoneNumbersToUserIds(phoneNumbers: string[]) {
-    const userIdsAndPhoneNumbers: UserIdsAndPhoneNumbers = {
-      phoneNumberToUserId: {},
-      userIdToPhoneNumber: {}
-    };
+    const userIdToInfo: UserIdToInfo = {};
     const promises: Promise<void>[] = [];
     phoneNumbers.forEach((phoneNumber: string) => {
-      promises.push(addToUserIdsAndPhoneNumbers(userIdsAndPhoneNumbers, phoneNumber));
+      promises.push(addToUserIdToInfo(userIdToInfo, phoneNumber));
     });
     Promise.all(promises).then(() => {
-      dispatch({ updateUserIdsAndPhoneNumbers: userIdsAndPhoneNumbers });
+      dispatch({ updateUserIdToInfo: userIdToInfo });
     });
   }
 
-  function addToUserIdsAndPhoneNumbers(
-    userIdsAndPhoneNumbers: UserIdsAndPhoneNumbers,
+  function addToUserIdToInfo(
+    userIdToInfo: UserIdToInfo,
     phoneNumber: string
   ): Promise<void> {
     return getUserIdFromPhoneNumber(phoneNumber).then( userId => {
@@ -737,8 +733,8 @@ export namespace ourFirebase {
       }
       // Note that users may have their own number in their contacts.
       // I don't want to exclude it here because then that number will show up in contactsList under "Invite".
-      userIdsAndPhoneNumbers.userIdToPhoneNumber[userId] = phoneNumber;
-      userIdsAndPhoneNumbers.phoneNumberToUserId[phoneNumber] = userId;
+      userIdToInfo[userId] = {
+        phoneNumber, displayName: '', userId};
     });
   }
 

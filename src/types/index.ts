@@ -32,19 +32,15 @@ export interface StoreState {
   // In this case, the UI will show the name in publicFields/displayName.
   userIdToInfo: UserIdToInfo; 
 
-  userIdsAndPhoneNumbers: UserIdsAndPhoneNumbers; // Coming from firebase.
   myUser: MyUser;
 
   signals: SignalEntry[];
 }
 
-export interface PublicUserInfo {
+export interface UserInfo {
   userId: string;
   displayName: string;
-}
-export interface UserIdsAndPhoneNumbers {
-  phoneNumberToUserId: PhoneNumberToUserId;
-  userIdToPhoneNumber: UserIdToPhoneNumber; // Calculated whenever
+  phoneNumber?: string; // phoneNumber is set if this user came from contacts
 }
 
 export interface MyUser {
@@ -65,7 +61,7 @@ export interface GameSpecs {
 export interface IdIndexer<T> {
   [id: string]: T;
 }
-export type UserIdToInfo = IdIndexer<PublicUserInfo>;
+export type UserIdToInfo = IdIndexer<UserInfo>;
 export type StringIndexer = IdIndexer<string>;
 export type BooleanIndexer = IdIndexer<boolean>;
 export type CSSPropertiesIndexer = IdIndexer<CSSProperties>;

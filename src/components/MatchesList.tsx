@@ -4,9 +4,10 @@ import {
   StoreState,
   CSSPropertiesIndexer,
   Contact,
-  PhoneNumInfo
+  PhoneNumInfo,
+  PhoneNumberToContact
 } from '../types/index';
-import { MatchInfo, UserIdToPhoneNumber, PhoneNumberToContact } from '../types';
+import { MatchInfo, UserIdToInfo } from '../types';
 import FloatingActionButton from 'material-ui/FloatingActionButton';
 import ContentAdd from 'material-ui/svg-icons/content/add';
 import { List, ListItem } from 'material-ui/List';
@@ -46,8 +47,7 @@ const styles: CSSPropertiesIndexer = {
 interface Props {
   matchesList: MatchInfo[];
   myUserId: string;
-  userIdToPhoneNumber: UserIdToPhoneNumber;
-  phoneNumberToContact: PhoneNumberToContact;
+  userIdToInfo: UserIdToInfo;
 }
 
 let didFetchContacts = false;
@@ -66,8 +66,7 @@ class MatchesList extends React.Component<Props, {}> {
       getOpponents(
         participantsUserIds,
         this.props.myUserId,
-        this.props.userIdToPhoneNumber,
-        this.props.phoneNumberToContact
+        this.props.userIdToInfo
       )
         .map(opponent => opponent.name)
         .join(', ')
@@ -231,8 +230,7 @@ function timeSince(date: number) {
 
 const mapStateToProps = (state: StoreState) => ({
   matchesList: state.matchesList,
-  userIdToPhoneNumber: state.userIdsAndPhoneNumbers.userIdToPhoneNumber,
-  phoneNumberToContact: state.phoneNumberToContact,
+  userIdToInfo: state.userIdToInfo,
   myUserId: state.myUser.myUserId
 });
 export default connect(mapStateToProps)(MatchesList);

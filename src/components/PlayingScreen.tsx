@@ -5,8 +5,7 @@ import {
   StoreState,
   MatchInfo,
   GameSpec,
-  UserIdToPhoneNumber,
-  PhoneNumberToContact,
+  UserIdToInfo,
   CSSPropertiesIndexer,
   RouterMatchParams
 } from '../types/index';
@@ -19,8 +18,7 @@ import { videoChat } from '../services/videoChat';
 
 interface PlayingScreenProps {
   myUserId: string;
-  userIdToPhoneNumber: UserIdToPhoneNumber;
-  phoneNumberToContact: PhoneNumberToContact;
+  userIdToInfo: UserIdToInfo;
   matchInfo: MatchInfo;
   gameSpec: GameSpec;
   match: RouterMatchParams;
@@ -77,8 +75,7 @@ class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
     const opponents = getOpponents(
       participantsUserIds,
       this.props.myUserId,
-      this.props.userIdToPhoneNumber,
-      this.props.phoneNumberToContact
+      this.props.userIdToInfo
     );
     const showVideoArea = opponents.length >= 1 && videoChat.isSupported();
     console.log('showVideoArea=', showVideoArea, 'opponents=', opponents);
@@ -119,8 +116,7 @@ const mapStateToProps = (state: StoreState, ownProps: PlayingScreenProps) => {
     matchInfo: matchInfo,
     gameSpec: gameSpec,
     myUserId: state.myUser.myUserId,
-    userIdToPhoneNumber: state.userIdsAndPhoneNumbers.userIdToPhoneNumber,
-    phoneNumberToContact: state.phoneNumberToContact
+    userIdToInfo: state.userIdToInfo,
   };
 };
 

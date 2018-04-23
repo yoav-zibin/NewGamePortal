@@ -6,19 +6,17 @@ import { StringIndexer } from '../types';
 import {
   MatchInfo,
   StoreState,
-  UserIdsAndPhoneNumbers,
-  PhoneNumberToContact,
+  UserIdToInfo,
   MyUser
 } from '../types';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
 import * as H from 'history';
-import { getOpponents } from '../globals';
+import { getOpponents, findMatch } from '../globals';
 
 interface Props {
   matchInfo: MatchInfo;
-  userIdsAndPhoneNumbers: UserIdsAndPhoneNumbers;
-  phoneNumberToContact: PhoneNumberToContact;
+  userIdToInfo: UserIdToInfo;
   myUser: MyUser;
   // react-router-dom says match<P> is the type, not sure what P should be
   match: any;
@@ -53,8 +51,7 @@ class AppHeader extends React.Component<Props, {}> {
           title += getOpponents(
             this.props.matchInfo.participantsUserIds,
             this.props.myUser.myUserId,
-            this.props.userIdsAndPhoneNumbers.userIdToPhoneNumber,
-            this.props.phoneNumberToContact
+            this.props.userIdToInfo
           )
             .map(opponent => opponent.name)
             .join(', ');
@@ -96,23 +93,19 @@ const mapStateToProps = (state: StoreState, ownProps: Props) => {
   if (pathname.startsWith('/matches/')) {
     let matchId = pathname.split('/')[2];
 
-    matchInfo = state.matchesList.find((match: any) => {
-      return matchId === match.matchId;
-    });
+    matchInfo = findMatch(state.matchesList, matchId);
 
     if (matchInfo) {
       return {
         matchInfo: matchInfo,
-        userIdsAndPhoneNumbers: state.userIdsAndPhoneNumbers,
-        phoneNumberToContact: state.phoneNumberToContact,
+        userIdToInfo: state.userIdToInfo,
         myUser: state.myUser
       };
     }
   }
   // We're not on a match or matchInfo is not found
   return {
-    userIdsAndPhoneNumbers: state.userIdsAndPhoneNumbers,
-    phoneNumberToContact: state.phoneNumberToContact,
+    userIdToInfo: state.userIdToInfo,
     myUser: state.myUser
   };
 };

@@ -5,16 +5,14 @@ import {
   GameSpecs,
   MatchInfo,
   PhoneNumberToContact,
-  UserIdsAndPhoneNumbers,
   SignalEntry,
   IdIndexer,
   MyUser,
   MatchState,
-  StringIndexer,
   UserIdToInfo
 } from '../types';
 import { storeStateDefault } from '../stores/defaults';
-import { checkCondition } from '../globals';
+import { checkCondition, getPhoneNumberToUserInfo } from '../globals';
 
 export interface Action {
   // Actions that start with "set" mean that they replace the matching
@@ -26,7 +24,6 @@ export interface Action {
   setMatchesList?: MatchInfo[];
   updatePhoneNumberToContact?: PhoneNumberToContact;
   updateUserIdToInfo?: UserIdToInfo;
-  updateUserIdsAndPhoneNumbers?: UserIdsAndPhoneNumbers;
   setMyUser?: MyUser;
   setSignals?: SignalEntry[];
   restoreOldStore?: StoreState;
@@ -36,7 +33,8 @@ export function mergeMaps<T>(
   original: IdIndexer<T>,
   updateWithEntries: IdIndexer<T>
 ): IdIndexer<T> {
-  return Object.assign(original, updateWithEntries);
+  const copy = Object.assign({}, original);
+  return Object.assign(copy, updateWithEntries);
 }
 
 export function checkMatchStateInStore(
@@ -62,6 +60,29 @@ function checkStoreInvariants(state: StoreState) {
   });
 }
 
+function setNamesFromContacts(state: StoreState): StoreState {
+  const { phoneNumberToContact, userIdToInfo } = state;
+  const phoneNumberToUserInfo = getPhoneNumberToUserInfo(userIdToInfo);
+  const newUserIdToInfo: UserIdToInfo = {};
+  for (let [phoneNumber, contact] of Object.entries(phoneNumberToContact)) {
+    const userInfo = phoneNumberToUserInfo[phoneNumber];
+    if (userInfo && userInfo.displayName !== contact.name) {
+      newUserIdToInfo[userInfo.userId] = {
+        displayName: contact.name,
+        userId: userInfo.userId,
+        phoneNumber: phoneNumber,
+      };
+    }
+  }
+  return {
+    ...state,
+    userIdToInfo: mergeMaps(
+      userIdToInfo,
+      newUserIdToInfo
+    )
+  };
+}
+
 function reduce(state: StoreState, action: Action) {
   if (undefined !== action.setGamesList) {
     return { ...state, gamesList: action.setGamesList };
@@ -79,38 +100,23 @@ function reduce(state: StoreState, action: Action) {
     return { ...state, myUser: action.setMyUser };
   } else if (undefined !== action.updateUserIdToInfo) {
     let { userIdToInfo, ...rest } = state;
-    return {
+    return setNamesFromContacts({
       userIdToInfo: mergeMaps(
         userIdToInfo,
         action.updateUserIdToInfo
       ),
       ...rest
-    };
+    });
   } else if (undefined !== action.updatePhoneNumberToContact) {
-    let { phoneNumberToContact, ...rest } = state;
-    let newPhoneNumberToContact = action.updatePhoneNumberToContact;
-    return {
+    const { phoneNumberToContact, ...rest } = state;
+    const newPhoneNumberToContact = action.updatePhoneNumberToContact;
+    return setNamesFromContacts({
       phoneNumberToContact: mergeMaps(
         phoneNumberToContact,
         newPhoneNumberToContact
       ),
       ...rest
-    };
-  } else if (undefined !== action.updateUserIdsAndPhoneNumbers) {
-    let { userIdsAndPhoneNumbers, ...rest } = state;
-    return {
-      userIdsAndPhoneNumbers: {
-        phoneNumberToUserId: mergeMaps(
-          userIdsAndPhoneNumbers.phoneNumberToUserId,
-          action.updateUserIdsAndPhoneNumbers.phoneNumberToUserId
-        ),
-        userIdToPhoneNumber: mergeMaps(
-          userIdsAndPhoneNumbers.userIdToPhoneNumber,
-          action.updateUserIdsAndPhoneNumbers.userIdToPhoneNumber
-        )
-      },
-      ...rest
-    };
+    });
   } else if (undefined !== action.updateGameSpecs) {
     let {
       imageIdToImage,

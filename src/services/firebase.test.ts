@@ -4,12 +4,13 @@
 import { ourFirebase } from './firebase';
 import {
   MatchInfo,
-  UserIdsAndPhoneNumbers,
+  UserIdToInfo,
   PhoneNumberToContact,
-  GameSpecs
+  GameSpecs,
+  UserInfo
 } from '../types/index';
 import { store } from '../stores';
-import { checkCondition, prettyJson } from '../globals';
+import { checkCondition, prettyJson, findMatch } from '../globals';
 import { MatchStateHelper } from './matchStateHelper';
 
 const testConfig = {
@@ -31,6 +32,7 @@ jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 
 // If you remove all gamePortalUsers, then remember to create one for the test.
 const existingUserId = 'wnSB3rTfCLRHkgfGM6jZtaw7EpB3';
+const existingUserInfo: UserInfo = {"displayName": "Unit tests user", "userId": "wnSB3rTfCLRHkgfGM6jZtaw7EpB3"};
 
 function createMatch() {
   const state = store.getState();
@@ -172,10 +174,9 @@ it('addParticipants', done => {
   const match: MatchInfo = createMatch();
   ourFirebase.addParticipant(match, existingUserId);
   store.subscribe(() => {
-    const matchesList = store.getState().matchesList;
-    const thisMatch = matchesList.find(
-      matchInList => matchInList.matchId === match.matchId
-    );
+    const state = store.getState();
+    const matchesList = state.matchesList;
+    const thisMatch = findMatch(matchesList, match.matchId);
     if (
       thisMatch &&
       thisMatch.participantsUserIds.indexOf(existingUserId) !== -1
@@ -189,7 +190,8 @@ it('fetch match list from firebase', done => {
   const matchId = createMatch().matchId;
   store.subscribe(() => {
     const matchesList = store.getState().matchesList;
-    if (matchesList.find(match => match.matchId === matchId)) {
+    const match = findMatch(matchesList, matchId);
+    if (match) {
       done();
     }
   });
@@ -198,10 +200,11 @@ it('fetch match list from firebase', done => {
 it('Should update the phone numbers', done => {
   // write something to gameportal/phoneNumberToUserId
   // get string from contact and convert them to string
+  const displayName = 'whatever name';
   const phoneNumbers: PhoneNumberToContact = {
     [magicPhoneNumberForTest]: {
       phoneNumber: magicPhoneNumberForTest,
-      name: 'name'
+      name: displayName
     },
     '+1234567890123456789': {
       phoneNumber: '+1234567890123456789',
@@ -216,14 +219,18 @@ it('Should update the phone numbers', done => {
   ourFirebase.storeContacts(phoneNumbers);
   // check if store has been updated
   store.subscribe(() => {
-    const userIdsAndPhoneNumbers = store.getState().userIdsAndPhoneNumbers;
+    const userIdToInfo = store.getState().userIdToInfo;
     const uid = ourFirebase.getUserId();
-    const expectedUserIdsAndPhoneNumbers: UserIdsAndPhoneNumbers = {
-      phoneNumberToUserId: { [magicPhoneNumberForTest]: uid },
-      userIdToPhoneNumber: { [uid]: magicPhoneNumberForTest }
+    const expectedUserIdToInfo: UserIdToInfo = {
+      [uid]: {
+        userId: uid,
+        phoneNumber: magicPhoneNumberForTest,
+        displayName: displayName
+      },
+      [existingUserId]:existingUserInfo
     };
-    if (userIdsAndPhoneNumbers.phoneNumberToUserId[magicPhoneNumberForTest]) {
-      expect(userIdsAndPhoneNumbers).toEqual(expectedUserIdsAndPhoneNumbers);
+    if (userIdToInfo[uid]) {
+      expect(userIdToInfo).toEqual(expectedUserIdToInfo);
       done();
     }
   });

@@ -14,7 +14,7 @@ import { ourFirebase } from '../services/firebase';
 import { connect } from 'react-redux';
 import { StoreState } from '../types/index';
 import { History } from 'history';
-import { checkNotNull, isAndroid, isIos, findMatch } from '../globals';
+import { checkNotNull, isAndroid, isIos, findMatch, getPhoneNumberToUserInfo } from '../globals';
 
 const style: React.CSSProperties = {
   marginRight: 20
@@ -97,10 +97,6 @@ class ContactsList extends React.Component<Props, {}> {
   };
 
   getMatch = () => {
-    /*let currentMatchId: String = this.props.match.params.matchIdInRoute;
-    let currentMatch = this.props.matchesList.find(
-      match => match.matchId === currentMatchId
-    );*/
     return checkNotNull(this.props.currentMatch)!;
   };
 
@@ -278,11 +274,9 @@ const mapStateToProps = (state: StoreState, ownProps: Props) => {
   const users: ContactWithUserId[] = [];
   const notUsers: Contact[] = [];
   const allUserNames: UserName[] = [];
-  const phoneNumbers = Object.keys(state.phoneNumberToContact);
-  for (let phoneNumber of phoneNumbers) {
-    const contact = state.phoneNumberToContact[phoneNumber];
-    const userId =
-      state.userIdsAndPhoneNumbers.phoneNumberToUserId[phoneNumber];
+  const phoneNumberToInfo = getPhoneNumberToUserInfo(state.userIdToInfo);
+  for (let [phoneNumber, contact] of Object.entries(state.phoneNumberToContact)) {
+    const userId = phoneNumberToInfo[phoneNumber] ? phoneNumberToInfo[phoneNumber].userId : null;
     if (userId === state.myUser.myUserId) {
       // Ignore my user (in case I have my own phone number in my contacts)
     } else if (userId) {
