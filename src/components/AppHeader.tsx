@@ -10,6 +10,7 @@ import * as H from 'history';
 import { getOpponents, findMatch } from '../globals';
 import { FloatingActionButton } from 'material-ui';
 import ContentAdd from 'material-ui/svg-icons/content/add';
+import VolumeUp from 'material-ui/svg-icons/av/volume-up';
 
 interface Props {
   matchInfo: MatchInfo;
@@ -74,9 +75,11 @@ class AppHeader extends React.Component<Props, {}> {
       return '';
     }
   }
-
+  handleAudioClick = () => {
+    console.log('Clicked audio button');
+  };
   // When back button is clicked
-  handleOnClick = () => {
+  handleNavigationClick = () => {
     let pathname: string = this.props.location.pathname;
     if (pathname.startsWith('/matches/')) {
       this.props.history.replace('/');
@@ -87,27 +90,36 @@ class AppHeader extends React.Component<Props, {}> {
 
   render() {
     if (this.onPlayingScreen()) {
-      // We're on Playing Screen, which needs 'add' button
+      // We're on Playing Screen, which needs 'add' button and mute button
       console.log('ON PLAYING SCREEN');
       return (
         <AppBar
           iconElementLeft={
             <IconButton>
-              <NavigationArrowBack onClick={this.handleOnClick} />
+              <NavigationArrowBack onClick={this.handleNavigationClick} />
             </IconButton>
           }
           iconElementRight={
-            <FloatingActionButton
-              style={{ marginRight: 20 }}
-              mini={true}
-              onClick={() =>
-                this.props.history.push(
-                  '/contactsList/' + this.props.matchInfo!.matchId
-                )
-              }
-            >
-              <ContentAdd />
-            </FloatingActionButton>
+            <div>
+              <FloatingActionButton
+                style={{ marginRight: 40 }}
+                mini={true}
+                onClick={this.handleAudioClick}
+              >
+                <VolumeUp />
+              </FloatingActionButton>
+              <FloatingActionButton
+                style={{ marginRight: 20 }}
+                mini={true}
+                onClick={() =>
+                  this.props.history.push(
+                    '/contactsList/' + this.props.matchInfo!.matchId
+                  )
+                }
+              >
+                <ContentAdd />
+              </FloatingActionButton>
+            </div>
           }
           title={this.getLocation()}
         />
@@ -119,7 +131,7 @@ class AppHeader extends React.Component<Props, {}> {
         <AppBar
           iconElementLeft={
             <IconButton>
-              <NavigationArrowBack onClick={this.handleOnClick} />
+              <NavigationArrowBack onClick={this.handleNavigationClick} />
             </IconButton>
           }
           title={this.getLocation()}
