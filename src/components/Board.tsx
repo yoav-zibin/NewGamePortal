@@ -32,6 +32,7 @@ interface BoardState {
     y: number;
   };
   throttled: boolean;
+  justRollDice: boolean;
 }
 
 /**
@@ -57,7 +58,8 @@ class Board extends React.Component<BoardProps, BoardState> {
         y: 0
       },
       // for throttling window resize event
-      throttled: false
+      throttled: false,
+      justRollDice: false
     };
   }
   componentWillMount() {
@@ -128,6 +130,13 @@ class Board extends React.Component<BoardProps, BoardState> {
 
   rollDice(index: number) {
     console.log('Roll Dice for index:', index);
+    let animatingTime = 500;
+    const canvasImage = this.refs['canvasImage' + index] as CanvasImage;
+    const imageNode = canvasImage.imageNode;
+    imageNode.to({
+      duration: animatingTime / 1000,
+      rotation: imageNode.rotation() + 540
+    });
     const match: MatchInfo = this.props.matchInfo;
     this.helper.rollDice(index);
     ourFirebase.updatePieceState(match, index);
@@ -257,9 +266,7 @@ class Board extends React.Component<BoardProps, BoardState> {
         piece.cardVisibilityPerIndex[this.state.selfParticipantIndex];
       let imageIndex: number =
         pieceSpec.element.elementKind === 'card'
-          ? isVisible
-            ? 0
-            : 1
+          ? isVisible ? 0 : 1
           : piece.currentImageIndex;
       let zIndex = isVisible ? 50 : 1;
       let imageSrc: string = pieceSpec.element.images[imageIndex].downloadURL;
@@ -275,6 +282,8 @@ class Board extends React.Component<BoardProps, BoardState> {
           y={piece.y * height / 100 * ratio}
           src={imageSrc}
           z-index={zIndex}
+          offsetX={pieceSpec.element.width * ratio / 2}
+          offsetY={pieceSpec.element.height * ratio / 2}
           onTouchStart={() => {
             console.log('onTouchStart');
           }}
