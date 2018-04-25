@@ -112,10 +112,9 @@ class ContactsList extends React.Component<Props, {}> {
   }
 
   handleAddNotUser = (contact: Contact) => {
-    // TODO: Herbert, send the SMS here in ios/android.
     if (isAndroid || isIos) {
-      console.log('Sending SMS to ', contact);
-      // this.sendSms(contact, 'Your friend would like to invite you to GamePortal!');
+      console.log('Sending SMS to ', contact.name);
+      this.sendSms(contact, 'Your friend would like to invite you to a game in GamePortal!');
     }
     this.setState({ snackBarOpen: true });
     // let currentMatch = this.getMatch();
@@ -151,7 +150,7 @@ class ContactsList extends React.Component<Props, {}> {
     const options = {
       replaceLineBreaks: false, // true to replace \n by a new line, false by default
       android: {
-        intent: '' // send SMS with the native android SMS messaging
+        intent: 'INTENT' // send SMS with the native android SMS messaging
       }
     };
 
@@ -162,7 +161,9 @@ class ContactsList extends React.Component<Props, {}> {
       console.log('Message Failed');
     };
 
-    this.requestSMSPermission();
+    if (isAndroid) {
+      this.requestSMSPermission();
+    }
     window.sms.send(phoneNum, message, options, success, error);
   };
 
