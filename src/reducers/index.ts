@@ -83,11 +83,19 @@ function setNamesFromContacts(state: StoreState): StoreState {
   };
 }
 
+function fixOldState(oldSavedState: StoreState) {
+  // I've added userIdToInfo, so it might not be in state stored in localStorage.
+  if (!oldSavedState.userIdToInfo) {
+    oldSavedState.userIdToInfo = {};
+  }
+  return oldSavedState;
+}
+
 function reduce(state: StoreState, action: Action) {
   if (undefined !== action.setGamesList) {
     return { ...state, gamesList: action.setGamesList };
   } else if (undefined !== action.restoreOldStore) {
-    return action.restoreOldStore;
+    return fixOldState(action.restoreOldStore);
   } else if (undefined !== action.setMatchesList) {
     let { matchesList, ...rest } = state;
     return {

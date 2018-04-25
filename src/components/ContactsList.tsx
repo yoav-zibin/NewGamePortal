@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Contact, RouterMatchParams } from '../types';
+import { Contact, RouterMatchParams, UserInfo } from '../types';
 import { MatchInfo, ContactWithUserId } from '../types';
 import { List, ListItem } from 'material-ui/List';
 import Divider from 'material-ui/Divider';
@@ -42,7 +42,7 @@ interface DataSourceConfig {
 
 interface Props {
   matchesList: MatchInfo[];
-  users: ContactWithUserId[];
+  users: UserInfo[];
   notUsers: Contact[];
   allUserNames: UserName[];
   match: RouterMatchParams;
@@ -78,7 +78,7 @@ class ContactsList extends React.Component<Props, {}> {
 
     if (chosenRequest.value.props.secondaryText === 'Existing user') {
       let chosenUser = this.props.users.find(
-        user => user.name === chosenRequest.text
+        user => user.displayName === chosenRequest.text
       );
       this.handleAddUser(chosenUser!.userId);
     } else {
@@ -181,7 +181,7 @@ class ContactsList extends React.Component<Props, {}> {
     }
   };
 
-  filterParticipants(contacts: ContactWithUserId[]): ContactWithUserId[] {
+  filterParticipants(contacts: UserInfo[]): UserInfo[] {
     let participantsUserIds = this.getMatch().participantsUserIds;
     // Filter out existing participants.
     return contacts.filter(
@@ -189,11 +189,18 @@ class ContactsList extends React.Component<Props, {}> {
     );
   }
 
-  filterContacts<T extends Contact>(contacts: T[]): T[] {
+  filterContacts(contacts: Contact[]): Contact[] {
     return contacts.filter(
       contact => contact.name.indexOf(this.state.filterValue) !== -1
     );
   }
+
+  filterUsers(contacts: UserInfo[]): UserInfo[] {
+    return contacts.filter(
+      contact => contact.displayName.indexOf(this.state.filterValue) !== -1
+    );
+  }
+
   // TODO: show formatted phone numbers next to non-users (like in Duo).
   // const phoneInfo: PhoneNumInfo = parsePhoneNumber(localNumber, myCountryCode);
   render() {
@@ -221,11 +228,11 @@ class ContactsList extends React.Component<Props, {}> {
 
         <List>
           <Subheader>Game User</Subheader>
-          {this.filterParticipants(this.filterContacts(this.props.users)).map(
-            (user: ContactWithUserId) => (
+          {this.filterParticipants(this.filterUsers(this.props.users)).map(
+            (user: UserInfo) => (
               <ListItem
-                key={user.phoneNumber}
-                primaryText={user.name}
+                key={user.userId}
+                primaryText={user.displayName}
                 rightIconButton={
                   <FloatingActionButton
                     mini={true}
@@ -271,22 +278,12 @@ class ContactsList extends React.Component<Props, {}> {
 }
 
 const mapStateToProps = (state: StoreState, ownProps: Props) => {
-  const users: ContactWithUserId[] = [];
+  const users: UserInfo[] = [];
   const notUsers: Contact[] = [];
   const allUserNames: UserName[] = [];
   const phoneNumberToInfo = getPhoneNumberToUserInfo(state.userIdToInfo);
   for (let [phoneNumber, contact] of Object.entries(state.phoneNumberToContact)) {
-    const userId = phoneNumberToInfo[phoneNumber] ? phoneNumberToInfo[phoneNumber].userId : null;
-    if (userId === state.myUser.myUserId) {
-      // Ignore my user (in case I have my own phone number in my contacts)
-    } else if (userId) {
-      users.push({ ...contact, userId: userId });
-      let userName: UserName = {
-        name: contact.name,
-        userType: 'Existing user'
-      };
-      allUserNames.push(userName);
-    } else {
+    if (!phoneNumberToInfo[phoneNumber]) {
       notUsers.push(contact);
       let userName: UserName = {
         name: contact.name,
@@ -295,8 +292,20 @@ const mapStateToProps = (state: StoreState, ownProps: Props) => {
       allUserNames.push(userName);
     }
   }
+  for (let [userId, userInfo] of Object.entries(state.userIdToInfo)) {
+    if (userId === state.myUser.myUserId) {
+      // Ignore my user (in case I have my own phone number in my contacts)
+    } else {
+      users.push(userInfo);
+      let userName: UserName = {
+        name: userInfo.displayName,
+        userType: 'Existing user'
+      };
+      allUserNames.push(userName);
+    }
+  }
 
-  users.sort((c1, c2) => c1.name.localeCompare(c2.name));
+  users.sort((c1, c2) => c1.displayName.localeCompare(c2.displayName));
   notUsers.sort((c1, c2) => c1.name.localeCompare(c2.name));
 
   let currentMatchId: string = ownProps.match.params.matchIdInRoute;
