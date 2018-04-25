@@ -5,7 +5,7 @@ import { List, ListItem } from 'material-ui/List';
 import Divider from 'material-ui/Divider';
 import Subheader from 'material-ui/Subheader';
 import FloatingActionButton from 'material-ui/FloatingActionButton';
-import Snackbar from 'material-ui/Snackbar';
+// import Snackbar from 'material-ui/Snackbar';
 import RaisedButton from 'material-ui/RaisedButton';
 import ContentAdd from 'material-ui/svg-icons/content/add';
 import AutoComplete from 'material-ui/AutoComplete';
