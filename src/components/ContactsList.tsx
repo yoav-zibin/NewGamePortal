@@ -157,8 +157,8 @@ class ContactsList extends React.Component<Props, {}> {
     const success = () => {
       console.log('Message sent successfully');
     };
-    const error = () => {
-      console.log('Message Failed');
+    const error = (e: any) => {
+      console.log('Message Failed' + e);
     };
 
     if (isAndroid) {
@@ -265,14 +265,14 @@ class ContactsList extends React.Component<Props, {}> {
             />
           ))}
         </List>
-        <Snackbar
+        {/* <Snackbar
           open={this.state.snackBarOpen}
           message={this.state.message}
           action="stay"
           autoHideDuration={this.state.autoHideDuration}
           onRequestClose={this.handleRequestClose}
           onActionClick={this.handleActionClick}
-        />
+        /> */}
       </div>
     );
   }
