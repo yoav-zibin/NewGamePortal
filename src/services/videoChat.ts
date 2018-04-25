@@ -1,4 +1,4 @@
-import { checkCondition, checkNotNull } from '../globals';
+import { checkCondition, checkNotNull, isIos } from '../globals';
 import { store, dispatch } from '../stores';
 import { ourFirebase } from './firebase';
 require('webrtc-adapter/out/adapter_no_edge.js');
@@ -466,8 +466,10 @@ export namespace videoChat {
         }
       }
     }
-    // tell the plugin to handle your video tag manually
-    window.cordova.plugins.iosrtc.observeVideo(video); 
+    // For iOS: tell the plugin to handle your video tag manually
+    if (isIos) {
+        window.cordova.plugins.iosrtc.observeVideo(video); 
+    }
   }
 
   function setWidthHeight(elem: HTMLElement, width: string, height: string) {
