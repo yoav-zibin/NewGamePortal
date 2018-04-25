@@ -466,6 +466,8 @@ export namespace videoChat {
         }
       }
     }
+    // tell the plugin to handle your video tag manually
+    window.cordova.plugins.iosrtc.observeVideo(video); 
   }
 
   function setWidthHeight(elem: HTMLElement, width: string, height: string) {
