@@ -74,6 +74,12 @@ export namespace videoChat {
     return _isSupported;
   }
 
+  export function updateIsSupported() {
+    _isSupported =
+      !!(<any>window).RTCPeerConnection &&
+      !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+  }
+
   export function stopUserMedia() {
     if (!localMediaStream) {
       return;
