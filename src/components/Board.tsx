@@ -69,7 +69,6 @@ class Board extends React.Component<BoardProps, BoardState> {
         this.props.matchInfo.matchState[i].y !== nextMatchState[i].y
       ) {
         // the position is changed. Call animation.
-        console.log('position changed test');
         const imageNode = (this.refs['canvasImage' + i] as CanvasImage)
           .imageNode;
         const width = this.props.gameSpec.board.width;
@@ -172,15 +171,38 @@ class Board extends React.Component<BoardProps, BoardState> {
     ourFirebase.updatePieceState(match, index);
   }
 
-  shuffleDeck(index: number) {
+  shuffleDeck(pieceIndex: number, deckIndex: number) {
     const match: MatchInfo = this.props.matchInfo;
-    this.helper.shuffleDeck(index);
+    // make a deep copy of current matchState.
+    const matchState = match.matchState;
+    // JSON.parse() convert text into a JavaScript object. JSON.stringify() to convert obj into a string.
+    const prevMatchState = JSON.parse(JSON.stringify(matchState));
+    this.helper.shuffleDeck(deckIndex);
+    const nextMatchState = this.props.matchInfo.matchState;
+
+    for (let i = 0; i < nextMatchState.length; i++) {
+      if (
+        prevMatchState[i].x !== nextMatchState[i].x ||
+        prevMatchState[i].y !== nextMatchState[i].y
+      ) {
+        // the position is changed. Call animation.
+        const imageNode = (this.refs['canvasImage' + i] as CanvasImage)
+          .imageNode;
+        const ratio = this.state.innerWidth / this.props.gameSpec.board.width;
+        imageNode.to({
+          duration: 0.5,
+          x: nextMatchState[i].x / 100 * this.state.innerWidth,
+          y:
+            nextMatchState[i].y / 100 * this.props.gameSpec.board.height * ratio
+        });
+      }
+    }
     this.setState({
       selectedPieceIndex: -1,
       showCardOptions: false
     });
     ourFirebase.updateMatchState(match);
-    console.log('Shufle Deck for index:', index);
+    console.log('Shufle Deck for index:', pieceIndex);
   }
 
   handleTouchEnd = (
@@ -392,6 +414,7 @@ class Board extends React.Component<BoardProps, BoardState> {
             primaryText={'Shuffle Deck'}
             onClick={() => {
               this.shuffleDeck(
+                this.state.selectedPieceIndex,
                 this.props.gameSpec.pieces[this.state.selectedPieceIndex]
                   .deckPieceIndex
               );
