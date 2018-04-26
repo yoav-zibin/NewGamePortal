@@ -32,7 +32,6 @@ interface BoardState {
     y: number;
   };
   throttled: boolean;
-  justRollDice: boolean;
 }
 
 /**
@@ -58,10 +57,34 @@ class Board extends React.Component<BoardProps, BoardState> {
         y: 0
       },
       // for throttling window resize event
-      throttled: false,
-      justRollDice: false
+      throttled: false
     };
   }
+
+  componentWillUpdate(nextProps: BoardProps) {
+    const nextMatchState = nextProps.matchInfo.matchState;
+    for (let i = 0; i < nextMatchState.length; i++) {
+      if (
+        this.props.matchInfo.matchState[i].x !== nextMatchState[i].x ||
+        this.props.matchInfo.matchState[i].y !== nextMatchState[i].y
+      ) {
+        // the position is changed. Call animation.
+        console.log('position changed test');
+        const imageNode = (this.refs['canvasImage' + i] as CanvasImage)
+          .imageNode;
+        const width = this.props.gameSpec.board.width;
+        const height = this.props.gameSpec.board.height;
+        const ratio = this.state.innerWidth / width;
+        imageNode.to({
+          duration: 0.5,
+          x: nextMatchState[i].x / 100 * width * ratio,
+          y: nextMatchState[i].y / 100 * height * ratio
+        });
+      }
+    }
+    console.log('animation test');
+  }
+
   componentWillMount() {
     if (this.props.matchInfo.matchState.length === 0) {
       this.props.matchInfo.matchState = MatchStateHelper.createInitialState(
@@ -115,6 +138,13 @@ class Board extends React.Component<BoardProps, BoardState> {
 
   // cycles through the images of each piece
   togglePiece(index: number) {
+    let animatingTime = 500;
+    const canvasImage = this.refs['canvasImage' + index] as CanvasImage;
+    const imageNode = canvasImage.imageNode;
+    imageNode.to({
+      duration: animatingTime / 1000,
+      rotation: imageNode.rotation() + 720
+    });
     const match: MatchInfo = this.props.matchInfo;
     this.helper.toggleImage(index);
     ourFirebase.updatePieceState(match, index);
@@ -135,7 +165,7 @@ class Board extends React.Component<BoardProps, BoardState> {
     const imageNode = canvasImage.imageNode;
     imageNode.to({
       duration: animatingTime / 1000,
-      rotation: imageNode.rotation() + 540
+      rotation: imageNode.rotation() + 720
     });
     const match: MatchInfo = this.props.matchInfo;
     this.helper.rollDice(index);
@@ -221,11 +251,12 @@ class Board extends React.Component<BoardProps, BoardState> {
       // and the tooltip is not hided due to drag, then hide it
       this.hideCardOptions();
     } else {
-      let position = (this.refs[
-        refString
-      ] as CanvasImage).imageNode.getAbsolutePosition();
+      const imageNode = (this.refs[refString] as CanvasImage).imageNode;
+      let position = imageNode.getAbsolutePosition();
       this.setState({
         tooltipPosition: {
+          // x: position.x - imageNode.width()/2,
+          // y: position.y - imageNode.height()/2
           x: position.x,
           y: position.y
         },
@@ -244,6 +275,7 @@ class Board extends React.Component<BoardProps, BoardState> {
   }
 
   render() {
+    console.log('render test');
     let boardImage = this.props.gameSpec.board.downloadURL;
     const width = this.props.gameSpec.board.width;
     const height = this.props.gameSpec.board.height;
@@ -282,8 +314,8 @@ class Board extends React.Component<BoardProps, BoardState> {
           y={piece.y * height / 100 * ratio}
           src={imageSrc}
           z-index={zIndex}
-          offsetX={pieceSpec.element.width * ratio / 2}
-          offsetY={pieceSpec.element.height * ratio / 2}
+          // offsetX={pieceSpec.element.width * ratio / 2}
+          // offsetY={pieceSpec.element.height * ratio / 2}
           onTouchStart={() => {
             console.log('onTouchStart');
           }}
