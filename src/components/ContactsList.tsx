@@ -10,11 +10,25 @@ import RaisedButton from 'material-ui/RaisedButton';
 import ContentAdd from 'material-ui/svg-icons/content/add';
 import AutoComplete from 'material-ui/AutoComplete';
 import MenuItem from 'material-ui/MenuItem';
+import TextField from 'material-ui/TextField';
 import { ourFirebase } from '../services/firebase';
 import { connect } from 'react-redux';
 import { StoreState } from '../types/index';
 import { History } from 'history';
-import { checkNotNull, isAndroid, isIos, findMatch, getPhoneNumberToUserInfo, checkPhoneNumber } from '../globals';
+import {
+  checkNotNull,
+  isAndroid,
+  isIos,
+  findMatch,
+  getPhoneNumberToUserInfo,
+  checkPhoneNumber
+} from '../globals';
+
+require('../js/trans-compiled');
+declare function parsePhoneNumber(
+  phoneNumber: String,
+  regionCode: String
+): PhoneNumInfo;
 
 const style: React.CSSProperties = {
   marginRight: 20
@@ -50,7 +64,6 @@ interface Props {
   myUserId: string;
   myCountryCode: string;
   history: History;
-  myUserCountryCode: string;
 }
 
 class ContactsList extends React.Component<Props, {}> {
@@ -113,9 +126,17 @@ class ContactsList extends React.Component<Props, {}> {
     console.log('request number is ' + requestNumber + '  ' + event);
     let phoneInfo: PhoneNumInfo = parsePhoneNumber(
       requestNumber,
-      this.props.myUserCountryCode
+      this.props.myCountryCode
     );
-    ourFirebase.searchPhoneNumber();
+    console.log(phoneInfo);
+
+    // let userInfo = ourFirebase.searchPhoneNumber(phoneInfo.number).then();
+    /*if (userInfo) {
+      this.props.users.push(userInfo);
+      this.setState({ filterValue: userInfo.displayName });
+    } else {
+
+    }*/
   };
 
   componentWillUnMount() {
@@ -125,7 +146,10 @@ class ContactsList extends React.Component<Props, {}> {
   handleAddNotUser = (contact: Contact) => {
     if (isAndroid || isIos) {
       console.log('Sending SMS to ', contact.name);
-      this.sendSms(contact, 'Your friend would like to invite you to a game in GamePortal!');
+      this.sendSms(
+        contact,
+        'Your friend would like to invite you to a game in GamePortal!'
+      );
     }
     this.setState({ snackBarOpen: true });
     // let currentMatch = this.getMatch();
@@ -235,7 +259,7 @@ class ContactsList extends React.Component<Props, {}> {
         />
       ) : (
         <TextField
-          hintText="Search"
+          hintText="Enter PhoneNumber"
           fullWidth={true}
           onChange={this.handleRequestNumber}
         />
@@ -269,23 +293,30 @@ class ContactsList extends React.Component<Props, {}> {
         <List>
           <Subheader>Not Game User</Subheader>
           {this.filterContacts(this.props.notUsers).map((contact: Contact) => {
-            const parsed: PhoneNumInfo | null = checkPhoneNumber(contact.phoneNumber, this.props.myCountryCode);
-            return (<ListItem
-              key={contact.phoneNumber}
-              primaryText={
-                contact.name + (parsed && parsed.isValidNumber ? `(${parsed.internationalFormat})` : '')
-              }
-              rightIconButton={
-                <RaisedButton
-                  label="invite"
-                  primary={true}
-                  style={style}
-                  onClick={() => this.handleAddNotUser(contact)}
-                />
-              }
-            />
-          )
-        })}
+            const parsed: PhoneNumInfo | null = checkPhoneNumber(
+              contact.phoneNumber,
+              this.props.myCountryCode
+            );
+            return (
+              <ListItem
+                key={contact.phoneNumber}
+                primaryText={
+                  contact.name +
+                  (parsed && parsed.isValidNumber
+                    ? `(${parsed.internationalFormat})`
+                    : '')
+                }
+                rightIconButton={
+                  <RaisedButton
+                    label="invite"
+                    primary={true}
+                    style={style}
+                    onClick={() => this.handleAddNotUser(contact)}
+                  />
+                }
+              />
+            );
+          })}
         </List>
         {/* <Snackbar
           open={this.state.snackBarOpen}
