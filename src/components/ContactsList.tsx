@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Contact, RouterMatchParams, UserInfo } from '../types';
+import { Contact, RouterMatchParams, UserInfo, PhoneNumInfo } from '../types';
 import { MatchInfo } from '../types';
 import { List, ListItem } from 'material-ui/List';
 import Divider from 'material-ui/Divider';
@@ -14,7 +14,7 @@ import { ourFirebase } from '../services/firebase';
 import { connect } from 'react-redux';
 import { StoreState } from '../types/index';
 import { History } from 'history';
-import { checkNotNull, isAndroid, isIos, findMatch, getPhoneNumberToUserInfo } from '../globals';
+import { checkNotNull, isAndroid, isIos, findMatch, getPhoneNumberToUserInfo, checkPhoneNumber } from '../globals';
 
 const style: React.CSSProperties = {
   marginRight: 20
@@ -48,6 +48,7 @@ interface Props {
   match: RouterMatchParams;
   currentMatch: MatchInfo;
   myUserId: string;
+  myCountryCode: string;
   history: History;
 }
 
@@ -202,8 +203,6 @@ class ContactsList extends React.Component<Props, {}> {
     );
   }
 
-  // TODO: show formatted phone numbers next to non-users (like in Duo).
-  // const phoneInfo: PhoneNumInfo = parsePhoneNumber(localNumber, myCountryCode);
   render() {
     return (
       <div>
@@ -250,10 +249,13 @@ class ContactsList extends React.Component<Props, {}> {
         <Divider />
         <List>
           <Subheader>Not Game User</Subheader>
-          {this.filterContacts(this.props.notUsers).map((contact: Contact) => (
-            <ListItem
+          {this.filterContacts(this.props.notUsers).map((contact: Contact) => {
+            const parsed: PhoneNumInfo | null = checkPhoneNumber(contact.phoneNumber, this.props.myCountryCode);
+            return (<ListItem
               key={contact.phoneNumber}
-              primaryText={contact.name}
+              primaryText={
+                contact.name + (parsed && parsed.isValidNumber ? `(${parsed.internationalFormat})` : '')
+              }
               rightIconButton={
                 <RaisedButton
                   label="invite"
@@ -263,7 +265,8 @@ class ContactsList extends React.Component<Props, {}> {
                 />
               }
             />
-          ))}
+          )
+        })}
         </List>
         {/* <Snackbar
           open={this.state.snackBarOpen}
@@ -317,7 +320,8 @@ const mapStateToProps = (state: StoreState, ownProps: Props) => {
     notUsers,
     allUserNames,
     currentMatch,
-    myUserId: state.myUser.myUserId
+    myUserId: state.myUser.myUserId,
+    myCountryCode: state.myUser.myCountryCode
   };
 };
 export default connect(mapStateToProps)(ContactsList);
