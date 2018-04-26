@@ -25,8 +25,8 @@ interface Props {
 
 class AppHeader extends React.Component<Props, {}> {
   state = {
-    audioMute : false
-  }
+    audioMute: false
+  };
 
   routes: StringIndexer = {
     '/login': 'Login',
@@ -83,7 +83,7 @@ class AppHeader extends React.Component<Props, {}> {
   handleAudioClick = () => {
     console.log('Clicked audio button');
     (window as any).audioMute = !this.state.audioMute;
-    this.setState({audioMute: !this.state.audioMute});
+    this.setState({ audioMute: !this.state.audioMute });
   };
   // When back button is clicked
   handleNavigationClick = () => {
@@ -96,7 +96,7 @@ class AppHeader extends React.Component<Props, {}> {
   };
 
   render() {
-    let volume = this.state.audioMute?(
+    let volume = this.state.audioMute ? (
       <FloatingActionButton
         style={{ marginRight: 40 }}
         mini={true}
@@ -182,14 +182,14 @@ const mapStateToProps = (state: StoreState, ownProps: Props) => {
       return {
         matchInfo: matchInfo,
         userIdToInfo: state.userIdToInfo,
-        myUser: state.myUser,
+        myUser: state.myUser
       };
     }
   }
   // We're not on a match or matchInfo is not found
   return {
     userIdToInfo: state.userIdToInfo,
-    myUser: state.myUser,
+    myUser: state.myUser
   };
 };
 

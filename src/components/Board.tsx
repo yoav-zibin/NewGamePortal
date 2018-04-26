@@ -34,6 +34,7 @@ interface BoardState {
     y: number;
   };
   throttled: boolean;
+  animatingTime: number;
 }
 
 /**
@@ -60,31 +61,60 @@ class Board extends React.Component<BoardProps, BoardState> {
         y: 0
       },
       // for throttling window resize event
-      throttled: false
+      throttled: false,
+      animatingTime: 0.5
     };
   }
 
   componentWillUpdate(nextProps: BoardProps) {
+    const prevMatchState = this.props.matchInfo.matchState;
     const nextMatchState = nextProps.matchInfo.matchState;
     for (let i = 0; i < nextMatchState.length; i++) {
+      const imageNode = (this.refs['canvasImage' + i] as CanvasImage).imageNode;
       if (
-        this.props.matchInfo.matchState[i].x !== nextMatchState[i].x ||
-        this.props.matchInfo.matchState[i].y !== nextMatchState[i].y
+        prevMatchState[i].x !== nextMatchState[i].x ||
+        prevMatchState[i].y !== nextMatchState[i].y
       ) {
         // the position is changed. Call animation.
-        const imageNode = (this.refs['canvasImage' + i] as CanvasImage)
-          .imageNode;
-        const width = this.props.gameSpec.board.width;
-        const height = this.props.gameSpec.board.height;
-        const ratio = this.state.innerWidth / width;
+        const ratio = this.state.innerWidth / this.props.gameSpec.board.width;
         imageNode.to({
-          duration: 0.5,
-          x: nextMatchState[i].x / 100 * width * ratio,
-          y: nextMatchState[i].y / 100 * height * ratio
+          duration: this.state.animatingTime,
+          x: nextMatchState[i].x / 100 * this.state.innerWidth,
+          y:
+            nextMatchState[i].y / 100 * this.props.gameSpec.board.height * ratio
         });
+      } else if (
+        this.props.gameSpec.pieces[i].element.elementKind === 'card' &&
+        prevMatchState[i].cardVisibilityPerIndex[
+          this.state.selfParticipantIndex
+        ] !==
+          nextMatchState[i].cardVisibilityPerIndex[
+            this.state.selfParticipantIndex
+          ]
+      ) {
+        // the card is flipped. Call animation.
+        this.handleAnimation(i);
+      } else if (
+        this.props.gameSpec.pieces[i].element.elementKind !== 'dice' &&
+        prevMatchState[i].currentImageIndex !==
+          nextMatchState[i].currentImageIndex
+      ) {
+        // the piece is toggled. Call animation.
+        this.handleAnimation(i);
+      } else if (
+        this.props.gameSpec.pieces[i].element.elementKind === 'dice' &&
+        prevMatchState[i].x === nextMatchState[i].x &&
+        prevMatchState[i].y === nextMatchState[i].y &&
+        prevMatchState[i].zDepth !== nextMatchState[i].zDepth
+      ) {
+        // To notify the firebase that someone has rolled a dice
+        // (so that other users can see a rolling dice animation)
+        // we add the z-depth of dice
+        // So if z-depth is changed, that means the dice is rolled. Call animation.
+        this.handleAnimation(i);
       }
     }
-    console.log('animation test');
+    console.log('componentWillUpdate test');
   }
 
   componentWillMount() {
@@ -106,6 +136,15 @@ class Board extends React.Component<BoardProps, BoardState> {
   componentWillUnmount() {
     window.removeEventListener('resize', () => {
       this.handleResize();
+    });
+  }
+
+  handleAnimation(index: number) {
+    const imageNode = (this.refs['canvasImage' + index] as CanvasImage)
+      .imageNode;
+    imageNode.to({
+      duration: this.state.animatingTime,
+      rotation: imageNode.rotation() + 720
     });
   }
 
@@ -140,13 +179,7 @@ class Board extends React.Component<BoardProps, BoardState> {
 
   // cycles through the images of each piece
   togglePiece(index: number) {
-    let animatingTime = 500;
-    const canvasImage = this.refs['canvasImage' + index] as CanvasImage;
-    const imageNode = canvasImage.imageNode;
-    imageNode.to({
-      duration: animatingTime / 1000,
-      rotation: imageNode.rotation() + 720
-    });
+    this.handleAnimation(index);
     const match: MatchInfo = this.props.matchInfo;
     this.helper.toggleImage(index);
     ourFirebase.updatePieceState(match, index);
@@ -162,29 +195,22 @@ class Board extends React.Component<BoardProps, BoardState> {
 
   rollDice(index: number) {
     console.log('Roll Dice for index:', index);
-    if((isAndroid || isIos) && (!this.state.audioMute)){
-              
-      let audio = new Audio("http://www.sounds.beachware.com/2illionzayp3may/mbunhtlz/DICE.mp3");
+    if ((isAndroid || isIos) && !this.state.audioMute) {
+      let audio = new Audio(
+        'http://www.sounds.beachware.com/2illionzayp3may/mbunhtlz/DICE.mp3'
+      );
       audio.play();
     }
-    let animatingTime = 500;
-    const canvasImage = this.refs['canvasImage' + index] as CanvasImage;
-    const imageNode = canvasImage.imageNode;
-    imageNode.to({
-      duration: animatingTime / 1000,
-      rotation: imageNode.rotation() + 720
-    });
+    this.handleAnimation(index);
     const match: MatchInfo = this.props.matchInfo;
     this.helper.rollDice(index);
     ourFirebase.updatePieceState(match, index);
   }
 
-  shuffleDeck(pieceIndex: number, deckIndex: number) {
+  shuffleDeck(deckIndex: number) {
     const match: MatchInfo = this.props.matchInfo;
-    // make a deep copy of current matchState.
-    const matchState = match.matchState;
     // JSON.parse() convert text into a JavaScript object. JSON.stringify() to convert obj into a string.
-    const prevMatchState = JSON.parse(JSON.stringify(matchState));
+    const prevMatchState = JSON.parse(JSON.stringify(match.matchState));
     this.helper.shuffleDeck(deckIndex);
     const nextMatchState = this.props.matchInfo.matchState;
 
@@ -198,7 +224,7 @@ class Board extends React.Component<BoardProps, BoardState> {
           .imageNode;
         const ratio = this.state.innerWidth / this.props.gameSpec.board.width;
         imageNode.to({
-          duration: 0.5,
+          duration: this.state.animatingTime,
           x: nextMatchState[i].x / 100 * this.state.innerWidth,
           y:
             nextMatchState[i].y / 100 * this.props.gameSpec.board.height * ratio
@@ -210,7 +236,7 @@ class Board extends React.Component<BoardProps, BoardState> {
       showCardOptions: false
     });
     ourFirebase.updateMatchState(match);
-    console.log('Shufle Deck for index:', pieceIndex);
+    console.log('Shufle Deck for index:');
   }
 
   handleTouchEnd = (
@@ -253,13 +279,29 @@ class Board extends React.Component<BoardProps, BoardState> {
 
   makeCardVisibleToSelf(index: number) {
     const match: MatchInfo = this.props.matchInfo;
-    this.helper.showMe(index);
-    ourFirebase.updatePieceState(match, index);
-    console.log('card show to me:', index);
+    if (
+      !match.matchState[index].cardVisibilityPerIndex[
+        this.state.selfParticipantIndex
+      ]
+    ) {
+      // add animation
+      this.handleAnimation(index);
+      this.helper.showMe(index);
+      ourFirebase.updatePieceState(match, index);
+      console.log('card show to me:', index);
+    }
   }
 
   makeCardVisibleToAll(index: number) {
     const match: MatchInfo = this.props.matchInfo;
+    if (
+      !match.matchState[index].cardVisibilityPerIndex[
+        this.state.selfParticipantIndex
+      ]
+    ) {
+      // add animation
+      this.handleAnimation(index);
+    }
     this.helper.showEveryone(index);
     ourFirebase.updatePieceState(match, index);
     console.log('card show to everyone:', index);
@@ -267,6 +309,14 @@ class Board extends React.Component<BoardProps, BoardState> {
 
   makeCardHiddenToAll(index: number) {
     const match: MatchInfo = this.props.matchInfo;
+    if (
+      match.matchState[index].cardVisibilityPerIndex[
+        this.state.selfParticipantIndex
+      ]
+    ) {
+      // add animation
+      this.handleAnimation(index);
+    }
     this.helper.hideFromEveryone(index);
     ourFirebase.updatePieceState(match, index);
     console.log('card hide to everyone:', index);
@@ -356,20 +406,23 @@ class Board extends React.Component<BoardProps, BoardState> {
             this.handleTouchEnd(index, kind, startX, startY, ratio);
           }}
           onDragStart={() => {
-            if((isAndroid || isIos) && (!(window as any).audioMute)){
-              
-              let audio = new Audio("http://www.soundjay.com/misc/sounds/briefcase-lock-8.mp3");
+            if ((isAndroid || isIos) && !(window as any).audioMute) {
+              let audio = new Audio(
+                'http://www.soundjay.com/misc/sounds/briefcase-lock-8.mp3'
+              );
               audio.play();
             }
-            
+
             console.log('onDragStart');
             this.setState({
               showCardOptions: false
             });
           }}
           onDragEnd={() => {
-            if((isAndroid || isIos) && (!(window as any).audioMute)){
-              let audio = new Audio("http://www.sounds.beachware.com/2illionzayp3may/opaz/EGGCRACK.mp3");
+            if ((isAndroid || isIos) && !(window as any).audioMute) {
+              let audio = new Audio(
+                'http://www.sounds.beachware.com/2illionzayp3may/opaz/EGGCRACK.mp3'
+              );
               audio.play();
             }
             console.log('onDragEnd');
@@ -432,7 +485,6 @@ class Board extends React.Component<BoardProps, BoardState> {
             primaryText={'Shuffle Deck'}
             onClick={() => {
               this.shuffleDeck(
-                this.state.selectedPieceIndex,
                 this.props.gameSpec.pieces[this.state.selectedPieceIndex]
                   .deckPieceIndex
               );

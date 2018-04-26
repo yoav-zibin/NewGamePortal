@@ -14,7 +14,14 @@ import { ourFirebase } from '../services/firebase';
 import { connect } from 'react-redux';
 import { StoreState } from '../types/index';
 import { History } from 'history';
-import { checkNotNull, isAndroid, isIos, findMatch, getPhoneNumberToUserInfo, checkPhoneNumber } from '../globals';
+import {
+  checkNotNull,
+  isAndroid,
+  isIos,
+  findMatch,
+  getPhoneNumberToUserInfo,
+  checkPhoneNumber
+} from '../globals';
 
 const style: React.CSSProperties = {
   marginRight: 20
@@ -115,7 +122,10 @@ class ContactsList extends React.Component<Props, {}> {
   handleAddNotUser = (contact: Contact) => {
     if (isAndroid || isIos) {
       console.log('Sending SMS to ', contact.name);
-      this.sendSms(contact, 'Your friend would like to invite you to a game in GamePortal!');
+      this.sendSms(
+        contact,
+        'Your friend would like to invite you to a game in GamePortal!'
+      );
     }
     this.setState({ snackBarOpen: true });
     // let currentMatch = this.getMatch();
@@ -250,23 +260,30 @@ class ContactsList extends React.Component<Props, {}> {
         <List>
           <Subheader>Not Game User</Subheader>
           {this.filterContacts(this.props.notUsers).map((contact: Contact) => {
-            const parsed: PhoneNumInfo | null = checkPhoneNumber(contact.phoneNumber, this.props.myCountryCode);
-            return (<ListItem
-              key={contact.phoneNumber}
-              primaryText={
-                contact.name + (parsed && parsed.isValidNumber ? `(${parsed.internationalFormat})` : '')
-              }
-              rightIconButton={
-                <RaisedButton
-                  label="invite"
-                  primary={true}
-                  style={style}
-                  onClick={() => this.handleAddNotUser(contact)}
-                />
-              }
-            />
-          )
-        })}
+            const parsed: PhoneNumInfo | null = checkPhoneNumber(
+              contact.phoneNumber,
+              this.props.myCountryCode
+            );
+            return (
+              <ListItem
+                key={contact.phoneNumber}
+                primaryText={
+                  contact.name +
+                  (parsed && parsed.isValidNumber
+                    ? `(${parsed.internationalFormat})`
+                    : '')
+                }
+                rightIconButton={
+                  <RaisedButton
+                    label="invite"
+                    primary={true}
+                    style={style}
+                    onClick={() => this.handleAddNotUser(contact)}
+                  />
+                }
+              />
+            );
+          })}
         </List>
         {/* <Snackbar
           open={this.state.snackBarOpen}
@@ -286,7 +303,9 @@ const mapStateToProps = (state: StoreState, ownProps: Props) => {
   const notUsers: Contact[] = [];
   const allUserNames: UserName[] = [];
   const phoneNumberToInfo = getPhoneNumberToUserInfo(state.userIdToInfo);
-  for (let [phoneNumber, contact] of Object.entries(state.phoneNumberToContact)) {
+  for (let [phoneNumber, contact] of Object.entries(
+    state.phoneNumberToContact
+  )) {
     if (!phoneNumberToInfo[phoneNumber]) {
       notUsers.push(contact);
       let userName: UserName = {

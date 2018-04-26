@@ -46,6 +46,10 @@ export class MatchStateHelper {
     this.getPieceState(diceIndex).currentImageIndex = Math.floor(
       imagesNum * Math.random()
     );
+    // To notify the firebase that someone has rolled a dice
+    // (so that other users can see a rolling dice animation)
+    // we add the z-depth of dice
+    this.getPieceState(diceIndex).zDepth += 1;
   }
 
   // Show a card to me (look/peek at the card).

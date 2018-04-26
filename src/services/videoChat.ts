@@ -468,7 +468,7 @@ export namespace videoChat {
     }
     // for iOS: tell the plugin to handle your video tag manually
     if (isIos) {
-      window.cordova.plugins.iosrtc.observeVideo(video); 
+      window.cordova.plugins.iosrtc.observeVideo(video);
     }
   }
 
