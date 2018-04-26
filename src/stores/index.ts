@@ -2,6 +2,7 @@ import { Store, createStore, applyMiddleware, StoreEnhancer } from 'redux';
 import { StoreState } from '../types';
 import { reducer, Action } from '../reducers';
 import { createLogger } from 'redux-logger';
+import { storeStateDefault } from './defaults';
 
 const isInUnitTests = typeof window === 'undefined';
 const enhancer: StoreEnhancer<StoreState> | undefined =
@@ -43,13 +44,76 @@ export const store: Store<StoreState> = createStore(
   enhancer
 );
 
+function saveStateInLocalStorage(state: StoreState) {
+  localStorage.setItem(REDUX_STATE_LOCAL_STORAGE_KEY, JSON.stringify(state));
+}
+
+// trimState reduces the state so we can save it in localStorage.
+// It's exported so we can write unit tests.
+export function trimState(state: StoreState): StoreState {
+  // If there any game specs that aren't used in any matches, delete them and return.
+  if (Object.keys(state.gameSpecs.gameSpecIdToGameSpec).length > 0) {
+    let gameSpecsToDelete = [];
+    for (let specId in state.gameSpecs.gameSpecIdToGameSpec) {
+      if (state.gameSpecs.gameSpecIdToGameSpec.hasOwnProperty(specId)) {
+        let specIdInMatch = false;
+        for (let m = 0; m < state.matchesList.length; m++) {
+          let match = state.matchesList[m];
+          if (match.gameSpecId === specId) {
+            specIdInMatch = true;
+            break;
+          }
+        }
+        if (!specIdInMatch) {
+          gameSpecsToDelete.push(specId);
+        }
+      }
+    }
+    if (gameSpecsToDelete.length > 0) {
+      for (let i = 0; i < gameSpecsToDelete.length; i++) {
+        let specId = gameSpecsToDelete[i];
+        delete state.gameSpecs.gameSpecIdToGameSpec[specId];
+      }
+      return state;
+    }
+  }
+  // If there are matches, delete the match that has the oldest lastUpdatedOn and return.
+  if (state.matchesList.length > 0) {
+    let oldestIndex = 0;
+    let oldestTimestamp = state.matchesList[oldestIndex].lastUpdatedOn;
+    for (let i = 1; i < state.matchesList.length; i++) {
+      let timestamp = state.matchesList[i].lastUpdatedOn;
+      if (timestamp < oldestTimestamp) {
+        oldestTimestamp = timestamp;
+        oldestIndex = i;
+      }
+    }
+    // delete state.matchesList[oldestIndex];
+    state.matchesList.splice(oldestIndex, 1);
+    return state;
+  }
+  if (Object.keys(state.phoneNumberToContact).length > 0) {
+    state.phoneNumberToContact = {};
+    return state;
+  }
+  // (otherwise) just return myUser.
+  return { ...storeStateDefault, myUser: state.myUser };
+}
+
 function persistNewState() {
   store.subscribe(() => {
     if (hasLocalStorage) {
-      localStorage.setItem(
-        REDUX_STATE_LOCAL_STORAGE_KEY,
-        JSON.stringify(store.getState())
-      );
+      let state = store.getState();
+      for (let i = 0; i < 100; i++) {
+        try {
+          saveStateInLocalStorage(state);
+          return;
+        } catch (e) {
+          // If we store too much data, we may get
+          // QuotaExceededError: The quota has been exceeded.
+          state = trimState(state);
+        }
+      }
     }
   });
 }

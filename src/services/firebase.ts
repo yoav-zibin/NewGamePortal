@@ -81,6 +81,10 @@ export namespace ourFirebase {
     });
   }
 
+  export function getMessaging() {
+    return firebase.messaging();
+  }
+
   // See https://firebase.google.com/docs/auth/web/phone-auth
   let myCountryCodeForSignInWithPhoneNumber = '';
   let displayNameForSignIn = '';
@@ -851,13 +855,17 @@ export namespace ourFirebase {
     signalFbrRef.onDisconnect().remove();
   }
 
-  export function addFcmToken(fcmToken: string, platform: 'ios' | 'android') {
+  export function addFcmToken(
+    fcmToken: string,
+    platform: 'web' | 'ios' | 'android'
+  ) {
     checkCondition('addFcmToken', /^.{140,200}$/.test(fcmToken));
     // Can be called multiple times if the token is updated.
     const fcmTokenObj: fbr.FcmToken = {
       lastTimeReceived: <any>firebase.database.ServerValue.TIMESTAMP,
       platform: platform
     };
+    console.log(getUserId() + ' This is the user id');
     refSet(
       getRef(
         `/gamePortal/gamePortalUsers/${getUserId()}/privateFields/fcmTokens/${fcmToken}`

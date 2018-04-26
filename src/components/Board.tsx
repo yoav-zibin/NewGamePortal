@@ -14,6 +14,7 @@ import { connect } from 'react-redux';
 import { StoreState } from '../types/index';
 import { ourFirebase } from '../services/firebase';
 import { MatchStateHelper } from '../services/matchStateHelper';
+import { isIos, isAndroid } from '../globals';
 
 interface BoardProps {
   myUserId: string;
@@ -22,6 +23,7 @@ interface BoardProps {
 }
 
 interface BoardState {
+  audioMute: boolean;
   showCardOptions: boolean;
   innerWidth: number;
   innerHeight: number;
@@ -46,6 +48,7 @@ class Board extends React.Component<BoardProps, BoardState> {
   constructor(props: BoardProps) {
     super(props);
     this.state = {
+      audioMute: false,
       showCardOptions: false,
       innerHeight: window.innerHeight,
       innerWidth: window.innerWidth,
@@ -192,6 +195,12 @@ class Board extends React.Component<BoardProps, BoardState> {
 
   rollDice(index: number) {
     console.log('Roll Dice for index:', index);
+    if ((isAndroid || isIos) && !this.state.audioMute) {
+      let audio = new Audio(
+        'http://www.sounds.beachware.com/2illionzayp3may/mbunhtlz/DICE.mp3'
+      );
+      audio.play();
+    }
     this.handleAnimation(index);
     const match: MatchInfo = this.props.matchInfo;
     this.helper.rollDice(index);
@@ -397,12 +406,25 @@ class Board extends React.Component<BoardProps, BoardState> {
             this.handleTouchEnd(index, kind, startX, startY, ratio);
           }}
           onDragStart={() => {
+            if ((isAndroid || isIos) && !(window as any).audioMute) {
+              let audio = new Audio(
+                'http://www.soundjay.com/misc/sounds/briefcase-lock-8.mp3'
+              );
+              audio.play();
+            }
+
             console.log('onDragStart');
             this.setState({
               showCardOptions: false
             });
           }}
           onDragEnd={() => {
+            if ((isAndroid || isIos) && !(window as any).audioMute) {
+              let audio = new Audio(
+                'http://www.sounds.beachware.com/2illionzayp3may/opaz/EGGCRACK.mp3'
+              );
+              audio.play();
+            }
             console.log('onDragEnd');
           }}
         />

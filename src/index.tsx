@@ -9,6 +9,7 @@ import App from './App';
 import registerServiceWorker from './registerServiceWorker';
 import './index.css';
 import { ourFirebase } from './services/firebase';
+import { videoChat } from './services/videoChat';
 import { Contact, PhoneNumberToContact } from './types';
 import * as Raven from 'raven-js';
 import * as sentryRelease from './sentry-config.json';
@@ -142,6 +143,7 @@ if (isIos || isAndroid) {
       if (isIos) {
         console.log('Loading WebRTC for iOS');
         window.cordova.plugins.iosrtc.registerGlobals();
+        videoChat.updateIsSupported();
       }
       delayReactRender();
     },

@@ -70,24 +70,29 @@ function setNamesFromContacts(state: StoreState): StoreState {
       newUserIdToInfo[userInfo.userId] = {
         displayName: contact.name,
         userId: userInfo.userId,
-        phoneNumber: phoneNumber,
+        phoneNumber: phoneNumber
       };
     }
   }
   return {
     ...state,
-    userIdToInfo: mergeMaps(
-      userIdToInfo,
-      newUserIdToInfo
-    )
+    userIdToInfo: mergeMaps(userIdToInfo, newUserIdToInfo)
   };
+}
+
+function fixOldState(oldSavedState: StoreState) {
+  // I've added userIdToInfo, so it might not be in state stored in localStorage.
+  if (!oldSavedState.userIdToInfo) {
+    oldSavedState.userIdToInfo = {};
+  }
+  return oldSavedState;
 }
 
 function reduce(state: StoreState, action: Action) {
   if (undefined !== action.setGamesList) {
     return { ...state, gamesList: action.setGamesList };
   } else if (undefined !== action.restoreOldStore) {
-    return action.restoreOldStore;
+    return fixOldState(action.restoreOldStore);
   } else if (undefined !== action.setMatchesList) {
     let { matchesList, ...rest } = state;
     return {
@@ -101,10 +106,7 @@ function reduce(state: StoreState, action: Action) {
   } else if (undefined !== action.updateUserIdToInfo) {
     let { userIdToInfo, ...rest } = state;
     return setNamesFromContacts({
-      userIdToInfo: mergeMaps(
-        userIdToInfo,
-        action.updateUserIdToInfo
-      ),
+      userIdToInfo: mergeMaps(userIdToInfo, action.updateUserIdToInfo),
       ...rest
     });
   } else if (undefined !== action.updatePhoneNumberToContact) {

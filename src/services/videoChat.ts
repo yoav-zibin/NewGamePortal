@@ -1,4 +1,4 @@
-import { checkCondition, checkNotNull } from '../globals';
+import { checkCondition, checkNotNull, isIos } from '../globals';
 import { store, dispatch } from '../stores';
 import { ourFirebase } from './firebase';
 require('webrtc-adapter/out/adapter_no_edge.js');
@@ -72,6 +72,12 @@ export namespace videoChat {
 
   export function isSupported() {
     return _isSupported;
+  }
+
+  export function updateIsSupported() {
+    _isSupported =
+      !!(<any>window).RTCPeerConnection &&
+      !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
   }
 
   export function stopUserMedia() {
@@ -459,6 +465,10 @@ export namespace videoChat {
           setWidthHeight(name, width, height);
         }
       }
+    }
+    // for iOS: tell the plugin to handle your video tag manually
+    if (isIos) {
+      window.cordova.plugins.iosrtc.observeVideo(video);
     }
   }
 

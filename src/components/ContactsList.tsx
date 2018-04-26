@@ -1,11 +1,11 @@
 import * as React from 'react';
-import { Contact, RouterMatchParams } from '../types';
-import { MatchInfo, ContactWithUserId } from '../types';
+import { Contact, RouterMatchParams, UserInfo, PhoneNumInfo } from '../types';
+import { MatchInfo } from '../types';
 import { List, ListItem } from 'material-ui/List';
 import Divider from 'material-ui/Divider';
 import Subheader from 'material-ui/Subheader';
 import FloatingActionButton from 'material-ui/FloatingActionButton';
-import Snackbar from 'material-ui/Snackbar';
+// import Snackbar from 'material-ui/Snackbar';
 import RaisedButton from 'material-ui/RaisedButton';
 import ContentAdd from 'material-ui/svg-icons/content/add';
 import AutoComplete from 'material-ui/AutoComplete';
@@ -14,7 +14,14 @@ import { ourFirebase } from '../services/firebase';
 import { connect } from 'react-redux';
 import { StoreState } from '../types/index';
 import { History } from 'history';
-import { checkNotNull, isAndroid, isIos, findMatch, getPhoneNumberToUserInfo } from '../globals';
+import {
+  checkNotNull,
+  isAndroid,
+  isIos,
+  findMatch,
+  getPhoneNumberToUserInfo,
+  checkPhoneNumber
+} from '../globals';
 
 const style: React.CSSProperties = {
   marginRight: 20
@@ -42,12 +49,13 @@ interface DataSourceConfig {
 
 interface Props {
   matchesList: MatchInfo[];
-  users: ContactWithUserId[];
+  users: UserInfo[];
   notUsers: Contact[];
   allUserNames: UserName[];
   match: RouterMatchParams;
   currentMatch: MatchInfo;
   myUserId: string;
+  myCountryCode: string;
   history: History;
 }
 
@@ -78,7 +86,7 @@ class ContactsList extends React.Component<Props, {}> {
 
     if (chosenRequest.value.props.secondaryText === 'Existing user') {
       let chosenUser = this.props.users.find(
-        user => user.name === chosenRequest.text
+        user => user.displayName === chosenRequest.text
       );
       this.handleAddUser(chosenUser!.userId);
     } else {
@@ -112,10 +120,12 @@ class ContactsList extends React.Component<Props, {}> {
   }
 
   handleAddNotUser = (contact: Contact) => {
-    // TODO: Herbert, send the SMS here in ios/android.
     if (isAndroid || isIos) {
-      console.log('Sending SMS to ', contact);
-      // this.sendSms(contact, 'Your friend would like to invite you to GamePortal!');
+      console.log('Sending SMS to ', contact.name);
+      this.sendSms(
+        contact,
+        'Your friend would like to invite you to a game in GamePortal!'
+      );
     }
     this.setState({ snackBarOpen: true });
     // let currentMatch = this.getMatch();
@@ -151,18 +161,20 @@ class ContactsList extends React.Component<Props, {}> {
     const options = {
       replaceLineBreaks: false, // true to replace \n by a new line, false by default
       android: {
-        intent: '' // send SMS with the native android SMS messaging
+        intent: 'INTENT' // send SMS with the native android SMS messaging
       }
     };
 
     const success = () => {
       console.log('Message sent successfully');
     };
-    const error = () => {
-      console.log('Message Failed');
+    const error = (e: any) => {
+      console.log('Message Failed' + e);
     };
 
-    this.requestSMSPermission();
+    if (isAndroid) {
+      this.requestSMSPermission();
+    }
     window.sms.send(phoneNum, message, options, success, error);
   };
 
@@ -181,7 +193,7 @@ class ContactsList extends React.Component<Props, {}> {
     }
   };
 
-  filterParticipants(contacts: ContactWithUserId[]): ContactWithUserId[] {
+  filterParticipants(contacts: UserInfo[]): UserInfo[] {
     let participantsUserIds = this.getMatch().participantsUserIds;
     // Filter out existing participants.
     return contacts.filter(
@@ -189,13 +201,18 @@ class ContactsList extends React.Component<Props, {}> {
     );
   }
 
-  filterContacts<T extends Contact>(contacts: T[]): T[] {
+  filterContacts(contacts: Contact[]): Contact[] {
     return contacts.filter(
       contact => contact.name.indexOf(this.state.filterValue) !== -1
     );
   }
-  // TODO: show formatted phone numbers next to non-users (like in Duo).
-  // const phoneInfo: PhoneNumInfo = parsePhoneNumber(localNumber, myCountryCode);
+
+  filterUsers(contacts: UserInfo[]): UserInfo[] {
+    return contacts.filter(
+      contact => contact.displayName.indexOf(this.state.filterValue) !== -1
+    );
+  }
+
   render() {
     return (
       <div>
@@ -221,11 +238,11 @@ class ContactsList extends React.Component<Props, {}> {
 
         <List>
           <Subheader>Game User</Subheader>
-          {this.filterParticipants(this.filterContacts(this.props.users)).map(
-            (user: ContactWithUserId) => (
+          {this.filterParticipants(this.filterUsers(this.props.users)).map(
+            (user: UserInfo) => (
               <ListItem
-                key={user.phoneNumber}
-                primaryText={user.name}
+                key={user.userId}
+                primaryText={user.displayName}
                 rightIconButton={
                   <FloatingActionButton
                     mini={true}
@@ -242,51 +259,54 @@ class ContactsList extends React.Component<Props, {}> {
         <Divider />
         <List>
           <Subheader>Not Game User</Subheader>
-          {this.filterContacts(this.props.notUsers).map((contact: Contact) => (
-            <ListItem
-              key={contact.phoneNumber}
-              primaryText={contact.name}
-              rightIconButton={
-                <RaisedButton
-                  label="invite"
-                  primary={true}
-                  style={style}
-                  onClick={() => this.handleAddNotUser(contact)}
-                />
-              }
-            />
-          ))}
+          {this.filterContacts(this.props.notUsers).map((contact: Contact) => {
+            const parsed: PhoneNumInfo | null = checkPhoneNumber(
+              contact.phoneNumber,
+              this.props.myCountryCode
+            );
+            return (
+              <ListItem
+                key={contact.phoneNumber}
+                primaryText={
+                  contact.name +
+                  (parsed && parsed.isValidNumber
+                    ? `(${parsed.internationalFormat})`
+                    : '')
+                }
+                rightIconButton={
+                  <RaisedButton
+                    label="invite"
+                    primary={true}
+                    style={style}
+                    onClick={() => this.handleAddNotUser(contact)}
+                  />
+                }
+              />
+            );
+          })}
         </List>
-        <Snackbar
+        {/* <Snackbar
           open={this.state.snackBarOpen}
           message={this.state.message}
           action="stay"
           autoHideDuration={this.state.autoHideDuration}
           onRequestClose={this.handleRequestClose}
           onActionClick={this.handleActionClick}
-        />
+        /> */}
       </div>
     );
   }
 }
 
 const mapStateToProps = (state: StoreState, ownProps: Props) => {
-  const users: ContactWithUserId[] = [];
+  const users: UserInfo[] = [];
   const notUsers: Contact[] = [];
   const allUserNames: UserName[] = [];
   const phoneNumberToInfo = getPhoneNumberToUserInfo(state.userIdToInfo);
-  for (let [phoneNumber, contact] of Object.entries(state.phoneNumberToContact)) {
-    const userId = phoneNumberToInfo[phoneNumber] ? phoneNumberToInfo[phoneNumber].userId : null;
-    if (userId === state.myUser.myUserId) {
-      // Ignore my user (in case I have my own phone number in my contacts)
-    } else if (userId) {
-      users.push({ ...contact, userId: userId });
-      let userName: UserName = {
-        name: contact.name,
-        userType: 'Existing user'
-      };
-      allUserNames.push(userName);
-    } else {
+  for (let [phoneNumber, contact] of Object.entries(
+    state.phoneNumberToContact
+  )) {
+    if (!phoneNumberToInfo[phoneNumber]) {
       notUsers.push(contact);
       let userName: UserName = {
         name: contact.name,
@@ -295,8 +315,20 @@ const mapStateToProps = (state: StoreState, ownProps: Props) => {
       allUserNames.push(userName);
     }
   }
+  for (let [userId, userInfo] of Object.entries(state.userIdToInfo)) {
+    if (userId === state.myUser.myUserId) {
+      // Ignore my user (in case I have my own phone number in my contacts)
+    } else {
+      users.push(userInfo);
+      let userName: UserName = {
+        name: userInfo.displayName,
+        userType: 'Existing user'
+      };
+      allUserNames.push(userName);
+    }
+  }
 
-  users.sort((c1, c2) => c1.name.localeCompare(c2.name));
+  users.sort((c1, c2) => c1.displayName.localeCompare(c2.displayName));
   notUsers.sort((c1, c2) => c1.name.localeCompare(c2.name));
 
   let currentMatchId: string = ownProps.match.params.matchIdInRoute;
@@ -307,7 +339,8 @@ const mapStateToProps = (state: StoreState, ownProps: Props) => {
     notUsers,
     allUserNames,
     currentMatch,
-    myUserId: state.myUser.myUserId
+    myUserId: state.myUser.myUserId,
+    myCountryCode: state.myUser.myCountryCode
   };
 };
 export default connect(mapStateToProps)(ContactsList);

@@ -11,6 +11,7 @@ import { getOpponents, findMatch } from '../globals';
 import { FloatingActionButton } from 'material-ui';
 import ContentAdd from 'material-ui/svg-icons/content/add';
 import VolumeUp from 'material-ui/svg-icons/av/volume-up';
+import VolumeMute from 'material-ui/svg-icons/av/volume-mute';
 
 interface Props {
   matchInfo: MatchInfo;
@@ -23,6 +24,10 @@ interface Props {
 }
 
 class AppHeader extends React.Component<Props, {}> {
+  state = {
+    audioMute: false
+  };
+
   routes: StringIndexer = {
     '/login': 'Login',
     '/addMatch': 'Create a new game',
@@ -77,6 +82,8 @@ class AppHeader extends React.Component<Props, {}> {
   }
   handleAudioClick = () => {
     console.log('Clicked audio button');
+    (window as any).audioMute = !this.state.audioMute;
+    this.setState({ audioMute: !this.state.audioMute });
   };
   // When back button is clicked
   handleNavigationClick = () => {
@@ -89,6 +96,23 @@ class AppHeader extends React.Component<Props, {}> {
   };
 
   render() {
+    let volume = this.state.audioMute ? (
+      <FloatingActionButton
+        style={{ marginRight: 40 }}
+        mini={true}
+        onClick={this.handleAudioClick}
+      >
+        <VolumeMute />
+      </FloatingActionButton>
+    ) : (
+      <FloatingActionButton
+        style={{ marginRight: 40 }}
+        mini={true}
+        onClick={this.handleAudioClick}
+      >
+        <VolumeUp />
+      </FloatingActionButton>
+    );
     if (this.onPlayingScreen()) {
       // We're on Playing Screen, which needs 'add' button and mute button
       console.log('ON PLAYING SCREEN');
@@ -101,13 +125,7 @@ class AppHeader extends React.Component<Props, {}> {
           }
           iconElementRight={
             <div>
-              <FloatingActionButton
-                style={{ marginRight: 40 }}
-                mini={true}
-                onClick={this.handleAudioClick}
-              >
-                <VolumeUp />
-              </FloatingActionButton>
+              {volume}
               <FloatingActionButton
                 style={{ marginRight: 20 }}
                 mini={true}
