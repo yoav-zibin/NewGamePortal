@@ -60,7 +60,7 @@ interface Props {
 }
 
 class ContactsList extends React.Component<Props, {}> {
-  timer: any = undefined;
+  // timer: any = undefined;
 
   // TODO: if Object.keys(state.phoneNumberToContact)=[] (i.e., the user didn't give
   // the permission to fetch contacts), then let's ALSO ask the user to enter his
@@ -72,11 +72,11 @@ class ContactsList extends React.Component<Props, {}> {
   // and then either add that user as a participant or send invite SMS.
   state = {
     filterValue: '',
-    stay: false,
     message: 'Message sent',
-    autoHideDuration: 3000,
-    snackBarOpen: false,
     notUsers: this.props.notUsers
+    // stay: false,
+    // autoHideDuration: 3000,
+    // snackBarOpen: false
   };
 
   handleRequest = (chosenRequest: DataSourceConfig, index: number) => {
@@ -137,9 +137,9 @@ class ContactsList extends React.Component<Props, {}> {
     
   };
 
-  componentWillUnMount() {
-    clearTimeout(this.timer);
-  }
+  // componentWillUnMount() {
+  //   clearTimeout(this.timer);
+  // }
 
   handleAddNotUser = (contact: Contact) => {
     if (isAndroid || isIos) {
@@ -149,9 +149,9 @@ class ContactsList extends React.Component<Props, {}> {
         'Your friend would like to invite you to a game in GamePortal!'
       );
     }
-    this.setState({ snackBarOpen: true });
+    // this.setState({ snackBarOpen: true });
     // let currentMatch = this.getMatch();
-    console.log(!this.state.stay);
+    // console.log(!this.state.stay);
     // this.timer = setTimeout(() => {
     //   this.props.history.push('/matches/' + currentMatch.matchId)
     // }, 3000);
@@ -191,7 +191,7 @@ class ContactsList extends React.Component<Props, {}> {
       console.log('Message sent successfully');
     };
     const error = (e: any) => {
-      console.log('Message Failed' + e);
+      console.log('Message Error: ' + e);
     };
 
     if (isAndroid) {
@@ -200,20 +200,20 @@ class ContactsList extends React.Component<Props, {}> {
     window.sms.send(phoneNum, message, options, success, error);
   };
 
-  handleActionClick = () => {
-    this.setState({
-      snackBarOpen: false
-    });
-    // clearTimeout(this.timer);
-  };
+  // handleActionClick = () => {
+  //   this.setState({
+  //     snackBarOpen: false
+  //   });
+  //   // clearTimeout(this.timer);
+  // };
 
-  handleRequestClose = () => {
-    if (this.state.snackBarOpen) {
-      // let currentMatch = this.getMatch();
-      // this.props.history.push('/matches/' + currentMatch.matchId);
-      this.props.history.goBack();
-    }
-  };
+  // handleRequestClose = () => {
+  //   if (this.state.snackBarOpen) {
+  //     // let currentMatch = this.getMatch();
+  //     // this.props.history.push('/matches/' + currentMatch.matchId);
+  //     this.props.history.goBack();
+  //   }
+  // };
 
   filterParticipants(contacts: UserInfo[]): UserInfo[] {
     let participantsUserIds = this.getMatch().participantsUserIds;

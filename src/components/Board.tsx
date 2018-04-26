@@ -35,6 +35,7 @@ interface BoardState {
   };
   throttled: boolean;
   animatingTime: number;
+  timer: any;
 }
 
 /**
@@ -62,7 +63,8 @@ class Board extends React.Component<BoardProps, BoardState> {
       },
       // for throttling window resize event
       throttled: false,
-      animatingTime: 0.5
+      animatingTime: 0.5,
+      timer: null
     };
   }
 
@@ -128,15 +130,15 @@ class Board extends React.Component<BoardProps, BoardState> {
 
   // resize the board (also for correctly displaying on mobile)
   componentDidMount() {
-    window.addEventListener('resize', () => {
-      this.handleResize();
-    });
+    window.addEventListener('resize', this.handleResize);
   }
 
   componentWillUnmount() {
-    window.removeEventListener('resize', () => {
-      this.handleResize();
-    });
+    window.removeEventListener('resize', this.handleResize);
+    // make sure to clear the timer before unmounting
+    if (this.state.timer) {
+      clearTimeout(this.state.timer);
+    }
   }
 
   handleAnimation(index: number) {
@@ -148,15 +150,19 @@ class Board extends React.Component<BoardProps, BoardState> {
     });
   }
 
-  handleResize() {
+  handleResize = () => {
     if (!this.state.throttled) {
       this.setDimensions();
+      let timer = setTimeout(
+        () => this.setState({ timer: null, throttled: false }),
+        250
+      );
       this.setState({
-        throttled: true
+        throttled: true,
+        timer
       });
-      setTimeout(() => this.setState({ throttled: false }), 250);
     }
-  }
+  };
 
   setDimensions() {
     this.setState({
