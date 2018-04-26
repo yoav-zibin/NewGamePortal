@@ -21,7 +21,7 @@ function reactRender() {
       <Provider store={store}>
         <BrowserRouter
           basename={
-            location.hostname === 'herbertli.github.io'
+            location.hostname === 'yoav-zibin.github.io'
               ? '/NewGamePortal'
               : '/'
           }
