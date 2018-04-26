@@ -14,7 +14,14 @@ import { ourFirebase } from '../services/firebase';
 import { connect } from 'react-redux';
 import { StoreState } from '../types/index';
 import { History } from 'history';
-import { checkNotNull, isAndroid, isIos, findMatch, getPhoneNumberToUserInfo } from '../globals';
+import TextField from 'material-ui/TextField';
+import {
+  checkNotNull,
+  isAndroid,
+  isIos,
+  findMatch,
+  getPhoneNumberToUserInfo
+} from '../globals';
 
 const style: React.CSSProperties = {
   marginRight: 20
@@ -49,6 +56,7 @@ interface Props {
   currentMatch: MatchInfo;
   myUserId: string;
   history: History;
+  myUserCountryCode: string;
 }
 
 class ContactsList extends React.Component<Props, {}> {
@@ -105,6 +113,15 @@ class ContactsList extends React.Component<Props, {}> {
     let currentMatch = this.getMatch();
     ourFirebase.addParticipant(currentMatch, userId);
     this.props.history.push('/matches/' + currentMatch.matchId);
+  };
+
+  handleRequestNumber = (event: object, requestNumber: string) => {
+    console.log('request number is ' + requestNumber + '  ' + event);
+    let phoneInfo: PhoneNumInfo = parsePhoneNumber(
+      requestNumber,
+      this.props.myUserCountryCode
+    );
+    ourFirebase.searchPhoneNumber();
   };
 
   componentWillUnMount() {
@@ -204,27 +221,36 @@ class ContactsList extends React.Component<Props, {}> {
   // TODO: show formatted phone numbers next to non-users (like in Duo).
   // const phoneInfo: PhoneNumInfo = parsePhoneNumber(localNumber, myCountryCode);
   render() {
+    let searchField =
+      this.props.allUserNames.length > 0 ? (
+        <AutoComplete
+          floatingLabelText="Search"
+          filter={AutoComplete.fuzzyFilter}
+          dataSource={this.props.allUserNames.map((username: UserName) => ({
+            text: username.name,
+            value: (
+              <MenuItem
+                primaryText={username.name}
+                secondaryText={username.userType}
+              />
+            )
+          }))}
+          maxSearchResults={5}
+          fullWidth={true}
+          onNewRequest={this.handleRequest}
+          onUpdateInput={this.handleUpdate}
+        />
+      ) : (
+        <TextField
+          hintText="Search"
+          fullWidth={true}
+          onChange={this.handleRequestNumber}
+        />
+      );
+
     return (
       <div>
-        <div style={searchStyle}>
-          <AutoComplete
-            floatingLabelText="Search"
-            filter={AutoComplete.fuzzyFilter}
-            dataSource={this.props.allUserNames.map((username: UserName) => ({
-              text: username.name,
-              value: (
-                <MenuItem
-                  primaryText={username.name}
-                  secondaryText={username.userType}
-                />
-              )
-            }))}
-            maxSearchResults={5}
-            fullWidth={true}
-            onNewRequest={this.handleRequest}
-            onUpdateInput={this.handleUpdate}
-          />
-        </div>
+        <div style={searchStyle}>{searchField}</div>
 
         <List>
           <Subheader>Game User</Subheader>
@@ -282,7 +308,9 @@ const mapStateToProps = (state: StoreState, ownProps: Props) => {
   const notUsers: Contact[] = [];
   const allUserNames: UserName[] = [];
   const phoneNumberToInfo = getPhoneNumberToUserInfo(state.userIdToInfo);
-  for (let [phoneNumber, contact] of Object.entries(state.phoneNumberToContact)) {
+  for (let [phoneNumber, contact] of Object.entries(
+    state.phoneNumberToContact
+  )) {
     if (!phoneNumberToInfo[phoneNumber]) {
       notUsers.push(contact);
       let userName: UserName = {
@@ -316,7 +344,8 @@ const mapStateToProps = (state: StoreState, ownProps: Props) => {
     notUsers,
     allUserNames,
     currentMatch,
-    myUserId: state.myUser.myUserId
+    myUserId: state.myUser.myUserId,
+    myUserCountryCode: state.myUser.myCountryCode
   };
 };
 export default connect(mapStateToProps)(ContactsList);
