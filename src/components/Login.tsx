@@ -66,7 +66,7 @@ class Login extends React.Component<Props, {}> {
     confirmationResult: null,
     veriDisabled: true,
     status: loadingType.hide,
-    searchText: '',
+    searchText: 'United States(+1)',
     defaultText: 'United States(+1)',
     onSelect: false,
     clearVisibility: visibilityType.visible,
@@ -202,8 +202,6 @@ class Login extends React.Component<Props, {}> {
     this.props.history.push('/');
   };
 
-  // TODO: the initial state should have the country set as United States.
-  // TODO: ask the user for it's name (Yoav needs to add it to firebase).
   render() {
     if (this.props.myUserId) {
       return <Redirect to="/" />;
