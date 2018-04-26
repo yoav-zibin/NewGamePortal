@@ -22,6 +22,7 @@ interface BoardProps {
 }
 
 interface BoardState {
+  audioPlaying: boolean;
   showCardOptions: boolean;
   innerWidth: number;
   innerHeight: number;
@@ -45,6 +46,7 @@ class Board extends React.Component<BoardProps, BoardState> {
   constructor(props: BoardProps) {
     super(props);
     this.state = {
+      audioPlaying: true,
       showCardOptions: false,
       innerHeight: window.innerHeight,
       innerWidth: window.innerWidth,
@@ -326,12 +328,20 @@ class Board extends React.Component<BoardProps, BoardState> {
             this.handleTouchEnd(index, kind, startX, startY, ratio);
           }}
           onDragStart={() => {
+            if(this.state.audioPlaying){
+              
+              let audio = new Audio("http://www.soundjay.com/misc/sounds/briefcase-lock-8.mp3");
+              audio.play();
+            }
+            
             console.log('onDragStart');
             this.setState({
               showCardOptions: false
             });
           }}
           onDragEnd={() => {
+            let audio = new Audio("http://www.sounds.beachware.com/2illionzayp3may/opaz/EGGCRACK.mp3");
+            audio.play();
             console.log('onDragEnd');
           }}
         />
