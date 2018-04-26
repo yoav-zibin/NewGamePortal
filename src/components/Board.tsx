@@ -14,6 +14,7 @@ import { connect } from 'react-redux';
 import { StoreState } from '../types/index';
 import { ourFirebase } from '../services/firebase';
 import { MatchStateHelper } from '../services/matchStateHelper';
+import { isIos, isAndroid } from '../globals';
 
 interface BoardProps {
   myUserId: string;
@@ -22,7 +23,7 @@ interface BoardProps {
 }
 
 interface BoardState {
-  audioPlaying: boolean;
+  audioMute: boolean;
   showCardOptions: boolean;
   innerWidth: number;
   innerHeight: number;
@@ -46,7 +47,7 @@ class Board extends React.Component<BoardProps, BoardState> {
   constructor(props: BoardProps) {
     super(props);
     this.state = {
-      audioPlaying: true,
+      audioMute: false,
       showCardOptions: false,
       innerHeight: window.innerHeight,
       innerWidth: window.innerWidth,
@@ -161,6 +162,11 @@ class Board extends React.Component<BoardProps, BoardState> {
 
   rollDice(index: number) {
     console.log('Roll Dice for index:', index);
+    if((isAndroid || isIos) && (!this.state.audioMute)){
+              
+      let audio = new Audio("http://www.sounds.beachware.com/2illionzayp3may/mbunhtlz/DICE.mp3");
+      audio.play();
+    }
     let animatingTime = 500;
     const canvasImage = this.refs['canvasImage' + index] as CanvasImage;
     const imageNode = canvasImage.imageNode;
@@ -350,7 +356,7 @@ class Board extends React.Component<BoardProps, BoardState> {
             this.handleTouchEnd(index, kind, startX, startY, ratio);
           }}
           onDragStart={() => {
-            if(this.state.audioPlaying){
+            if((isAndroid || isIos) && (!(window as any).audioMute)){
               
               let audio = new Audio("http://www.soundjay.com/misc/sounds/briefcase-lock-8.mp3");
               audio.play();
@@ -362,8 +368,10 @@ class Board extends React.Component<BoardProps, BoardState> {
             });
           }}
           onDragEnd={() => {
-            let audio = new Audio("http://www.sounds.beachware.com/2illionzayp3may/opaz/EGGCRACK.mp3");
-            audio.play();
+            if((isAndroid || isIos) && (!(window as any).audioMute)){
+              let audio = new Audio("http://www.sounds.beachware.com/2illionzayp3may/opaz/EGGCRACK.mp3");
+              audio.play();
+            }
             console.log('onDragEnd');
           }}
         />

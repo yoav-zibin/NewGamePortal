@@ -57,7 +57,7 @@ class Login extends React.Component<Props, {}> {
   state = {
     displayName: '',
     selectField: { value: '', label: '' },
-    code: '',
+    code: 'US',
     defaultCode: 'US',
     phoneNum: '',
     veriCode: '',
