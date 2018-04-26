@@ -1,11 +1,11 @@
 import * as React from 'react';
-import { Contact, RouterMatchParams, UserInfo } from '../types';
+import { Contact, RouterMatchParams, UserInfo, PhoneNumInfo } from '../types';
 import { MatchInfo } from '../types';
 import { List, ListItem } from 'material-ui/List';
 import Divider from 'material-ui/Divider';
 import Subheader from 'material-ui/Subheader';
 import FloatingActionButton from 'material-ui/FloatingActionButton';
-import Snackbar from 'material-ui/Snackbar';
+// import Snackbar from 'material-ui/Snackbar';
 import RaisedButton from 'material-ui/RaisedButton';
 import ContentAdd from 'material-ui/svg-icons/content/add';
 import AutoComplete from 'material-ui/AutoComplete';
@@ -14,14 +14,7 @@ import { ourFirebase } from '../services/firebase';
 import { connect } from 'react-redux';
 import { StoreState } from '../types/index';
 import { History } from 'history';
-import TextField from 'material-ui/TextField';
-import {
-  checkNotNull,
-  isAndroid,
-  isIos,
-  findMatch,
-  getPhoneNumberToUserInfo
-} from '../globals';
+import { checkNotNull, isAndroid, isIos, findMatch, getPhoneNumberToUserInfo, checkPhoneNumber } from '../globals';
 
 const style: React.CSSProperties = {
   marginRight: 20
@@ -55,6 +48,7 @@ interface Props {
   match: RouterMatchParams;
   currentMatch: MatchInfo;
   myUserId: string;
+  myCountryCode: string;
   history: History;
   myUserCountryCode: string;
 }
@@ -129,10 +123,9 @@ class ContactsList extends React.Component<Props, {}> {
   }
 
   handleAddNotUser = (contact: Contact) => {
-    // TODO: Herbert, send the SMS here in ios/android.
     if (isAndroid || isIos) {
-      console.log('Sending SMS to ', contact);
-      // this.sendSms(contact, 'Your friend would like to invite you to GamePortal!');
+      console.log('Sending SMS to ', contact.name);
+      this.sendSms(contact, 'Your friend would like to invite you to a game in GamePortal!');
     }
     this.setState({ snackBarOpen: true });
     // let currentMatch = this.getMatch();
@@ -168,18 +161,20 @@ class ContactsList extends React.Component<Props, {}> {
     const options = {
       replaceLineBreaks: false, // true to replace \n by a new line, false by default
       android: {
-        intent: '' // send SMS with the native android SMS messaging
+        intent: 'INTENT' // send SMS with the native android SMS messaging
       }
     };
 
     const success = () => {
       console.log('Message sent successfully');
     };
-    const error = () => {
-      console.log('Message Failed');
+    const error = (e: any) => {
+      console.log('Message Failed' + e);
     };
 
-    this.requestSMSPermission();
+    if (isAndroid) {
+      this.requestSMSPermission();
+    }
     window.sms.send(phoneNum, message, options, success, error);
   };
 
@@ -218,8 +213,6 @@ class ContactsList extends React.Component<Props, {}> {
     );
   }
 
-  // TODO: show formatted phone numbers next to non-users (like in Duo).
-  // const phoneInfo: PhoneNumInfo = parsePhoneNumber(localNumber, myCountryCode);
   render() {
     let searchField =
       this.props.allUserNames.length > 0 ? (
@@ -275,10 +268,13 @@ class ContactsList extends React.Component<Props, {}> {
         <Divider />
         <List>
           <Subheader>Not Game User</Subheader>
-          {this.filterContacts(this.props.notUsers).map((contact: Contact) => (
-            <ListItem
+          {this.filterContacts(this.props.notUsers).map((contact: Contact) => {
+            const parsed: PhoneNumInfo | null = checkPhoneNumber(contact.phoneNumber, this.props.myCountryCode);
+            return (<ListItem
               key={contact.phoneNumber}
-              primaryText={contact.name}
+              primaryText={
+                contact.name + (parsed && parsed.isValidNumber ? `(${parsed.internationalFormat})` : '')
+              }
               rightIconButton={
                 <RaisedButton
                   label="invite"
@@ -288,16 +284,17 @@ class ContactsList extends React.Component<Props, {}> {
                 />
               }
             />
-          ))}
+          )
+        })}
         </List>
-        <Snackbar
+        {/* <Snackbar
           open={this.state.snackBarOpen}
           message={this.state.message}
           action="stay"
           autoHideDuration={this.state.autoHideDuration}
           onRequestClose={this.handleRequestClose}
           onActionClick={this.handleActionClick}
-        />
+        /> */}
       </div>
     );
   }
@@ -345,7 +342,7 @@ const mapStateToProps = (state: StoreState, ownProps: Props) => {
     allUserNames,
     currentMatch,
     myUserId: state.myUser.myUserId,
-    myUserCountryCode: state.myUser.myCountryCode
+    myCountryCode: state.myUser.myCountryCode
   };
 };
 export default connect(mapStateToProps)(ContactsList);
