@@ -8,6 +8,9 @@
 
 // To learn more about the benefits of this model, read https://goo.gl/KwvDNy.
 // This link also includes instructions on opting out of this behavior.
+// import {messaging, auth, initPushNotification} from './firebase';
+import * as firebase from 'firebase';
+import { initPushNotification } from './services/pushNotification';
 
 const isLocalhost = Boolean(
   window.location.hostname === 'localhost' ||
@@ -51,6 +54,12 @@ function registerValidSW(swUrl: string) {
   navigator.serviceWorker
     .register(swUrl)
     .then(registration => {
+      firebase.messaging().useServiceWorker(registration);
+      firebase.auth().onAuthStateChanged(user => {
+        if (user) {
+          initPushNotification();
+        }
+      });
       registration.onupdatefound = () => {
         const installingWorker = registration.installing;
         if (installingWorker) {
