@@ -2,6 +2,7 @@ import { Store, createStore, applyMiddleware, StoreEnhancer } from 'redux';
 import { StoreState } from '../types';
 import { reducer, Action } from '../reducers';
 import { createLogger } from 'redux-logger';
+import { storeStateDefault } from './defaults';
 
 const isInUnitTests = typeof window === 'undefined';
 const enhancer: StoreEnhancer<StoreState> | undefined =
@@ -43,13 +44,42 @@ export const store: Store<StoreState> = createStore(
   enhancer
 );
 
+function saveStateInLocalStorage(state: StoreState) {
+  localStorage.setItem(
+    REDUX_STATE_LOCAL_STORAGE_KEY,
+    JSON.stringify(state)
+  );
+}
+
+// trimState reduces the state so we can save it in localStorage.
+// It's exported so we can write unit tests.
+export function trimState(state: StoreState): StoreState {
+  // TODO: implement trimState and write unit tests for it.
+
+  // If there any game specs that aren't used in any matches, delete them and return.
+  
+  // If there are matches, delete the match that has the oldest lastUpdatedOn and return.
+  
+  // If there are phoneNumberToContact, delete them and return.
+  
+  // (otherwise) just return myUser.
+  return { ...storeStateDefault, myUser: state.myUser};
+}
+
 function persistNewState() {
   store.subscribe(() => {
     if (hasLocalStorage) {
-      localStorage.setItem(
-        REDUX_STATE_LOCAL_STORAGE_KEY,
-        JSON.stringify(store.getState())
-      );
+      let state = store.getState();
+      for (let i = 0; i < 100; i++) {
+        try {
+          saveStateInLocalStorage(state);
+          return;
+        } catch (e) {
+          // If we store too much data, we may get
+          // QuotaExceededError: The quota has been exceeded.
+          state = trimState(state);
+        }
+      }
     }
   });
 }

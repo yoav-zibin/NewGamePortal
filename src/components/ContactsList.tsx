@@ -5,7 +5,7 @@ import { List, ListItem } from 'material-ui/List';
 import Divider from 'material-ui/Divider';
 import Subheader from 'material-ui/Subheader';
 import FloatingActionButton from 'material-ui/FloatingActionButton';
-import Snackbar from 'material-ui/Snackbar';
+// import Snackbar from 'material-ui/Snackbar';
 import RaisedButton from 'material-ui/RaisedButton';
 import ContentAdd from 'material-ui/svg-icons/content/add';
 import AutoComplete from 'material-ui/AutoComplete';
@@ -112,10 +112,9 @@ class ContactsList extends React.Component<Props, {}> {
   }
 
   handleAddNotUser = (contact: Contact) => {
-    // TODO: Herbert, send the SMS here in ios/android.
     if (isAndroid || isIos) {
-      console.log('Sending SMS to ', contact);
-      // this.sendSms(contact, 'Your friend would like to invite you to GamePortal!');
+      console.log('Sending SMS to ', contact.name);
+      this.sendSms(contact, 'Your friend would like to invite you to a game in GamePortal!');
     }
     this.setState({ snackBarOpen: true });
     // let currentMatch = this.getMatch();
@@ -151,18 +150,20 @@ class ContactsList extends React.Component<Props, {}> {
     const options = {
       replaceLineBreaks: false, // true to replace \n by a new line, false by default
       android: {
-        intent: '' // send SMS with the native android SMS messaging
+        intent: 'INTENT' // send SMS with the native android SMS messaging
       }
     };
 
     const success = () => {
       console.log('Message sent successfully');
     };
-    const error = () => {
-      console.log('Message Failed');
+    const error = (e: any) => {
+      console.log('Message Failed' + e);
     };
 
-    this.requestSMSPermission();
+    if (isAndroid) {
+      this.requestSMSPermission();
+    }
     window.sms.send(phoneNum, message, options, success, error);
   };
 
@@ -264,14 +265,14 @@ class ContactsList extends React.Component<Props, {}> {
             />
           ))}
         </List>
-        <Snackbar
+        {/* <Snackbar
           open={this.state.snackBarOpen}
           message={this.state.message}
           action="stay"
           autoHideDuration={this.state.autoHideDuration}
           onRequestClose={this.handleRequestClose}
           onActionClick={this.handleActionClick}
-        />
+        /> */}
       </div>
     );
   }
