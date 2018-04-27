@@ -57,6 +57,7 @@ interface Props {
   myUserId: string;
   myCountryCode: string;
   history: History;
+  searchByNumber: boolean;
 }
 
 class ContactsList extends React.Component<Props, {}> {
@@ -74,9 +75,6 @@ class ContactsList extends React.Component<Props, {}> {
     filterValue: '',
     message: 'Message sent',
     notUsers: this.props.notUsers
-    // stay: false,
-    // autoHideDuration: 3000,
-    // snackBarOpen: false
   };
 
   handleRequest = (chosenRequest: DataSourceConfig, index: number) => {
@@ -128,18 +126,14 @@ class ContactsList extends React.Component<Props, {}> {
         if(user==null){
           let userInfo:Contact = {
             phoneNumber: phoneInfo!.e164Format,
-            name: "Unknown User"
-          }; 
+            name: " "
+          };
           this.setState({notUsers: [userInfo]})
         }
       });
     }
-    
-  };
 
-  // componentWillUnMount() {
-  //   clearTimeout(this.timer);
-  // }
+  };
 
   handleAddNotUser = (contact: Contact) => {
     if (isAndroid || isIos) {
@@ -149,12 +143,6 @@ class ContactsList extends React.Component<Props, {}> {
         'Your friend would like to invite you to a game in GamePortal!'
       );
     }
-    // this.setState({ snackBarOpen: true });
-    // let currentMatch = this.getMatch();
-    // console.log(!this.state.stay);
-    // this.timer = setTimeout(() => {
-    //   this.props.history.push('/matches/' + currentMatch.matchId)
-    // }, 3000);
   };
 
   requestSMSPermission = () => {
@@ -200,21 +188,6 @@ class ContactsList extends React.Component<Props, {}> {
     window.sms.send(phoneNum, message, options, success, error);
   };
 
-  // handleActionClick = () => {
-  //   this.setState({
-  //     snackBarOpen: false
-  //   });
-  //   // clearTimeout(this.timer);
-  // };
-
-  // handleRequestClose = () => {
-  //   if (this.state.snackBarOpen) {
-  //     // let currentMatch = this.getMatch();
-  //     // this.props.history.push('/matches/' + currentMatch.matchId);
-  //     this.props.history.goBack();
-  //   }
-  // };
-
   filterParticipants(contacts: UserInfo[]): UserInfo[] {
     let participantsUserIds = this.getMatch().participantsUserIds;
     // Filter out existing participants.
@@ -237,9 +210,9 @@ class ContactsList extends React.Component<Props, {}> {
 
   render() {
     let searchField =
-      this.props.allUserNames.length > 0 ? (
+      this.props.searchByNumber ? (
         <AutoComplete
-          floatingLabelText="Search"
+          floatingLabelText="Search By PhoneNumber"
           filter={AutoComplete.fuzzyFilter}
           dataSource={this.props.allUserNames.map((username: UserName) => ({
             text: username.name,
@@ -252,8 +225,7 @@ class ContactsList extends React.Component<Props, {}> {
           }))}
           maxSearchResults={5}
           fullWidth={true}
-          onNewRequest={this.handleRequest}
-          onUpdateInput={this.handleUpdate}
+          onNewRequest={this.handleRequestNumber}
         />
       ) : (
         <AutoComplete
@@ -270,7 +242,8 @@ class ContactsList extends React.Component<Props, {}> {
           }))}
           maxSearchResults={5}
           fullWidth={true}
-          onNewRequest={this.handleRequestNumber}
+          onNewRequest={this.handleRequest}
+          onUpdateInput={this.handleUpdate}
         />
       );
 
@@ -327,14 +300,6 @@ class ContactsList extends React.Component<Props, {}> {
             );
           })}
         </List>
-        {/* <Snackbar
-          open={this.state.snackBarOpen}
-          message={this.state.message}
-          action="stay"
-          autoHideDuration={this.state.autoHideDuration}
-          onRequestClose={this.handleRequestClose}
-          onActionClick={this.handleActionClick}
-        /> */}
       </div>
     );
   }
@@ -375,14 +340,14 @@ const mapStateToProps = (state: StoreState, ownProps: Props) => {
 
   let currentMatchId: string = ownProps.match.params.matchIdInRoute;
   let currentMatch = findMatch(state.matchesList, currentMatchId);
-
   return {
     users,
     notUsers,
     allUserNames,
     currentMatch,
     myUserId: state.myUser.myUserId,
-    myCountryCode: state.myUser.myCountryCode
+    myCountryCode: state.myUser.myCountryCode,
+    searchByNumber: Object.keys(state.phoneNumberToContact).length<=0
   };
 };
 export default connect(mapStateToProps)(ContactsList);
