@@ -133,3 +133,6 @@ if (!Object.entries) {
     return resArray;
   };
 }
+if (!Object.freeze) {
+  Object.freeze = (o: any) => o;
+}

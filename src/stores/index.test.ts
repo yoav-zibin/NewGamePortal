@@ -17,6 +17,7 @@ const initialContact = {
 
 // Define different states to input into
 // trimState in order to test its different return values
+// todo: move into test 
 const noChangeState: StoreState = {
   gamesList: [
     {
@@ -265,6 +266,7 @@ it('Deletes unused gameSpecs, if there', () => {
 
 it('Deletes Match with oldest timestamp, if there', () => {
   const newState = trimState(timestampState);
+  // todo: test that the delete performed is on the oldest one
   expect(newState.matchesList.length).toEqual(1);
 });
 
