@@ -75,7 +75,8 @@ class ContactsList extends React.Component<Props, {}> {
     stay: false,
     message: 'Message sent',
     autoHideDuration: 3000,
-    snackBarOpen: false
+    snackBarOpen: false,
+    notUsers: this.props.notUsers
   };
 
   handleRequest = (chosenRequest: DataSourceConfig, index: number) => {
@@ -123,15 +124,15 @@ class ContactsList extends React.Component<Props, {}> {
     );
     console.log(phoneInfo);
     if (phoneInfo && phoneInfo.isValidNumber) {
-      let userInfo = ourFirebase.searchPhoneNumber(phoneInfo.e164Format);
-      console.log(userInfo);
-      if (userInfo === null) {
-        let user:Contact = {
-          phoneNumber: phoneInfo.e164Format,
-          name: "Unknown User"
-        }; 
-        this.props.notUsers.push(user);
-      }
+      ourFirebase.searchPhoneNumber(phoneInfo.e164Format).then((user)=>{
+        if(user==null){
+          let userInfo:Contact = {
+            phoneNumber: phoneInfo!.e164Format,
+            name: "Unknown User"
+          }; 
+          this.setState({notUsers: [userInfo]})
+        }
+      });
     }
     
   };
@@ -300,7 +301,7 @@ class ContactsList extends React.Component<Props, {}> {
         <Divider />
         <List>
           <Subheader>Not Game User</Subheader>
-          {this.filterContacts(this.props.notUsers).map((contact: Contact) => {
+          {this.filterContacts(this.state.notUsers).map((contact: Contact) => {
             const parsed: PhoneNumInfo | null = checkPhoneNumber(
               contact.phoneNumber,
               this.props.myCountryCode
