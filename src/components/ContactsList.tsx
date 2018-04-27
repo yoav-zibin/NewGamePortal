@@ -10,7 +10,6 @@ import RaisedButton from 'material-ui/RaisedButton';
 import ContentAdd from 'material-ui/svg-icons/content/add';
 import AutoComplete from 'material-ui/AutoComplete';
 import MenuItem from 'material-ui/MenuItem';
-import TextField from 'material-ui/TextField';
 import { ourFirebase } from '../services/firebase';
 import { connect } from 'react-redux';
 import { StoreState } from '../types/index';
@@ -23,12 +22,6 @@ import {
   getPhoneNumberToUserInfo,
   checkPhoneNumber
 } from '../globals';
-
-require('../js/trans-compiled');
-declare function parsePhoneNumber(
-  phoneNumber: String,
-  regionCode: String
-): PhoneNumInfo;
 
 const style: React.CSSProperties = {
   marginRight: 20
@@ -122,15 +115,17 @@ class ContactsList extends React.Component<Props, {}> {
     this.props.history.push('/matches/' + currentMatch.matchId);
   };
 
-  handleRequestNumber = (event: object, requestNumber: string) => {
-    console.log('request number is ' + requestNumber + '  ' + event);
-    let phoneInfo: PhoneNumInfo = parsePhoneNumber(
-      requestNumber,
+  handleRequestNumber = (chosenRequest: String, index: number) => {
+    console.log('request number is ' + chosenRequest + '  ' + event + index);
+    let phoneInfo: PhoneNumInfo | null = checkPhoneNumber(
+      chosenRequest,
       this.props.myCountryCode
     );
     console.log(phoneInfo);
-
-    // let userInfo = ourFirebase.searchPhoneNumber(phoneInfo.number).then();
+    if (phoneInfo && phoneInfo.isValidNumber) {
+      let userInfo = ourFirebase.searchPhoneNumber(phoneInfo.number);
+      console.log(userInfo);
+    }
     /*if (userInfo) {
       this.props.users.push(userInfo);
       this.setState({ filterValue: userInfo.displayName });
@@ -258,10 +253,21 @@ class ContactsList extends React.Component<Props, {}> {
           onUpdateInput={this.handleUpdate}
         />
       ) : (
-        <TextField
-          hintText="Enter PhoneNumber"
+        <AutoComplete
+          floatingLabelText="Search"
+          filter={AutoComplete.fuzzyFilter}
+          dataSource={this.props.allUserNames.map((username: UserName) => ({
+            text: username.name,
+            value: (
+              <MenuItem
+                primaryText={username.name}
+                secondaryText={username.userType}
+              />
+            )
+          }))}
+          maxSearchResults={5}
           fullWidth={true}
-          onChange={this.handleRequestNumber}
+          onNewRequest={this.handleRequestNumber}
         />
       );
 
