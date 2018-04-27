@@ -51,27 +51,21 @@ function saveStateInLocalStorage(state: StoreState) {
 // trimState reduces the state so we can save it in localStorage.
 // It's exported so we can write unit tests.
 export function trimState(state: StoreState): StoreState {
+  // todo: make copy of state here 
   // If there any game specs that aren't used in any matches, delete them and return.
   if (Object.keys(state.gameSpecs.gameSpecIdToGameSpec).length > 0) {
     let gameSpecsToDelete = [];
-    for (let specId in state.gameSpecs.gameSpecIdToGameSpec) {
-      if (state.gameSpecs.gameSpecIdToGameSpec.hasOwnProperty(specId)) {
-        let specIdInMatch = false;
-        for (let m = 0; m < state.matchesList.length; m++) {
-          let match = state.matchesList[m];
-          if (match.gameSpecId === specId) {
-            specIdInMatch = true;
-            break;
-          }
-        }
-        if (!specIdInMatch) {
-          gameSpecsToDelete.push(specId);
-        }
+    for (let specId of Object.keys(state.gameSpecs.gameSpecIdToGameSpec)) {
+      let specIdInMatch = state.matchesList.find( m => m.gameSpecId === specId);
+      if (!specIdInMatch) {
+        gameSpecsToDelete.push(specId);
       }
     }
     if (gameSpecsToDelete.length > 0) {
+      // todo: use the correct loops.
       for (let i = 0; i < gameSpecsToDelete.length; i++) {
         let specId = gameSpecsToDelete[i];
+        // todo: do not mutate argument directly 
         delete state.gameSpecs.gameSpecIdToGameSpec[specId];
       }
       return state;
@@ -81,6 +75,7 @@ export function trimState(state: StoreState): StoreState {
   if (state.matchesList.length > 0) {
     let oldestIndex = 0;
     let oldestTimestamp = state.matchesList[oldestIndex].lastUpdatedOn;
+    // todo: use reduce 
     for (let i = 1; i < state.matchesList.length; i++) {
       let timestamp = state.matchesList[i].lastUpdatedOn;
       if (timestamp < oldestTimestamp) {
@@ -89,6 +84,7 @@ export function trimState(state: StoreState): StoreState {
       }
     }
     // delete state.matchesList[oldestIndex];
+    // todo don't mutate state
     state.matchesList.splice(oldestIndex, 1);
     return state;
   }

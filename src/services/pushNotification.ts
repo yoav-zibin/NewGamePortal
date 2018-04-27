@@ -1,19 +1,18 @@
 import { ourFirebase } from './firebase';
+import { platform } from '../globals';
 
 export const initPushNotification = () => {
-  const messaging: firebase.messaging.Messaging = ourFirebase.getMessaging();
-  if (messaging === null) {
-    return;
-  }
-  // @ts-ignore
+  const messaging: firebase.messaging.Messaging = ourFirebase.getMessaging();  
   messaging
-    .requestPermission()
+    .requestPermission()!
     .then(() => {
       return messaging.getToken();
     })
     .then(token => {
       console.log('notification permission granted :)' + token);
-      ourFirebase.addFcmToken(token, 'ios');
+      if (platform !== 'tests') {
+        ourFirebase.addFcmToken(token, platform);
+      }
     })
     .catch(error => {
       console.log('Notification permission denied :/' + error);
