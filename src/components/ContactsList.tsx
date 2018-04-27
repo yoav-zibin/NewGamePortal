@@ -123,15 +123,17 @@ class ContactsList extends React.Component<Props, {}> {
     );
     console.log(phoneInfo);
     if (phoneInfo && phoneInfo.isValidNumber) {
-      let userInfo = ourFirebase.searchPhoneNumber(phoneInfo.number);
+      let userInfo = ourFirebase.searchPhoneNumber(phoneInfo.e164Format);
       console.log(userInfo);
+      if (userInfo === null) {
+        let user:Contact = {
+          phoneNumber: phoneInfo.e164Format,
+          name: "Unknown User"
+        }; 
+        this.props.notUsers.push(user);
+      }
     }
-    /*if (userInfo) {
-      this.props.users.push(userInfo);
-      this.setState({ filterValue: userInfo.displayName });
-    } else {
-
-    }*/
+    
   };
 
   componentWillUnMount() {
