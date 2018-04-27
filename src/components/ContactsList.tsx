@@ -115,6 +115,25 @@ class ContactsList extends React.Component<Props, {}> {
     this.props.history.push('/matches/' + currentMatch.matchId);
   };
 
+  handleRequestNumber = (chosenRequest: String, index: number) => {
+    console.log('request number is ' + chosenRequest + '  ' + event + index);
+    let phoneInfo: PhoneNumInfo | null = checkPhoneNumber(
+      chosenRequest,
+      this.props.myCountryCode
+    );
+    console.log(phoneInfo);
+    if (phoneInfo && phoneInfo.isValidNumber) {
+      let userInfo = ourFirebase.searchPhoneNumber(phoneInfo.number);
+      console.log(userInfo);
+    }
+    /*if (userInfo) {
+      this.props.users.push(userInfo);
+      this.setState({ filterValue: userInfo.displayName });
+    } else {
+
+    }*/
+  };
+
   componentWillUnMount() {
     clearTimeout(this.timer);
   }
@@ -214,27 +233,47 @@ class ContactsList extends React.Component<Props, {}> {
   }
 
   render() {
+    let searchField =
+      this.props.allUserNames.length > 0 ? (
+        <AutoComplete
+          floatingLabelText="Search"
+          filter={AutoComplete.fuzzyFilter}
+          dataSource={this.props.allUserNames.map((username: UserName) => ({
+            text: username.name,
+            value: (
+              <MenuItem
+                primaryText={username.name}
+                secondaryText={username.userType}
+              />
+            )
+          }))}
+          maxSearchResults={5}
+          fullWidth={true}
+          onNewRequest={this.handleRequest}
+          onUpdateInput={this.handleUpdate}
+        />
+      ) : (
+        <AutoComplete
+          floatingLabelText="Search"
+          filter={AutoComplete.fuzzyFilter}
+          dataSource={this.props.allUserNames.map((username: UserName) => ({
+            text: username.name,
+            value: (
+              <MenuItem
+                primaryText={username.name}
+                secondaryText={username.userType}
+              />
+            )
+          }))}
+          maxSearchResults={5}
+          fullWidth={true}
+          onNewRequest={this.handleRequestNumber}
+        />
+      );
+
     return (
       <div>
-        <div style={searchStyle}>
-          <AutoComplete
-            floatingLabelText="Search"
-            filter={AutoComplete.fuzzyFilter}
-            dataSource={this.props.allUserNames.map((username: UserName) => ({
-              text: username.name,
-              value: (
-                <MenuItem
-                  primaryText={username.name}
-                  secondaryText={username.userType}
-                />
-              )
-            }))}
-            maxSearchResults={5}
-            fullWidth={true}
-            onNewRequest={this.handleRequest}
-            onUpdateInput={this.handleUpdate}
-          />
-        </div>
+        <div style={searchStyle}>{searchField}</div>
 
         <List>
           <Subheader>Game User</Subheader>
