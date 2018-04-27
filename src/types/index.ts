@@ -35,6 +35,8 @@ export interface StoreState {
   myUser: MyUser;
 
   signals: SignalEntry[];
+
+  audioMute: boolean;
 }
 
 export interface UserInfo {

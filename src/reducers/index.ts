@@ -27,6 +27,7 @@ export interface Action {
   setMyUser?: MyUser;
   setSignals?: SignalEntry[];
   restoreOldStore?: StoreState;
+  setAudioMute? :boolean;
 }
 
 export function mergeMaps<T>(
@@ -140,6 +141,13 @@ function reduce(state: StoreState, action: Action) {
       },
       ...rest
     };
+  }else if(undefined !== action.setAudioMute){
+    let audio = action.setAudioMute;
+    let {audioMute,...rest} = state;
+    return {
+        ...rest,
+        audioMute: audio
+    }
   } else {
     return state;
   }

@@ -12,6 +12,8 @@ import { FloatingActionButton } from 'material-ui';
 import ContentAdd from 'material-ui/svg-icons/content/add';
 import VolumeUp from 'material-ui/svg-icons/av/volume-up';
 import VolumeMute from 'material-ui/svg-icons/av/volume-mute';
+import { Action } from '../reducers';
+import {  dispatch } from '../stores';
 
 interface Props {
   matchInfo: MatchInfo;
@@ -21,12 +23,10 @@ interface Props {
   match: any;
   location: H.Location;
   history: H.History;
+  audioMute: boolean;
 }
 
 class AppHeader extends React.Component<Props, {}> {
-  state = {
-    audioMute: false
-  };
 
   routes: StringIndexer = {
     '/login': 'Login',
@@ -82,8 +82,12 @@ class AppHeader extends React.Component<Props, {}> {
   }
   handleAudioClick = () => {
     console.log('Clicked audio button');
-    (window as any).audioMute = !this.state.audioMute;
-    this.setState({ audioMute: !this.state.audioMute });
+    // (window as any).audioMute = !this.state.audioMute;
+    // this.setState({ audioMute: !this.state.audioMute });
+    let action : Action = {
+      setAudioMute: !this.props.audioMute
+    }
+    dispatch(action);
   };
   // When back button is clicked
   handleNavigationClick = () => {
@@ -96,7 +100,7 @@ class AppHeader extends React.Component<Props, {}> {
   };
 
   render() {
-    let volume = this.state.audioMute ? (
+    let volume = this.props.audioMute ? (
       <FloatingActionButton
         style={{ marginRight: 40 }}
         mini={true}
@@ -182,14 +186,16 @@ const mapStateToProps = (state: StoreState, ownProps: Props) => {
       return {
         matchInfo: matchInfo,
         userIdToInfo: state.userIdToInfo,
-        myUser: state.myUser
+        myUser: state.myUser,
+        audioMute: state.audioMute
       };
     }
   }
   // We're not on a match or matchInfo is not found
   return {
     userIdToInfo: state.userIdToInfo,
-    myUser: state.myUser
+    myUser: state.myUser,
+    audioMute: state.audioMute
   };
 };
 
