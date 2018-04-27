@@ -111,6 +111,7 @@ declare global {
     cordova: any;
     device: any;
     sms: any;
+    PushNotification: any;
   }
   interface Navigator {
     contacts: any;
@@ -145,6 +146,8 @@ if (isIos || isAndroid) {
         window.cordova.plugins.iosrtc.registerGlobals();
         videoChat.updateIsSupported();
       }
+      console.log('Push Notifications: ', window.PushNotification);
+      console.log('Push Notifications: ', window.cordova.PushNotification);
       delayReactRender();
     },
     false

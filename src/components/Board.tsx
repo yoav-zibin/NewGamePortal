@@ -96,6 +96,7 @@ class Board extends React.Component<BoardProps, BoardState> {
         // the card is flipped. Call animation.
         this.handleAnimation(i);
       } else if (
+        // todo: change !== to ===
         this.props.gameSpec.pieces[i].element.elementKind !== 'dice' &&
         prevMatchState[i].currentImageIndex !==
           nextMatchState[i].currentImageIndex
@@ -103,6 +104,7 @@ class Board extends React.Component<BoardProps, BoardState> {
         // the piece is toggled. Call animation.
         this.handleAnimation(i);
       } else if (
+        // todo: no copy paste, refactor
         this.props.gameSpec.pieces[i].element.elementKind === 'dice' &&
         prevMatchState[i].x === nextMatchState[i].x &&
         prevMatchState[i].y === nextMatchState[i].y &&

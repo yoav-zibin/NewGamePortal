@@ -13,7 +13,7 @@ export const storeStateDefault: StoreState = {
   myUser: {
     myName: '',
     myPhoneNumber: '',
-    myCountryCode: '',
+    myCountryCode: 'US',
     myUserId: ''
   },
   signals: [],
