@@ -18,6 +18,7 @@ import { videoChat } from './services/videoChat';
 import { Contact, PhoneNumberToContact } from './types';
 import * as Raven from 'raven-js';
 import * as sentryRelease from './sentry-config.json';
+// import { initPushNotification } from './services/pushNotification';
 
 function reactRender() {
   document.getElementById('loadingSpinner')!.style.display = 'none';
@@ -140,7 +141,19 @@ if (isIos || isAndroid) {
         videoChat.updateIsSupported();
       }
       console.log('Push Notifications: ', window.PushNotification);
-      console.log('Push Notifications: ', window.cordova.PushNotification);
+      // initPushNotification();
+      const push = window.PushNotification.init({
+        android: {},
+        ios: {
+          alert: 'true',
+          badge: true,
+          sound: 'false'
+        },
+        windows: {}
+      });
+      push.on('registration', (data: any) => {
+        console.log('The phone gap reg id is ' + data.registrationId);
+      });
       delayReactRender();
     },
     false
