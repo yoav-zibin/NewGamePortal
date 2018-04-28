@@ -133,6 +133,56 @@ if (!Object.entries) {
     return resArray;
   };
 }
+if (!Array.isArray) {
+  Array.isArray = <any>function(arg: any) {
+    return Object.prototype.toString.call(arg) === '[object Array]';
+  };
+}
 if (!Object.freeze) {
   Object.freeze = (o: any) => o;
+}
+
+export function deepFreeze<T>(obj: T): T {
+  return deepFreezeHelper(obj, new Set());
+}
+export function deepFreezeHelper<T>(obj: T, cycleDetector: Set<any>): T {
+  checkForCycle(obj, cycleDetector);
+  if (!obj || typeof obj !== 'object') {
+    return obj;
+  }
+  for (let [_name, prop] of Object.entries(obj)) {
+    // Freeze prop if it is an object
+    if (typeof prop === 'object' && prop !== null) {
+      deepFreeze(prop);
+    }
+  }
+  // Freeze self (no-op if already frozen)
+  return Object.freeze(obj);
+}
+
+export function shallowCopy<T>(obj: T): T {
+  if (Array.isArray(obj)) {
+    return <any> obj.slice(0);
+  }
+  return Object.assign({}, obj);
+}
+export function deepCopy<T>(obj: T): T {
+  return deepCopyHelper(obj, new Set());
+}
+function checkForCycle(obj: any, cycleDetector: Set<any>) {
+  if (cycleDetector.has(obj)) {
+    throw new Error("Found cycle containing obj=" + prettyJson(obj)
+      + " objects-traversed=" + prettyJson(cycleDetector) );
+  }
+  cycleDetector.add(obj);
+}
+function deepCopyHelper<T>(obj: T, cycleDetector: Set<any>): T {
+  checkForCycle(obj, cycleDetector);
+  let result: any = shallowCopy(obj);
+  for (let [name, prop] of Object.entries(obj)) {
+    if (typeof prop === 'object' && prop !== null) {
+      result[name] = deepCopy(prop);
+    }
+  }
+  return result;
 }

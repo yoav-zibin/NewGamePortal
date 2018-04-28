@@ -1,6 +1,7 @@
 import { trimState } from './index';
 import { storeStateDefault } from '../stores/defaults';
 import { Image, StoreState } from '../types';
+import { deepCopy } from '../globals';
 
 const image: Image = {
   imageId: 'someImageId',
@@ -277,7 +278,7 @@ it('Deletes phoneNumberToContact if there', () => {
 
 it('Returns default state with user otherwise', () => {
   const newState = trimState(noChangeState);
-  const expectedState = storeStateDefault;
+  const expectedState = deepCopy(storeStateDefault);
   expectedState.myUser = noChangeState.myUser;
   expect(newState).toEqual(expectedState);
 });

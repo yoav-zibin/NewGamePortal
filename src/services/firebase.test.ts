@@ -10,7 +10,7 @@ import {
   UserInfo
 } from '../types/index';
 import { store } from '../stores';
-import { checkCondition, prettyJson, findMatch } from '../globals';
+import { checkCondition, prettyJson, findMatch, deepCopy, platform } from '../globals';
 import { MatchStateHelper } from './matchStateHelper';
 
 const testConfig = {
@@ -23,12 +23,6 @@ const testConfig = {
 };
 ourFirebase.allPromisesForTests = [];
 ourFirebase.init(testConfig);
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
-(<any>jasmine).getEnv().addReporter({
-  specStarted: function(result: any) {
-    console.log(result.fullName);
-  }
-});
 
 // If you remove all gamePortalUsers, then remember to create one for the test.
 const existingUserId = 'wnSB3rTfCLRHkgfGM6jZtaw7EpB3';
@@ -43,6 +37,56 @@ function createMatch() {
   return ourFirebase.createMatch(gameInfo);
 }
 
+function arraysEqual<T>(a: T[], b: T[]): boolean {
+  if (a === b) {
+    return true;
+  }
+  if (a == null || b == null) {
+    return false;
+  }
+  if (a.length !== b.length) {
+    return false;
+  }
+  for (var i = 0; i < a.length; ++i) {
+    if (!deepEquals(a[i], b[i])) {
+      return false;
+    }
+  }
+  return true;
+}
+function deepEquals(a: any, b: any): boolean {
+  if (a === b) {
+    return true;
+  }
+  if (a == null || b == null) {
+    return false;
+  }
+  if (Array.isArray(a) || Array.isArray(b)) {
+    return arraysEqual(<any>a, <any>b);
+  }
+  if (typeof a === 'object' || typeof b === 'object') {
+    const keys = Object.keys(a)
+    if (keys.length !== Object.keys(b).length) {
+      return false;
+    }
+    for (let key of keys) {
+      if (!deepEquals(a[key], b[key])) {
+        return false;
+      }
+    }
+    return true;
+  }
+  return false;
+}
+
+function expectEqual<T>(actual: T, expected: T) {
+  if (!deepEquals(actual, expected)) {
+    console.error('expectEqual: actual=', actual, ' expected=', expected);
+    throw new Error('expectEqual: actual=' + JSON.stringify(actual) + ' expected=' + JSON.stringify(expected));
+  }
+  // expect(actual).toEqual(expected);
+}
+
 function checkGameSpecs(gameSpecs: GameSpecs) {
   const {
     elementIdToElement,
@@ -51,12 +95,10 @@ function checkGameSpecs(gameSpecs: GameSpecs) {
   } = gameSpecs;
   Object.keys(gameSpecIdToGameSpec).forEach(gameSpecId => {
     const gameSpec = gameSpecIdToGameSpec[gameSpecId];
-    expect(gameSpec.board).toEqual(imageIdToImage[gameSpec.board.imageId]);
+    expectEqual(gameSpec.board, imageIdToImage[gameSpec.board.imageId]);
     expect(gameSpec.board.isBoardImage).toBe(true);
     gameSpec.pieces.forEach(piece => {
-      expect(piece.element).toEqual(
-        elementIdToElement[piece.element.elementId]
-      );
+      expectEqual(piece.element, elementIdToElement[piece.element.elementId]);
       if (piece.deckPieceIndex !== -1) {
         checkCondition(
           'piece must be a card to have deckPieceIndex: gameSpecId=' +
@@ -76,7 +118,7 @@ function checkGameSpecs(gameSpecs: GameSpecs) {
   Object.keys(elementIdToElement).forEach(elementId => {
     const element = elementIdToElement[elementId];
     element.images.forEach(image => {
-      expect(image).toEqual(imageIdToImage[image.imageId]);
+      expectEqual(image, imageIdToImage[image.imageId]);
     });
     // Some checks based on the element kind
     switch (element.elementKind) {
@@ -107,14 +149,14 @@ function checkGameSpecs(gameSpecs: GameSpecs) {
   });
 }
 
-function fetchAllGameSpecs() {
+function fetchSomeGameSpecs() {
   const gamesList = store.getState().gamesList;
-  expect(gamesList.length).toEqual(183);
+  expectEqual(gamesList.length, 183);
   gamesList.forEach(g => ourFirebase.createMatch(g));
 }
 
 function getAllPromisesForTests() {
-  return Promise.all(ourFirebase.allPromisesForTests!);
+  return Promise.all(ourFirebase.allPromisesForTests!).catch( e => console.error("Failed promise=", e));
 }
 
 // Since our test use anonymous login
@@ -123,13 +165,13 @@ function getAllPromisesForTests() {
 // So firebase rules add "+1111111111[0-9]" for test
 const magicPhoneNumberForTest = '+11111111111';
 
-beforeAll(done => {
+function doBeforeAll(done: () => void) {
   console.log('beforeAll: call signInAnonymously');
   ourFirebase.signInAnonymously(magicPhoneNumberForTest, 'Unit tests user');
   getAllPromisesForTests().then(() => {
     // We need to do it twice because after all our promises resolved, we created some more.
     getAllPromisesForTests().then(() => {
-      fetchAllGameSpecs();
+      fetchSomeGameSpecs();
       getAllPromisesForTests().then(() => {
         const state = store.getState();
         checkGameSpecs(state.gameSpecs);
@@ -140,18 +182,37 @@ beforeAll(done => {
       });
     });
   });
-});
-
-afterEach(done => {
+}
+function doAfterAll(done: () => void) {
   getAllPromisesForTests().then(done);
-});
+}
+
+if (platform === 'tests') {
+  jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
+  (<any>jasmine).getEnv().addReporter({
+    specStarted: function(result: any) {
+      console.log(result.fullName);
+    }
+  });
+  beforeAll(doBeforeAll);
+  afterEach(doAfterAll);
+} else {
+  (<any>window).it = () => 42;
+}
+
+export function runTestsInBrowser() {
+  doBeforeAll(() => {
+    createMatch();
+    doAfterAll(() => console.error("All done running test"))
+  })
+}
 
 it('adds a new match in firebase', () => {
   createMatch();
 });
 
 it('Should update the match state', () => {
-  const match: MatchInfo = createMatch();
+  const match: MatchInfo = deepCopy(createMatch());
   const matchStateHelper = new MatchStateHelper(match);
   const spec = matchStateHelper.spec;
   matchStateHelper.resetMatch();
@@ -230,7 +291,7 @@ it('Should update the phone numbers', done => {
       [existingUserId]:existingUserInfo
     };
     if (userIdToInfo[uid]) {
-      expect(userIdToInfo).toEqual(expectedUserIdToInfo);
+      expectEqual(userIdToInfo, expectedUserIdToInfo);
       done();
     }
   });

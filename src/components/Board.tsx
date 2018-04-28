@@ -14,7 +14,7 @@ import { connect } from 'react-redux';
 import { StoreState } from '../types/index';
 import { ourFirebase } from '../services/firebase';
 import { MatchStateHelper } from '../services/matchStateHelper';
-import { isIos, isAndroid } from '../globals';
+import { isIos, isAndroid, deepCopy } from '../globals';
 
 interface BoardProps {
   myUserId: string;
@@ -44,7 +44,8 @@ interface BoardState {
  * Should also add drag and drop functionality later on.
  */
 class Board extends React.Component<BoardProps, BoardState> {
-  helper: MatchStateHelper;
+  mutableMatch: MatchInfo = null as any;
+  helper: MatchStateHelper = null as any;
 
   constructor(props: BoardProps) {
     super(props);
@@ -368,7 +369,8 @@ class Board extends React.Component<BoardProps, BoardState> {
     const width = this.props.gameSpec.board.width;
     const height = this.props.gameSpec.board.height;
     const ratio = this.state.innerWidth / width;
-    this.helper = new MatchStateHelper(this.props.matchInfo);
+    this.mutableMatch = deepCopy(this.props.matchInfo);
+    this.helper = new MatchStateHelper(this.mutableMatch);
 
     let boardLayer = (
       <CanvasImage

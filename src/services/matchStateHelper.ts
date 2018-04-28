@@ -1,5 +1,5 @@
 import { MatchInfo, GameSpec, BooleanIndexer, MatchState } from '../types';
-import { checkCondition, checkNotNull } from '../globals';
+import { checkCondition, checkNotNull, deepCopy } from '../globals';
 import { store } from '../stores';
 
 export class MatchStateHelper {
@@ -110,7 +110,7 @@ export class MatchStateHelper {
   }
 
   resetMatch() {
-    this.match.matchState = this.spec.pieces.map(piece => piece.initialState);
+    this.match.matchState = this.spec.pieces.map(piece => deepCopy(piece.initialState));
     const decksShuffled: BooleanIndexer = {};
     this.spec.pieces.forEach((p, index) => {
       if (p.element.elementKind === 'dice') {

@@ -1,3 +1,8 @@
+
+import { runTestsInBrowser } from './services/firebase.test';
+runTestsInBrowser();
+
+/*
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
@@ -160,3 +165,4 @@ if (isIos) {
 
 // TODO: create a trivial site (like https://tribe.pm/) with two buttons for downloading
 // the app from PlayStore / AppStore.
+*/

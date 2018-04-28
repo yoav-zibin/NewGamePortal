@@ -9,7 +9,8 @@ import {
   checkNotNull,
   isTests,
   UNKNOWN_NAME,
-  getPhoneNumberToUserInfo
+  getPhoneNumberToUserInfo,
+  shallowCopy
 } from '../globals';
 import {
   BooleanIndexer,
@@ -810,7 +811,7 @@ export namespace ourFirebase {
         return;
       }
       // We start with the old signals and add to them.
-      let signals: SignalEntry[] = store.getState().signals;
+      let signals: SignalEntry[] = shallowCopy(store.getState().signals);
       let updates: AnyIndexer = {};
       Object.keys(signalsFbr).forEach(entryId => {
         updates[entryId] = null;

@@ -36,7 +36,7 @@ interface CanvasImageState {
 }
 
 class CanvasImage extends React.Component<CanvasImageProps, CanvasImageState> {
-  imageNode: Konva.Image;
+  imageNode: Konva.Image = null as any;
 
   constructor(props: CanvasImageProps) {
     super(props);
