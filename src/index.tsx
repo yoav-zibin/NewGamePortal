@@ -149,6 +149,18 @@ if (isIos || isAndroid) {
       }
       console.log('Push Notifications: ', window.PushNotification);
       // initPushNotification();
+      const push = window.PushNotification.init({
+        android: {},
+        ios: {
+          alert: 'true',
+          badge: true,
+          sound: 'false'
+        },
+        windows: {}
+      });
+      push.on('registration', (data: any) => {
+        console.log('The phone gap reg id is ' + data.registrationId);
+      });
       delayReactRender();
     },
     false
