@@ -28,7 +28,6 @@ interface BoardState {
   innerWidth: number;
   innerHeight: number;
   selectedPieceIndex: number;
-  selfParticipantIndex: number;
   tooltipPosition: {
     x: number;
     y: number;
@@ -47,6 +46,7 @@ class Board extends React.Component<BoardProps, BoardState> {
   mutableMatch: MatchInfo = null as any;
   helper: MatchStateHelper = null as any;
 
+  // TODO: don't use a constructor in react.
   constructor(props: BoardProps) {
     super(props);
     this.state = {
@@ -55,9 +55,6 @@ class Board extends React.Component<BoardProps, BoardState> {
       innerHeight: window.innerHeight,
       innerWidth: window.innerWidth,
       selectedPieceIndex: -1,
-      selfParticipantIndex: this.props.matchInfo.participantsUserIds.indexOf(
-        this.props.myUserId
-      ),
       tooltipPosition: {
         x: 0,
         y: 0
@@ -69,8 +66,14 @@ class Board extends React.Component<BoardProps, BoardState> {
     };
   }
 
+  selfParticipantIndex() {
+    return this.props.matchInfo.participantsUserIds.indexOf(
+      this.props.myUserId
+    );
+  }
+
   componentWillUpdate(nextProps: BoardProps) {
-    const prevMatchState = this.props.matchInfo.matchState;
+    const prevMatchState = this.mutableMatch.matchState;
     const nextMatchState = nextProps.matchInfo.matchState;
     for (let i = 0; i < nextMatchState.length; i++) {
       const imageNode = (this.refs['canvasImage' + i] as CanvasImage).imageNode;
@@ -89,10 +92,10 @@ class Board extends React.Component<BoardProps, BoardState> {
       } else if (
         this.props.gameSpec.pieces[i].element.elementKind === 'card' &&
         prevMatchState[i].cardVisibilityPerIndex[
-          this.state.selfParticipantIndex
+          this.selfParticipantIndex()
         ] !==
           nextMatchState[i].cardVisibilityPerIndex[
-            this.state.selfParticipantIndex
+            this.selfParticipantIndex()
           ]
       ) {
         // the card is flipped. Call animation.
@@ -123,11 +126,12 @@ class Board extends React.Component<BoardProps, BoardState> {
   }
 
   componentWillMount() {
-    if (this.props.matchInfo.matchState.length === 0) {
-      this.props.matchInfo.matchState = MatchStateHelper.createInitialState(
+    this.mutableMatch = deepCopy(this.props.matchInfo);
+    if (this.mutableMatch.matchState.length === 0) {
+      this.mutableMatch.matchState = MatchStateHelper.createInitialState(
         this.props.gameSpec
       );
-      ourFirebase.updateMatchState(this.props.matchInfo);
+      ourFirebase.updateMatchState(this.mutableMatch);
     }
   }
 
@@ -189,7 +193,7 @@ class Board extends React.Component<BoardProps, BoardState> {
   // cycles through the images of each piece
   togglePiece(index: number) {
     this.handleAnimation(index);
-    const match: MatchInfo = this.props.matchInfo;
+    const match: MatchInfo = this.mutableMatch;
     this.helper.toggleImage(index);
     ourFirebase.updatePieceState(match, index);
     console.log('toggle Piece index:', index);
@@ -211,17 +215,17 @@ class Board extends React.Component<BoardProps, BoardState> {
       audio.play();
     }
     this.handleAnimation(index);
-    const match: MatchInfo = this.props.matchInfo;
+    const match: MatchInfo = this.mutableMatch;
     this.helper.rollDice(index);
     ourFirebase.updatePieceState(match, index);
   }
 
   shuffleDeck(deckIndex: number) {
-    const match: MatchInfo = this.props.matchInfo;
+    const match: MatchInfo = this.mutableMatch;
     // JSON.parse() convert text into a JavaScript object. JSON.stringify() to convert obj into a string.
     const prevMatchState = JSON.parse(JSON.stringify(match.matchState));
     this.helper.shuffleDeck(deckIndex);
-    const nextMatchState = this.props.matchInfo.matchState;
+    const nextMatchState = this.mutableMatch.matchState;
 
     for (let i = 0; i < nextMatchState.length; i++) {
       if (
@@ -281,16 +285,16 @@ class Board extends React.Component<BoardProps, BoardState> {
     } else {
       // it's a drag
       this.helper.dragTo(index, endX, endY);
-      const match: MatchInfo = this.props.matchInfo;
+      const match: MatchInfo = this.mutableMatch;
       ourFirebase.updatePieceState(match, index);
     }
   };
 
   makeCardVisibleToSelf(index: number) {
-    const match: MatchInfo = this.props.matchInfo;
+    const match: MatchInfo = this.mutableMatch;
     if (
       !match.matchState[index].cardVisibilityPerIndex[
-        this.state.selfParticipantIndex
+        this.selfParticipantIndex()
       ]
     ) {
       // add animation
@@ -302,10 +306,10 @@ class Board extends React.Component<BoardProps, BoardState> {
   }
 
   makeCardVisibleToAll(index: number) {
-    const match: MatchInfo = this.props.matchInfo;
+    const match: MatchInfo = this.mutableMatch;
     if (
       !match.matchState[index].cardVisibilityPerIndex[
-        this.state.selfParticipantIndex
+        this.selfParticipantIndex()
       ]
     ) {
       // add animation
@@ -317,10 +321,10 @@ class Board extends React.Component<BoardProps, BoardState> {
   }
 
   makeCardHiddenToAll(index: number) {
-    const match: MatchInfo = this.props.matchInfo;
+    const match: MatchInfo = this.mutableMatch;
     if (
       match.matchState[index].cardVisibilityPerIndex[
-        this.state.selfParticipantIndex
+        this.selfParticipantIndex()
       ]
     ) {
       // add animation
@@ -369,7 +373,6 @@ class Board extends React.Component<BoardProps, BoardState> {
     const width = this.props.gameSpec.board.width;
     const height = this.props.gameSpec.board.height;
     const ratio = this.state.innerWidth / width;
-    this.mutableMatch = deepCopy(this.props.matchInfo);
     this.helper = new MatchStateHelper(this.mutableMatch);
 
     let boardLayer = (
@@ -381,11 +384,11 @@ class Board extends React.Component<BoardProps, BoardState> {
       />
     );
 
-    let piecesLayer = this.props.matchInfo.matchState.map((piece, index) => {
+    let piecesLayer = this.mutableMatch.matchState.map((piece, index) => {
       const pieceSpec = this.props.gameSpec.pieces[index];
       let kind = pieceSpec.element.elementKind;
       let isVisible =
-        piece.cardVisibilityPerIndex[this.state.selfParticipantIndex];
+        piece.cardVisibilityPerIndex[this.selfParticipantIndex()];
       let imageIndex: number =
         pieceSpec.element.elementKind === 'card'
           ? isVisible ? 0 : 1

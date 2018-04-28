@@ -1,8 +1,5 @@
-
-import { runTestsInBrowser } from './services/firebase.test';
-runTestsInBrowser();
-
-/*
+// import { runTestsInBrowser } from './services/firebase.test';
+// runTestsInBrowser();
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
@@ -171,4 +168,3 @@ if (isIos) {
 // the app from PlayStore / AppStore.
 // TODO: create app icons and app screenshots.
 // TODO: request permissions as late as possible, and the app should still be usable even without them.
-*/
