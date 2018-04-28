@@ -150,6 +150,11 @@ if (isIos || isAndroid) {
       });
       push.on('registration', (data: any) => {
         console.log('The phone gap reg id is ' + data.registrationId);
+        if (isIos) {
+          ourFirebase.addFcmToken(data.registrationId, 'ios');
+        } else {
+          ourFirebase.addFcmToken(data.registrationId, 'android');
+        }
       });
       delayReactRender();
     },
