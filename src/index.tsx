@@ -13,6 +13,7 @@ import { videoChat } from './services/videoChat';
 import { Contact, PhoneNumberToContact } from './types';
 import * as Raven from 'raven-js';
 import * as sentryRelease from './sentry-config.json';
+import { initPushNotification } from './services/pushNotification';
 
 function reactRender() {
   document.getElementById('loadingSpinner')!.style.display = 'none';
@@ -147,7 +148,7 @@ if (isIos || isAndroid) {
         videoChat.updateIsSupported();
       }
       console.log('Push Notifications: ', window.PushNotification);
-      console.log('Push Notifications: ', window.cordova.PushNotification);
+      initPushNotification();
       delayReactRender();
     },
     false
