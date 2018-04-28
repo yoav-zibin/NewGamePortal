@@ -6,7 +6,7 @@ export class MatchStateHelper {
   spec: GameSpec;
 
   static createInitialState(spec: GameSpec): MatchState {
-    checkCondition('spec', spec);
+    checkNotNull(spec);
     const m: MatchInfo = <MatchInfo>{ gameSpecId: spec.gameSpecId };
     new MatchStateHelper(m).resetMatch();
     return m.matchState;

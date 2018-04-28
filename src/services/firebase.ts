@@ -236,6 +236,9 @@ export namespace ourFirebase {
           };
           return gameInfo;
         });
+        // TODO: put the best 20 games first, i.e., 
+        // manually decide which 20 games are best and put them first,
+        // and the rest can be sorted alphabetically.
         gameList.sort((g1, g2) => g1.gameName.localeCompare(g2.gameName));
         dispatch({ setGamesList: gameList });
       }
@@ -513,10 +516,9 @@ export namespace ourFirebase {
       matchState: []
     };
 
-    receivedMatches[newMatch.matchId] = newMatch;
+    receivedMatches[matchId] = newMatch;
     dispatchSetMatchesList();
-    const matchIndex = store.getState().matchesList.indexOf(newMatch);
-    checkCondition('matchIndex', matchIndex >= 0);
+    checkNotNull(store.getState().matchesList.find(m => m.matchId === matchId));
     return newMatch;
   }
 

@@ -111,18 +111,6 @@ if (window.location.search.match('^[?][0-9]$')) {
   }
 }
 
-declare global {
-  interface Window {
-    cordova: any;
-    device: any;
-    sms: any;
-    PushNotification: any;
-  }
-  interface Navigator {
-    contacts: any;
-  }
-}
-
 function delayReactRender() {
   setTimeout(reactRender, 500);
 }
@@ -168,4 +156,6 @@ if (isIos) {
 
 // TODO: create a trivial site (like https://tribe.pm/) with two buttons for downloading
 // the app from PlayStore / AppStore.
+// TODO: create app icons and app screenshots.
+// TODO: request permissions as late as possible, and the app should still be usable even without them.
 */

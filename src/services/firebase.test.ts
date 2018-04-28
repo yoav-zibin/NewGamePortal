@@ -84,7 +84,6 @@ function expectEqual<T>(actual: T, expected: T) {
     console.error('expectEqual: actual=', actual, ' expected=', expected);
     throw new Error('expectEqual: actual=' + JSON.stringify(actual) + ' expected=' + JSON.stringify(expected));
   }
-  // expect(actual).toEqual(expected);
 }
 
 function checkGameSpecs(gameSpecs: GameSpecs) {
@@ -96,7 +95,7 @@ function checkGameSpecs(gameSpecs: GameSpecs) {
   Object.keys(gameSpecIdToGameSpec).forEach(gameSpecId => {
     const gameSpec = gameSpecIdToGameSpec[gameSpecId];
     expectEqual(gameSpec.board, imageIdToImage[gameSpec.board.imageId]);
-    expect(gameSpec.board.isBoardImage).toBe(true);
+    expectEqual(gameSpec.board.isBoardImage, true);
     gameSpec.pieces.forEach(piece => {
       expectEqual(piece.element, elementIdToElement[piece.element.elementId]);
       if (piece.deckPieceIndex !== -1) {
@@ -149,10 +148,14 @@ function checkGameSpecs(gameSpecs: GameSpecs) {
   });
 }
 
+const numOfSpecsToFetch = 1;
 function fetchSomeGameSpecs() {
   const gamesList = store.getState().gamesList;
   expectEqual(gamesList.length, 183);
-  gamesList.forEach(g => ourFirebase.createMatch(g));
+  for (let i = 0 ; i < numOfSpecsToFetch; i++) {
+    ourFirebase.createMatch(gamesList[i]);
+  }
+  // gamesList.forEach(g => ourFirebase.createMatch(g));
 }
 
 function getAllPromisesForTests() {
@@ -175,7 +178,8 @@ function doBeforeAll(done: () => void) {
       getAllPromisesForTests().then(() => {
         const state = store.getState();
         checkGameSpecs(state.gameSpecs);
-        expect(state.gamesList.length).toEqual(
+        expectEqual(
+          numOfSpecsToFetch, // state.gamesList.length,
           Object.keys(state.gameSpecs.gameSpecIdToGameSpec).length
         );
         done();

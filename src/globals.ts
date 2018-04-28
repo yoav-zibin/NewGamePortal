@@ -13,6 +13,26 @@ declare function parsePhoneNumber(
   regionCode: String
 ): PhoneNumInfo;
 
+// global Window class doesn't come with Image()
+// so we have to add it ourselves
+declare global {
+  interface Window {
+    cordova: any;
+    device: any;
+    sms: any;
+    PushNotification: any;
+  }
+  interface Navigator {
+    contacts: any;
+  }
+  interface Window {
+    Image: {
+      prototype: HTMLImageElement;
+      new (): HTMLImageElement;
+    };
+  }
+}
+
 export function checkPhoneNumber(
   phoneNumber: String,
   regionCode: String
@@ -35,7 +55,7 @@ export const isIos = platform === 'ios';
 export const isAndroid = platform === 'android';
 export const isWeb = platform === 'web';
 
-export function checkCondition(desc: any, cond: boolean | Object) {
+export function checkCondition(desc: any, cond: boolean) {
   if (!cond) {
     throw new Error('Condition check failed for: ' + JSON.stringify(desc));
   }

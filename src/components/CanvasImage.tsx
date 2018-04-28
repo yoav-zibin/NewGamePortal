@@ -2,17 +2,6 @@ import { Image, KonvaNodeProps } from 'react-konva';
 import * as React from 'react';
 import * as Konva from 'konva';
 
-// global Window class doesn't come with Image()
-// so we have to add it ourselves
-declare global {
-  interface Window {
-    Image: {
-      prototype: HTMLImageElement;
-      new (): HTMLImageElement;
-    };
-  }
-}
-
 // try drag& drop rectangle
 interface CanvasImageProps extends KonvaNodeProps {
   src: string;
