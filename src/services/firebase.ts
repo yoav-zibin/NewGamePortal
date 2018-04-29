@@ -76,6 +76,8 @@ export namespace ourFirebase {
     }
   }
 
+  export let reactRender = () => {/*no op*/};
+
   // Call init exactly once to connect to firebase.
   export function init(testConfig?: Object) {
     checkFunctionIsCalledOnce('init');
@@ -89,6 +91,10 @@ export namespace ourFirebase {
       messagingSenderId: '144595629077'
     };
     firebase.initializeApp(testConfig ? testConfig : config);
+    if (!persistedOldStore) {
+      reactRender();
+    }
+    
     firebase.auth().onAuthStateChanged(user => {
       console.log('onAuthStateChanged: hasUser=', !!user);
       if (user) {
@@ -97,6 +103,7 @@ export namespace ourFirebase {
           storeContactsAfterLogin();
         }
         storeFcmTokensAfterLogin();
+        reactRender();
       }
     });
   }

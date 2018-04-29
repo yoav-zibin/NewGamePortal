@@ -17,7 +17,16 @@ import * as Raven from 'raven-js';
 import * as sentryRelease from './sentry-config.json';
 // import { initPushNotification } from './services/pushNotification';
 
+// We delay calling reactRender until we know if we're logged in or not
+// (to avoid flashing the login screen).
+let wasReactRenderCalled = false;
 function reactRender() {
+  // This method might be called multiple times.
+  if (wasReactRenderCalled) {
+    return;
+  }
+  wasReactRenderCalled = true;
+
   document.getElementById('loadingSpinner')!.style.display = 'none';
   ReactDOM.render(
     <MuiThemeProvider>
@@ -45,7 +54,8 @@ Raven.config('https://efc65f7e50c14bd9a3482e2ad2ae3b9d@sentry.io/939406', {
 }).install();
 
 console.log('Page init with parameters:', window.location.search);
-ourFirebase.init();
+ourFirebase.reactRender = reactRender;
+ourFirebase.init(); // might call reactRender immediately if there is nothing in the local storage.
 registerServiceWorker();
 
 if (window.location.search.match('^[?][0-9]$')) {
@@ -110,7 +120,8 @@ if (window.location.search.match('^[?][0-9]$')) {
 }
 
 function delayReactRender() {
-  setTimeout(reactRender, 500);
+  // reactRender might also be called from ourFirebase after onAuthStateChanged is called.
+  setTimeout(reactRender, 2000);
 }
 
 function createScript(id: string, src: string) {
