@@ -58,6 +58,24 @@ export namespace ourFirebase {
     }
   }
 
+  interface FcmToken {
+    fcmToken: string;
+    platform: 'web' | 'ios' | 'android';
+  }
+  let fcmTokensToBeStored: FcmToken[] = [];
+
+  export function addFcmToken(
+    fcmToken: string,
+    platform: 'web' | 'ios' | 'android'
+  ) {
+    // Can be called multiple times if the token is updated.
+    checkCondition('addFcmToken', /^.{140,200}$/.test(fcmToken));
+    fcmTokensToBeStored.push({fcmToken, platform});
+    if (currentUser()) {
+      storeFcmTokensAfterLogin();
+    }
+  }
+
   // Call init exactly once to connect to firebase.
   export function init(testConfig?: Object) {
     checkFunctionIsCalledOnce('init');
@@ -78,6 +96,7 @@ export namespace ourFirebase {
         if (contactsToBeStored) {
           storeContactsAfterLogin();
         }
+        storeFcmTokensAfterLogin();
       }
     });
   }
@@ -858,22 +877,24 @@ export namespace ourFirebase {
     signalFbrRef.onDisconnect().remove();
   }
 
-  export function addFcmToken(
-    fcmToken: string,
-    platform: 'web' | 'ios' | 'android'
-  ) {
-    checkCondition('addFcmToken', /^.{140,200}$/.test(fcmToken));
-    // Can be called multiple times if the token is updated.
-    const fcmTokenObj: fbr.FcmToken = {
-      lastTimeReceived: <any>firebase.database.ServerValue.TIMESTAMP,
-      platform: platform
-    };
-    console.log(getUserId() + ' This is the user id');
-    refSet(
+  function storeFcmTokensAfterLogin() {
+    if (fcmTokensToBeStored.length === 0) {
+      return;
+    }
+    const updates: AnyIndexer = {};
+    for (let token of fcmTokensToBeStored) {
+      const fcmTokenObj: fbr.FcmToken = {
+        lastTimeReceived: <any>firebase.database.ServerValue.TIMESTAMP,
+        platform: token.platform
+      };
+      updates[token.fcmToken] = fcmTokenObj;
+    }
+    fcmTokensToBeStored = [];
+    refUpdate(
       getRef(
-        `/gamePortal/gamePortalUsers/${getUserId()}/privateFields/fcmTokens/${fcmToken}`
+        `/gamePortal/gamePortalUsers/${getUserId()}/privateFields/fcmTokens/`
       ),
-      fcmTokenObj
+      updates
     );
   }
 
