@@ -2,10 +2,7 @@ import * as React from 'react';
 import { connect } from 'react-redux';
 import {
   StoreState,
-  CSSPropertiesIndexer,
-  Contact,
-  PhoneNumInfo,
-  PhoneNumberToContact
+  CSSPropertiesIndexer
 } from '../types/index';
 import { MatchInfo, UserIdToInfo } from '../types';
 import FloatingActionButton from 'material-ui/FloatingActionButton';
@@ -13,11 +10,7 @@ import ContentAdd from 'material-ui/svg-icons/content/add';
 import { List, ListItem } from 'material-ui/List';
 import Avatar from 'material-ui/Avatar';
 import { Link } from 'react-router-dom';
-import { getOpponents, isIos, isAndroid, checkPhoneNumber } from '../globals';
-import { store } from '../stores';
-import { ourFirebase } from '../services/firebase';
-
-declare let ContactFindOptions: any;
+import { getOpponents } from '../globals';
 
 const styles: CSSPropertiesIndexer = {
   root: {
@@ -50,8 +43,6 @@ interface Props {
   userIdToInfo: UserIdToInfo;
 }
 
-let didFetchContacts = false;
-
 class MatchesList extends React.Component<Props, {}> {
   style: React.CSSProperties = {
     textDecoration: 'None'
@@ -71,86 +62,6 @@ class MatchesList extends React.Component<Props, {}> {
         .map(opponent => opponent.name)
         .join(', ')
     );
-  };
-
-  componentDidMount() {
-    if (didFetchContacts) {
-      return;
-    }
-    didFetchContacts = true;
-    if (isIos || isAndroid) {
-      this.fetchContacts();
-    }
-  }
-
-  fetchContacts = () => {
-    // TODO: show per-premission screen.
-    if (!navigator.contacts) {
-      console.error('No navigator.contacts!');
-      return;
-    }
-    console.log('Fetching contacts');
-
-    var options = new ContactFindOptions();
-    options.filter = '';
-    options.multiple = true;
-    options.desiredFields = [
-      navigator.contacts.fieldType.displayName,
-      navigator.contacts.fieldType.phoneNumbers
-    ];
-    options.hasPhoneNumber = true;
-    navigator.contacts.find(['*'], this.onSuccess, this.onError, options);
-  };
-
-  onSuccess = (contacts: any[]) => {
-    console.log('Successfully got contacts: ', contacts);
-    let myCountryCode = store.getState().myUser.myCountryCode;
-    if (!myCountryCode) {
-      console.error('Missing country code');
-      return;
-    }
-    if (!contacts) {
-      console.error('Missing contacts');
-      return;
-    }
-    let currentContacts: PhoneNumberToContact = {};
-    for (let contact of contacts) {
-      if (!contact.phoneNumbers) {
-        continue;
-      }
-      for (let phoneNumber of contact.phoneNumbers) {
-        const localNumber = phoneNumber['value'].replace(/[^0-9]/g, '');
-        const phoneInfo: PhoneNumInfo | null = checkPhoneNumber(
-          localNumber,
-          myCountryCode
-        );
-        if (
-          phoneInfo &&
-          phoneInfo.isPossibleNumber &&
-          phoneInfo.isValidNumber &&
-          phoneInfo.maybeMobileNumber
-        ) {
-          const internationalNumber = phoneInfo.e164Format;
-          if (ourFirebase.checkPhoneNum(internationalNumber)) {
-            console.error(
-              'e164Format returned illegal phone number:',
-              internationalNumber
-            );
-            continue;
-          }
-          const newContact: Contact = {
-            name: contact.displayName,
-            phoneNumber: internationalNumber
-          };
-          currentContacts[internationalNumber] = newContact;
-        }
-      }
-    }
-    ourFirebase.storeContacts(currentContacts);
-  };
-
-  onError = () => {
-    console.error('Error fetching contacts');
   };
 
   render() {
