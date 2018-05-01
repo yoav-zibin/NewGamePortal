@@ -9,7 +9,7 @@ import { connect } from 'react-redux';
 import { StoreState } from '../types/index';
 import { ourFirebase } from '../services/firebase';
 import { MatchStateHelper } from '../services/matchStateHelper';
-import { isIos, isAndroid, deepCopy, prettyJson } from '../globals';
+import { isIos, isAndroid, deepCopy } from '../globals';
 
 interface BoardProps {
   myUserId: string;
@@ -363,7 +363,6 @@ class Board extends React.Component<BoardProps, BoardState> {
           }}
           onTouchEnd={() => {
             console.log('onTouchEnd');
-            console.log(prettyJson(this.props.gameSpec.pieces[index]));
             let startX = piece.x;
             let startY = piece.y;
             this.handleTouchEnd(index, kind, startX, startY, ratio);
