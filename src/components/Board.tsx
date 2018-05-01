@@ -11,6 +11,10 @@ import { ourFirebase } from '../services/firebase';
 import { MatchStateHelper } from '../services/matchStateHelper';
 import { isIos, isAndroid, deepCopy } from '../globals';
 
+const saudio = require('../sounds/drag-start.mp3');
+const daudio = require('../sounds/dice.mp3');
+const eaudio = require('../sounds/click.mp3');
+
 interface BoardProps {
   myUserId: string;
   gameSpec: GameSpec;
@@ -31,6 +35,10 @@ interface BoardState {
   animatingTime: number;
   timer: any;
 }
+
+let diceAudio = new Audio(daudio);
+let dragStartAudio = new Audio(saudio);
+let dragEndAudio = new Audio(eaudio);
 
 /**
  * A reusable board class, that given a board image and pieces in props
@@ -58,6 +66,22 @@ class Board extends React.Component<BoardProps, BoardState> {
       animatingTime: 0.5,
       timer: null
     };
+  }
+
+  audioPlaying(sound: HTMLAudioElement) {
+    if ((isAndroid || isIos) && !this.props.audioMute) {
+      let playPromise = sound.play();
+      if(playPromise !== undefined){
+        playPromise.then(function() {
+          // Automatic playback started!
+        }).catch(function(error: any) {
+          // Automatic playback failed.
+          // Show a UI element to let the user manually start playback.
+          console.log(error);
+          console.log("fail to open the soundtrack");
+        });
+      }
+    }
   }
 
   selfParticipantIndex() {
@@ -197,12 +221,7 @@ class Board extends React.Component<BoardProps, BoardState> {
 
   rollDice(index: number) {
     console.log('Roll Dice for index:', index);
-    if ((isAndroid || isIos) && !this.props.audioMute) {
-      let audio = new Audio(
-        'http://www.sounds.beachware.com/2illionzayp3may/mbunhtlz/DICE.mp3'
-      );
-      audio.play();
-    }
+    this.audioPlaying(diceAudio);
     const match: MatchInfo = this.mutableMatch;
     this.helper.rollDice(index);
     ourFirebase.updatePieceState(match, index);
@@ -367,25 +386,14 @@ class Board extends React.Component<BoardProps, BoardState> {
             this.handleTouchEnd(index, kind, startX, startY, ratio);
           }}
           onDragStart={() => {
-            if ((isAndroid || isIos) && !this.props.audioMute) {
-              let audio = new Audio(
-                'http://www.soundjay.com/misc/sounds/briefcase-lock-8.mp3'
-              );
-              audio.play();
-            }
-
+            this.audioPlaying(dragStartAudio);
             console.log('onDragStart');
             this.setState({
               showCardOptions: false
             });
           }}
           onDragEnd={() => {
-            if ((isAndroid || isIos) && !this.props.audioMute) {
-              let audio = new Audio(
-                'http://www.sounds.beachware.com/2illionzayp3may/opaz/EGGCRACK.mp3'
-              );
-              audio.play();
-            }
+            this.audioPlaying(dragEndAudio);
             console.log('onDragEnd');
           }}
         />
