@@ -100,10 +100,11 @@ class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
           <RaisedButton
             onClick={() => {
               this.setState({
-                videoChatButton: true
+                videoChatButton: !this.state.videoChatButton
               });
             }}
-            label={'Start VideoChat with players'}
+            label={this.state.videoChatButton?'Stop VideoChatting':'Start VideoChatting'}
+            primary={true}
             // style={styles.videoChatContainer}
           />
         }
