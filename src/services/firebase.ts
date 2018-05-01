@@ -9,7 +9,8 @@ import {
   checkNotNull,
   isTests,
   UNKNOWN_NAME,
-  getPhoneNumberToUserInfo
+  getPhoneNumberToUserInfo,
+  shallowCopy
 } from '../globals';
 import {
   BooleanIndexer,
@@ -57,6 +58,26 @@ export namespace ourFirebase {
     }
   }
 
+  interface FcmToken {
+    fcmToken: string;
+    platform: 'web' | 'ios' | 'android';
+  }
+  let fcmTokensToBeStored: FcmToken[] = [];
+
+  export function addFcmToken(
+    fcmToken: string,
+    platform: 'web' | 'ios' | 'android'
+  ) {
+    // Can be called multiple times if the token is updated.
+    checkCondition('addFcmToken', /^.{140,200}$/.test(fcmToken));
+    fcmTokensToBeStored.push({fcmToken, platform});
+    if (currentUser()) {
+      storeFcmTokensAfterLogin();
+    }
+  }
+
+  export let reactRender = () => {/*no op*/};
+
   // Call init exactly once to connect to firebase.
   export function init(testConfig?: Object) {
     checkFunctionIsCalledOnce('init');
@@ -70,6 +91,10 @@ export namespace ourFirebase {
       messagingSenderId: '144595629077'
     };
     firebase.initializeApp(testConfig ? testConfig : config);
+    if (!persistedOldStore) {
+      reactRender();
+    }
+    
     firebase.auth().onAuthStateChanged(user => {
       console.log('onAuthStateChanged: hasUser=', !!user);
       if (user) {
@@ -77,6 +102,8 @@ export namespace ourFirebase {
         if (contactsToBeStored) {
           storeContactsAfterLogin();
         }
+        storeFcmTokensAfterLogin();
+        reactRender();
       }
     });
   }
@@ -235,6 +262,9 @@ export namespace ourFirebase {
           };
           return gameInfo;
         });
+        // TODO: put the best 20 games first, i.e., 
+        // manually decide which 20 games are best and put them first,
+        // and the rest can be sorted alphabetically.
         gameList.sort((g1, g2) => g1.gameName.localeCompare(g2.gameName));
         dispatch({ setGamesList: gameList });
       }
@@ -512,10 +542,9 @@ export namespace ourFirebase {
       matchState: []
     };
 
-    receivedMatches[newMatch.matchId] = newMatch;
+    receivedMatches[matchId] = newMatch;
     dispatchSetMatchesList();
-    const matchIndex = store.getState().matchesList.indexOf(newMatch);
-    checkCondition('matchIndex', matchIndex >= 0);
+    checkNotNull(store.getState().matchesList.find(m => m.matchId === matchId));
     return newMatch;
   }
 
@@ -810,7 +839,7 @@ export namespace ourFirebase {
         return;
       }
       // We start with the old signals and add to them.
-      let signals: SignalEntry[] = store.getState().signals;
+      let signals: SignalEntry[] = shallowCopy(store.getState().signals);
       let updates: AnyIndexer = {};
       Object.keys(signalsFbr).forEach(entryId => {
         updates[entryId] = null;
@@ -855,22 +884,24 @@ export namespace ourFirebase {
     signalFbrRef.onDisconnect().remove();
   }
 
-  export function addFcmToken(
-    fcmToken: string,
-    platform: 'web' | 'ios' | 'android'
-  ) {
-    checkCondition('addFcmToken', /^.{140,200}$/.test(fcmToken));
-    // Can be called multiple times if the token is updated.
-    const fcmTokenObj: fbr.FcmToken = {
-      lastTimeReceived: <any>firebase.database.ServerValue.TIMESTAMP,
-      platform: platform
-    };
-    console.log(getUserId() + ' This is the user id');
-    refSet(
+  function storeFcmTokensAfterLogin() {
+    if (fcmTokensToBeStored.length === 0) {
+      return;
+    }
+    const updates: AnyIndexer = {};
+    for (let token of fcmTokensToBeStored) {
+      const fcmTokenObj: fbr.FcmToken = {
+        lastTimeReceived: <any>firebase.database.ServerValue.TIMESTAMP,
+        platform: token.platform
+      };
+      updates[token.fcmToken] = fcmTokenObj;
+    }
+    fcmTokensToBeStored = [];
+    refUpdate(
       getRef(
-        `/gamePortal/gamePortalUsers/${getUserId()}/privateFields/fcmTokens/${fcmToken}`
+        `/gamePortal/gamePortalUsers/${getUserId()}/privateFields/fcmTokens/`
       ),
-      fcmTokenObj
+      updates
     );
   }
 

@@ -1,3 +1,5 @@
+// import { runTestsInBrowser } from './services/firebase.test';
+// runTestsInBrowser();
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
@@ -13,8 +15,18 @@ import { videoChat } from './services/videoChat';
 import { Contact, PhoneNumberToContact } from './types';
 import * as Raven from 'raven-js';
 import * as sentryRelease from './sentry-config.json';
+// import { initPushNotification } from './services/pushNotification';
 
+// We delay calling reactRender until we know if we're logged in or not
+// (to avoid flashing the login screen).
+let wasReactRenderCalled = false;
 function reactRender() {
+  // This method might be called multiple times.
+  if (wasReactRenderCalled) {
+    return;
+  }
+  wasReactRenderCalled = true;
+
   document.getElementById('loadingSpinner')!.style.display = 'none';
   ReactDOM.render(
     <MuiThemeProvider>
@@ -42,7 +54,8 @@ Raven.config('https://efc65f7e50c14bd9a3482e2ad2ae3b9d@sentry.io/939406', {
 }).install();
 
 console.log('Page init with parameters:', window.location.search);
-ourFirebase.init();
+ourFirebase.reactRender = reactRender;
+ourFirebase.init(); // might call reactRender immediately if there is nothing in the local storage.
 registerServiceWorker();
 
 if (window.location.search.match('^[?][0-9]$')) {
@@ -106,20 +119,9 @@ if (window.location.search.match('^[?][0-9]$')) {
   }
 }
 
-declare global {
-  interface Window {
-    cordova: any;
-    device: any;
-    sms: any;
-    PushNotification: any;
-  }
-  interface Navigator {
-    contacts: any;
-  }
-}
-
 function delayReactRender() {
-  setTimeout(reactRender, 500);
+  // reactRender might also be called from ourFirebase after onAuthStateChanged is called.
+  setTimeout(reactRender, 2000);
 }
 
 function createScript(id: string, src: string) {
@@ -147,7 +149,24 @@ if (isIos || isAndroid) {
         videoChat.updateIsSupported();
       }
       console.log('Push Notifications: ', window.PushNotification);
-      console.log('Push Notifications: ', window.cordova.PushNotification);
+      // initPushNotification();
+      const push = window.PushNotification.init({
+        android: {},
+        ios: {
+          alert: 'true',
+          badge: true,
+          sound: 'false'
+        },
+        windows: {}
+      });
+      push.on('registration', (data: any) => {
+        console.log('The phone gap reg id is ' + data.registrationId);
+        if (isIos) {
+          ourFirebase.addFcmToken(data.registrationId, 'ios');
+        } else {
+          ourFirebase.addFcmToken(data.registrationId, 'android');
+        }
+      });
       delayReactRender();
     },
     false
@@ -163,3 +182,5 @@ if (isIos) {
 
 // TODO: create a trivial site (like https://tribe.pm/) with two buttons for downloading
 // the app from PlayStore / AppStore.
+// TODO: create app icons and app screenshots.
+// TODO: request permissions as late as possible, and the app should still be usable even without them.

@@ -168,7 +168,7 @@ export namespace videoChat {
   // https://www.html5rocks.com/en/tutorials/webrtc/basics/
   class MyPeerConnection {
     private isCaller: boolean;
-    private gotSdp: boolean;
+    private gotSdp: boolean = false;
     private isClosed: boolean = false;
     private pc: RTCPeerConnection;
     private remoteStream: MediaStream | null = null;

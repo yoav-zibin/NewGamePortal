@@ -3,6 +3,7 @@ import { StoreState } from '../types';
 import { reducer, Action } from '../reducers';
 import { createLogger } from 'redux-logger';
 import { storeStateDefault } from './defaults';
+import { deepCopy } from '../globals';
 
 const isInUnitTests = typeof window === 'undefined';
 const enhancer: StoreEnhancer<StoreState> | undefined =
@@ -51,7 +52,6 @@ function saveStateInLocalStorage(state: StoreState) {
 // trimState reduces the state so we can save it in localStorage.
 // It's exported so we can write unit tests.
 export function trimState(state: StoreState): StoreState {
-  // todo: make copy of state here 
   // If there any game specs that aren't used in any matches, delete them and return.
   if (Object.keys(state.gameSpecs.gameSpecIdToGameSpec).length > 0) {
     let gameSpecsToDelete = [];
@@ -65,7 +65,6 @@ export function trimState(state: StoreState): StoreState {
       // todo: use the correct loops.
       for (let i = 0; i < gameSpecsToDelete.length; i++) {
         let specId = gameSpecsToDelete[i];
-        // todo: do not mutate argument directly 
         delete state.gameSpecs.gameSpecIdToGameSpec[specId];
       }
       return state;
@@ -84,7 +83,6 @@ export function trimState(state: StoreState): StoreState {
       }
     }
     // delete state.matchesList[oldestIndex];
-    // todo don't mutate state
     state.matchesList.splice(oldestIndex, 1);
     return state;
   }
@@ -100,14 +98,21 @@ function persistNewState() {
   store.subscribe(() => {
     if (hasLocalStorage) {
       let state = store.getState();
-      for (let i = 0; i < 100; i++) {
-        try {
-          saveStateInLocalStorage(state);
-          return;
-        } catch (e) {
-          // If we store too much data, we may get
-          // QuotaExceededError: The quota has been exceeded.
-          state = trimState(state);
+      try {
+        saveStateInLocalStorage(state);
+        return;
+      } catch (e) {
+        // If we store too much data, we may get
+        // QuotaExceededError: The quota has been exceeded.
+        state = deepCopy(state);
+        for (let i = 0; i < 100; i++) {
+          try {
+            state = trimState(state);
+            saveStateInLocalStorage(state);
+            return;
+          } catch (e) {
+            // try again.
+          }
         }
       }
     }

@@ -34,7 +34,7 @@ const PrivateRoute: React.StatelessComponent<RouteProps> = ({
     return <Redirect {...redirectProps} />;
   };
 
-  return <Route {...rest} render={renderFn(component)} />;
+  return <Route {...rest} render={renderFn(component as any)} />;
 };
 
 export default PrivateRoute;

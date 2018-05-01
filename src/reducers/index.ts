@@ -12,7 +12,7 @@ import {
   UserIdToInfo
 } from '../types';
 import { storeStateDefault } from '../stores/defaults';
-import { checkCondition, getPhoneNumberToUserInfo } from '../globals';
+import { checkCondition, getPhoneNumberToUserInfo, deepFreeze, shallowCopy } from '../globals';
 
 export interface Action {
   // Actions that start with "set" mean that they replace the matching
@@ -34,7 +34,7 @@ export function mergeMaps<T>(
   original: IdIndexer<T>,
   updateWithEntries: IdIndexer<T>
 ): IdIndexer<T> {
-  const copy = Object.assign({}, original);
+  const copy = shallowCopy(original);
   return Object.assign(copy, updateWithEntries);
 }
 
@@ -158,7 +158,7 @@ export const reducer: Reducer<StoreState> = (
   actionWithAnyType: any
 ) => {
   checkStoreInvariants(state);
-  const newState = reduce(state, actionWithAnyType);
+  const newState = deepFreeze(reduce(state, actionWithAnyType));
   checkStoreInvariants(newState);
   return newState;
 };

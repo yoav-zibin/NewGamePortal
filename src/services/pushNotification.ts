@@ -8,7 +8,7 @@ export const initPushNotification = () => {
     return;
   }
   if (isIos || isAndroid) {
-    console.log('Mobile Divice Logged In');
+    console.log('Mobile Device Logged In');
   } else {
     // @ts-ignore
     messaging

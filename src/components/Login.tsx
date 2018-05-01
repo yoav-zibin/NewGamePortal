@@ -273,6 +273,7 @@ class Login extends React.Component<Props, {}> {
               errorText={this.state.veriErrorText}
               onChange={this.handleCodeInput}
               disabled={this.state.veriDisabled}
+              type={'number'}
             />
             <br />
             <br />
