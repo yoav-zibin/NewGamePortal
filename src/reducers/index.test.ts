@@ -130,7 +130,8 @@ const initialState: StoreState = {
       signalType: 'sdp1',
       signalData: '3 Men Chess'
     }
-  ]
+  ],
+  audioMute: false
 };
 
 function reduce(state: StoreState, action: Action): StoreState {

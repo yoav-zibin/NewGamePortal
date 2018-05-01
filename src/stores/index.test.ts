@@ -55,7 +55,8 @@ const noChangeState: StoreState = {
       signalType: 'sdp1',
       signalData: '3 Men Chess'
     }
-  ]
+  ],
+  audioMute: false
 };
 
 const phoneState: StoreState = {
@@ -96,7 +97,8 @@ const phoneState: StoreState = {
       signalType: 'sdp1',
       signalData: '3 Men Chess'
     }
-  ]
+  ],
+  audioMute: false
 };
 const timestampState: StoreState = {
   gamesList: [
@@ -172,7 +174,8 @@ const timestampState: StoreState = {
       signalType: 'sdp1',
       signalData: '3 Men Chess'
     }
-  ]
+  ],
+  audioMute: false
 };
 
 const gameSpecState: StoreState = {
@@ -254,7 +257,8 @@ const gameSpecState: StoreState = {
       signalType: 'sdp1',
       signalData: '3 Men Chess'
     }
-  ]
+  ],
+  audioMute: false
 };
 
 it('Deletes unused gameSpecs, if there', () => {

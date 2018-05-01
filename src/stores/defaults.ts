@@ -16,5 +16,6 @@ export const storeStateDefault: StoreState = {
     myCountryCode: 'US',
     myUserId: ''
   },
-  signals: []
+  signals: [],
+  audioMute: false
 };

@@ -15,10 +15,10 @@ interface BoardProps {
   myUserId: string;
   gameSpec: GameSpec;
   matchInfo: MatchInfo;
+  audioMute: boolean;
 }
 
 interface BoardState {
-  audioMute: boolean;
   showCardOptions: boolean;
   innerWidth: number;
   innerHeight: number;
@@ -45,7 +45,6 @@ class Board extends React.Component<BoardProps, BoardState> {
   constructor(props: BoardProps) {
     super(props);
     this.state = {
-      audioMute: false,
       showCardOptions: false,
       innerHeight: window.innerHeight,
       innerWidth: window.innerWidth,
@@ -198,7 +197,7 @@ class Board extends React.Component<BoardProps, BoardState> {
 
   rollDice(index: number) {
     console.log('Roll Dice for index:', index);
-    if ((isAndroid || isIos) && !this.state.audioMute) {
+    if ((isAndroid || isIos) && !this.props.audioMute) {
       let audio = new Audio(
         'http://www.sounds.beachware.com/2illionzayp3may/mbunhtlz/DICE.mp3'
       );
@@ -368,7 +367,7 @@ class Board extends React.Component<BoardProps, BoardState> {
             this.handleTouchEnd(index, kind, startX, startY, ratio);
           }}
           onDragStart={() => {
-            if ((isAndroid || isIos) && !(window as any).audioMute) {
+            if ((isAndroid || isIos) && !this.props.audioMute) {
               let audio = new Audio(
                 'http://www.soundjay.com/misc/sounds/briefcase-lock-8.mp3'
               );
@@ -381,7 +380,7 @@ class Board extends React.Component<BoardProps, BoardState> {
             });
           }}
           onDragEnd={() => {
-            if ((isAndroid || isIos) && !(window as any).audioMute) {
+            if ((isAndroid || isIos) && !this.props.audioMute) {
               let audio = new Audio(
                 'http://www.sounds.beachware.com/2illionzayp3may/opaz/EGGCRACK.mp3'
               );
@@ -470,7 +469,8 @@ class Board extends React.Component<BoardProps, BoardState> {
 
 const mapStateToProps = (state: StoreState) => {
   return {
-    myUserId: state.myUser.myUserId
+    myUserId: state.myUser.myUserId,
+    audioMute: state.audioMute
   };
 };
 export default connect(mapStateToProps)(Board);
