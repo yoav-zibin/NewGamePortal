@@ -13,6 +13,7 @@ import { connect } from 'react-redux';
 import { History } from 'history';
 import { getOpponents, findMatch } from '../globals';
 import { videoChat } from '../services/videoChat';
+import RaisedButton from 'material-ui/RaisedButton';
 
 interface PlayingScreenProps {
   myUserId: string;
@@ -44,6 +45,9 @@ const styles: CSSPropertiesIndexer = {
 };
 
 class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
+  state = {
+    videoChatButton: false
+  };
   render() {
     if (!this.props.matchInfo) {
       return <div>The matchId doesn't exist.</div>;
@@ -75,7 +79,11 @@ class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
       this.props.myUserId,
       this.props.userIdToInfo
     );
-    const showVideoArea = opponents.length >= 1 && videoChat.isSupported();
+
+    const showVideoArea =
+      opponents.length >= 1 &&
+      videoChat.isSupported() &&
+      this.state.videoChatButton;
     console.log('showVideoArea=', showVideoArea, 'opponents=', opponents);
     const videoArea = !showVideoArea ? null : (
       <div style={styles.videoChatContainer}>
@@ -88,6 +96,17 @@ class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
           matchInfo={this.props.matchInfo!}
           gameSpec={this.props.gameSpec}
         />
+        {
+          <RaisedButton
+            onClick={() => {
+              this.setState({
+                videoChatButton: true
+              });
+            }}
+            label={'Start VideoChat with players'}
+            // style={styles.videoChatContainer}
+          />
+        }
         {videoArea}
       </div>
     );
