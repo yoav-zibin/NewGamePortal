@@ -71,15 +71,17 @@ class Board extends React.Component<BoardProps, BoardState> {
   audioPlaying(sound: HTMLAudioElement) {
     if ((isAndroid || isIos) && !this.props.audioMute) {
       let playPromise = sound.play();
-      if(playPromise !== undefined){
-        playPromise.then(function() {
-          // Automatic playback started!
-        }).catch(function(error: any) {
-          // Automatic playback failed.
-          // Show a UI element to let the user manually start playback.
-          console.log(error);
-          console.log("fail to open the soundtrack");
-        });
+      if (playPromise !== undefined) {
+        playPromise
+          .then(function() {
+            // Automatic playback started!
+          })
+          .catch(function(error: any) {
+            // Automatic playback failed.
+            // Show a UI element to let the user manually start playback.
+            console.log(error);
+            console.log('fail to open the soundtrack');
+          });
       }
     }
   }
@@ -91,7 +93,7 @@ class Board extends React.Component<BoardProps, BoardState> {
   }
 
   componentWillUpdate(nextProps: BoardProps) {
-    const prevMatchState = this.props.matchInfo.matchState;
+    const prevMatchState = this.mutableMatch.matchState;
     const nextMatchState = nextProps.matchInfo.matchState;
     for (let i = 0; i < nextMatchState.length; i++) {
       const imageNode = (this.refs['canvasImage' + i] as CanvasImage).imageNode;
@@ -358,7 +360,9 @@ class Board extends React.Component<BoardProps, BoardState> {
       let isVisible = piece.cardVisibilityPerIndex[this.selfParticipantIndex()];
       let imageIndex: number =
         pieceSpec.element.elementKind === 'card'
-          ? isVisible ? 0 : 1
+          ? isVisible
+            ? 0
+            : 1
           : piece.currentImageIndex;
       let zIndex = isVisible ? 50 : 1;
       let imageSrc: string = pieceSpec.element.images[imageIndex].downloadURL;
