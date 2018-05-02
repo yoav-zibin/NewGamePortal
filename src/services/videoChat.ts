@@ -444,8 +444,8 @@ export namespace videoChat {
   ) {
     console.log(isVideoVisible ? 'Showing video' : 'Showing name');
     const { video, name } = videoName;
-    video.style.display = isVideoVisible ? 'inline' : 'none';
-    name.style.display = isVideoVisible ? 'none' : 'table';
+    video.style.display = isVideoVisible ? 'block' : 'none';
+    name.style.display = isVideoVisible ? 'none' : 'block';
   }
   function setVideoStream(videoName: VideoNameElement, stream: MediaStream) {
     setVideoOrNameVisible(videoName, true);
