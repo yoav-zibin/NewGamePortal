@@ -30,7 +30,7 @@ export interface StoreState {
   // Not all users are in our contacts, e.g., if a user that isn't in my contacts
   // added me to a match.
   // In this case, the UI will show the name in publicFields/displayName.
-  userIdToInfo: UserIdToInfo; 
+  userIdToInfo: UserIdToInfo;
 
   myUser: MyUser;
 
@@ -125,6 +125,7 @@ export interface GameInfo {
   gameSpecId: string;
   gameName: string;
   screenShot: Image;
+  wikipediaUrl: string;
 }
 
 export interface GameSpec {

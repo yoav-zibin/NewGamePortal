@@ -1,4 +1,5 @@
-declare namespace fbr { // fbr stands for Fire Base Rules
+declare namespace fbr {
+  // fbr stands for Fire Base Rules
 
   interface Image {
     uploaderEmail: string;
@@ -42,7 +43,13 @@ declare namespace fbr { // fbr stands for Fire Base Rules
     name: string;
     images: ElementImages;
     isDraggable: boolean;
-    elementKind: 'standard'|'toggable'|'dice'|'card'|'cardsDeck'|'piecesDeck';
+    elementKind:
+      | 'standard'
+      | 'toggable'
+      | 'dice'
+      | 'card'
+      | 'cardsDeck'
+      | 'piecesDeck';
     rotatableDegrees: number;
     deckElements: DeckElements;
     isDrawable: boolean;
@@ -152,6 +159,7 @@ declare namespace fbr { // fbr stands for Fire Base Rules
     gameName: string;
     screenShotImageId: string;
     screenShotImage: ScreenShotImage;
+    wikipediaUrl: string | null;
   }
 
   interface GameInfos {
@@ -196,7 +204,7 @@ declare namespace fbr { // fbr stands for Fire Base Rules
 
   interface FcmToken {
     lastTimeReceived: number /*firebase.database.ServerValue.TIMESTAMP*/;
-    platform: 'web'|'ios'|'android';
+    platform: 'web' | 'ios' | 'android';
   }
 
   interface FcmTokens {
@@ -223,7 +231,7 @@ declare namespace fbr { // fbr stands for Fire Base Rules
   interface SignalEntry {
     addedByUid: string;
     timestamp: number /*firebase.database.ServerValue.TIMESTAMP*/;
-    signalType: 'sdp1'|'sdp2'|'candidate';
+    signalType: 'sdp1' | 'sdp2' | 'candidate';
     signalData: string;
   }
 
@@ -297,5 +305,4 @@ declare namespace fbr { // fbr stands for Fire Base Rules
     testPushNotification: string;
     gamePortal: GamePortal;
   }
-
 }
