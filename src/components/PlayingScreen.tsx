@@ -65,7 +65,6 @@ class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
       this.props.myUserId,
       this.props.userIdToInfo
     );
-
     const showVideoArea =
       opponents.length >= 1 &&
       videoChat.isSupported() &&
@@ -74,27 +73,38 @@ class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
     const videoArea = !showVideoArea ? null : (
       <VideoArea opponents={opponents} />
     );
+    const inviteFriend = this.props.matchInfo!.participantsUserIds.length > 1 ? null : (
+      <RaisedButton
+            onClick={() => {
+              this.props.history.push('/contactsList/' + this.props.matchInfo!.matchId);
+            }}
+            label="Invite a friend to play"
+            primary={true}
+      />
+    );
+    const openVideo = this.props.matchInfo!.participantsUserIds.length > 1 ? (
+      <RaisedButton
+        onClick={() => {
+          this.setState({
+            videoChatButton: !this.state.videoChatButton
+          });
+        }}
+        label={
+          this.state.videoChatButton
+            ? 'Stop VideoChatting'
+            : 'Start VideoChatting'
+        }
+        primary={true}
+      />
+    ) : null;
     return (
       <div style={styles.playingScreenContainer}>
         <Board
           matchInfo={this.props.matchInfo!}
           gameSpec={this.props.gameSpec}
         />
-        {
-          <RaisedButton
-            onClick={() => {
-              this.setState({
-                videoChatButton: !this.state.videoChatButton
-              });
-            }}
-            label={
-              this.state.videoChatButton
-                ? 'Stop VideoChatting'
-                : 'Start VideoChatting'
-            }
-            primary={true}
-          />
-        }
+        {openVideo}
+        {inviteFriend}
         {videoArea}
       </div>
     );
