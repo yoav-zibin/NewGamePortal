@@ -7,9 +7,7 @@ import { MatchInfo, StoreState, UserIdToInfo, MyUser } from '../types';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
 import * as H from 'history';
-import { getOpponents, findMatch } from '../globals';
-// import { FloatingActionButton } from 'material-ui';
-// import ContentAdd from 'material-ui/svg-icons/content/add';
+import { getOpponents, findMatch, deepCopy } from '../globals';
 import MoreVertIcon from 'material-ui/svg-icons/navigation/more-vert';
 import VolumeUp from 'material-ui/svg-icons/av/volume-up';
 import VolumeMute from 'material-ui/svg-icons/av/volume-mute';
@@ -17,6 +15,8 @@ import { Action } from '../reducers';
 import { dispatch } from '../stores';
 import MenuItem from 'material-ui/MenuItem';
 import IconMenu from 'material-ui/IconMenu';
+import { MatchStateHelper } from '../services/matchStateHelper';
+import { ourFirebase } from '../services/firebase';
 
 interface Props {
   matchInfo: MatchInfo;
@@ -111,6 +111,13 @@ class AppHeader extends React.Component<Props, {}> {
     }
   };
 
+  handleResetMatchClick = () => {
+    let match: MatchInfo = deepCopy(this.props.matchInfo);
+    new MatchStateHelper(match).resetMatch();
+    ourFirebase.updateMatchState(match);
+    console.log('reset match');
+  }
+
   render() {
     let volume = this.props.audioMute ? <VolumeMute /> : <VolumeUp />;
     if (this.onPlayingScreen()) {
@@ -147,6 +154,10 @@ class AppHeader extends React.Component<Props, {}> {
                 <MenuItem
                   primaryText="Show Game Rules"
                   onClick={this.handleGameRulesClick.bind(this)}
+                />
+                <MenuItem
+                  primaryText="Reset Match"
+                  onClick={this.handleResetMatchClick.bind(this)}
                 />
               </IconMenu>
             </div>
