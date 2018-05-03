@@ -4,13 +4,7 @@ import { videoChat } from '../services/videoChat';
 import { checkCondition } from '../globals';
 
 const styles: CSSPropertiesIndexer = {
-  displayInline: {
-    display: 'inline-block'
-  },
-  videoChatPeer: {
-    position: 'relative',
-    padding: 0,
-    margin: 0,
+  videoChatItem: {
     width: '150px',
     height: '150px',
     minWidth: '150px',
@@ -18,18 +12,17 @@ const styles: CSSPropertiesIndexer = {
     minHeight: '150px',
     maxHeight: '150px'
   },
-  hideVideo: {
-    display: 'none'
+  videoChatContainer: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+    flexFlow: 'row wrap'
   },
-  /* http://vanseodesign.com/css/vertical-centering/ */
-  forVerticalCenteringParent: {
-    display: 'table'
-  },
-  forVerticalCenteringChild: {
-    display: 'table-cell',
-    verticalAlign: 'middle',
+  centerItem: {
     textAlign: 'center',
-    fontSize: '16px'
+    lineHeight: '150px',
+    width: '150px',
+    height: '150px'
   }
 };
 
@@ -62,30 +55,16 @@ class VideoArea extends React.Component<Props> {
     participants.unshift({ userId: 'Me', name: 'Me' });
 
     return (
-      <>
+      <div style={styles.videoChatContainer}>
         {participants.map((participant, index) => (
-          <div
-            key={participant.userId}
-            style={{ ...styles.videoChatPeer, ...styles.displayInline }}
-          >
-            <video
-              style={{ ...styles.videoChatPeer, ...styles.hideVideo }}
-              id={'videoElement' + index}
-            />
-            <div
-              id={'videoParticipantName' + index}
-              style={{
-                ...styles.videoChatPeer,
-                ...styles.forVerticalCenteringParent
-              }}
-            >
-              <div style={styles.forVerticalCenteringChild}>
-                {participant.name}
-              </div>
+          <div key={participant.userId} style={styles.videoChatItem}>
+            <video id={'videoElement' + index} />
+            <div id={'videoParticipantName' + index} style={styles.centerItem}>
+              {participant.name}
             </div>
           </div>
         ))}
-      </>
+      </div>
     );
   }
 }
