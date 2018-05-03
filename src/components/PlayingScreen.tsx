@@ -72,7 +72,7 @@ class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
       this.state.videoChatButton;
     console.log('showVideoArea=', showVideoArea, 'opponents=', opponents);
     const videoArea = !showVideoArea ? null : (
-        <VideoArea opponents={opponents} />
+      <VideoArea opponents={opponents} />
     );
     return (
       <div style={styles.playingScreenContainer}>
@@ -87,7 +87,11 @@ class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
                 videoChatButton: !this.state.videoChatButton
               });
             }}
-            label={this.state.videoChatButton?'Stop VideoChatting':'Start VideoChatting'}
+            label={
+              this.state.videoChatButton
+                ? 'Stop VideoChatting'
+                : 'Start VideoChatting'
+            }
             primary={true}
           />
         }

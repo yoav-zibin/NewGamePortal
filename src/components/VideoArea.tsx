@@ -13,7 +13,7 @@ const styles: CSSPropertiesIndexer = {
     maxHeight: '150px'
   },
   videoChatContainer: {
-    display: 'flex',  
+    display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-around',
     flexFlow: 'row wrap'
