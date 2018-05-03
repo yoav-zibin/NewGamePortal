@@ -7,13 +7,17 @@ import { MatchInfo, StoreState, UserIdToInfo, MyUser } from '../types';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
 import * as H from 'history';
-import { getOpponents, findMatch } from '../globals';
-import { FloatingActionButton } from 'material-ui';
-import ContentAdd from 'material-ui/svg-icons/content/add';
+import { getOpponents, findMatch, deepCopy } from '../globals';
+import MoreVertIcon from 'material-ui/svg-icons/navigation/more-vert';
 import VolumeUp from 'material-ui/svg-icons/av/volume-up';
 import VolumeMute from 'material-ui/svg-icons/av/volume-mute';
 import { Action } from '../reducers';
-import {  dispatch } from '../stores';
+import { dispatch } from '../stores';
+import MenuItem from 'material-ui/MenuItem';
+import IconMenu from 'material-ui/IconMenu';
+import Toggle from 'material-ui/Toggle';
+import { MatchStateHelper } from '../services/matchStateHelper';
+import { ourFirebase } from '../services/firebase';
 
 interface Props {
   matchInfo: MatchInfo;
@@ -27,7 +31,6 @@ interface Props {
 }
 
 class AppHeader extends React.Component<Props, {}> {
-
   routes: StringIndexer = {
     '/login': 'Login',
     '/addMatch': 'Create a new game',
@@ -84,9 +87,9 @@ class AppHeader extends React.Component<Props, {}> {
     console.log('Clicked audio button');
     // (window as any).audioMute = !this.state.audioMute;
     // this.setState({ audioMute: !this.state.audioMute });
-    let action : Action = {
+    let action: Action = {
       setAudioMute: !this.props.audioMute
-    }
+    };
     dispatch(action);
   };
   // When back button is clicked
@@ -99,24 +102,25 @@ class AppHeader extends React.Component<Props, {}> {
     }
   };
 
+  handleAddFriendClick = () => {
+    this.props.history.push('/contactsList/' + this.props.matchInfo!.matchId);
+  };
+
+  handleGameRulesClick = () => {
+    if (this.props.matchInfo.game.wikipediaUrl) {
+      window.open(this.props.matchInfo.game.wikipediaUrl);
+    }
+  };
+
+  handleResetMatchClick = () => {
+    let match: MatchInfo = deepCopy(this.props.matchInfo);
+    new MatchStateHelper(match).resetMatch();
+    ourFirebase.updateMatchState(match);
+    console.log('reset match');
+  };
+
   render() {
-    let volume = this.props.audioMute ? (
-      <FloatingActionButton
-        style={{ marginRight: 40 }}
-        mini={true}
-        onClick={this.handleAudioClick}
-      >
-        <VolumeMute />
-      </FloatingActionButton>
-    ) : (
-      <FloatingActionButton
-        style={{ marginRight: 40 }}
-        mini={true}
-        onClick={this.handleAudioClick}
-      >
-        <VolumeUp />
-      </FloatingActionButton>
-    );
+    let volume = this.props.audioMute ? <VolumeMute /> : <VolumeUp />;
     if (this.onPlayingScreen()) {
       // We're on Playing Screen, which needs 'add' button and mute button
       console.log('ON PLAYING SCREEN');
@@ -129,18 +133,42 @@ class AppHeader extends React.Component<Props, {}> {
           }
           iconElementRight={
             <div>
-              {volume}
-              <FloatingActionButton
-                style={{ marginRight: 20 }}
-                mini={true}
-                onClick={() =>
-                  this.props.history.push(
-                    '/contactsList/' + this.props.matchInfo!.matchId
-                  )
+              <IconMenu
+                iconButtonElement={
+                  <IconButton>
+                    <MoreVertIcon />
+                  </IconButton>
                 }
+                iconStyle={{ color: 'white' }}
+                targetOrigin={{ horizontal: 'right', vertical: 'top' }}
+                anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
               >
-                <ContentAdd />
-              </FloatingActionButton>
+                <MenuItem
+                  primaryText="Invite a Friend"
+                  onClick={this.handleAddFriendClick}
+                />
+                <MenuItem
+                  onClick={this.handleAudioClick}
+                  rightIcon={volume}
+                  leftIcon={
+                    <div style={{ maxWidth: 250 }}>
+                      <Toggle
+                        label="Sound"
+                        toggled={!this.props.audioMute}
+                        style={{ maxWidth: 250 }}
+                      />
+                    </div>
+                  }
+                />
+                <MenuItem
+                  primaryText="Show Game Rules"
+                  onClick={this.handleGameRulesClick.bind(this)}
+                />
+                <MenuItem
+                  primaryText="Reset Match"
+                  onClick={this.handleResetMatchClick.bind(this)}
+                />
+              </IconMenu>
             </div>
           }
           title={this.getLocation()}

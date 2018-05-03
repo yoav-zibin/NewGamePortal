@@ -26,6 +26,7 @@ const image: Image = {
 const gameInfo: GameInfo = {
   gameSpecId: '123',
   gameName: 'Some game name',
+  wikipediaUrl: '',
   screenShot: image
 };
 
@@ -61,11 +62,13 @@ const initialState: StoreState = {
     {
       gameSpecId: '123',
       gameName: '3 Men Chess',
+      wikipediaUrl: '',
       screenShot: image
     },
     {
       gameSpecId: '456',
       gameName: 'Checkers',
+      wikipediaUrl: '',
       screenShot: image
     }
   ],
@@ -94,6 +97,7 @@ const initialState: StoreState = {
       game: {
         gameSpecId: '123',
         gameName: '3 Men Chess',
+        wikipediaUrl: '',
         screenShot: image
       },
       participantsUserIds: ['7UbETkgeXxe0RId6KxYioSJdARs1'], // including myself
@@ -106,6 +110,7 @@ const initialState: StoreState = {
       game: {
         gameSpecId: '456',
         gameName: 'Checkers',
+        wikipediaUrl: '',
         screenShot: image
       },
       participantsUserIds: ['7UbETkgeXxe0RId6KxYioSJdARs1'], // including myself
@@ -114,7 +119,7 @@ const initialState: StoreState = {
     }
   ],
   phoneNumberToContact: {
-    [initialContact.phoneNumber]: initialContact,
+    [initialContact.phoneNumber]: initialContact
   },
   userIdToInfo: {},
   myUser: {
@@ -209,9 +214,9 @@ it('updatePhoneNumberToContact', () => {
   newPhoneNumberToContact['+1234567890'] = someContact;
 
   let action: Action = {
-    updatePhoneNumberToContact: newPhoneNumberToContact,
+    updatePhoneNumberToContact: newPhoneNumberToContact
   };
-  
+
   const expectedState = {
     phoneNumberToContact: mergeMaps(
       initialState.phoneNumberToContact,
@@ -219,7 +224,9 @@ it('updatePhoneNumberToContact', () => {
     ),
     ...rest
   };
-  expect(initialState.phoneNumberToContact[initialContact.phoneNumber].name).toEqual(initialContact.name);
+  expect(
+    initialState.phoneNumberToContact[initialContact.phoneNumber].name
+  ).toEqual(initialContact.name);
   expect(reduce(initialState, action)).toEqual(expectedState);
 });
 
@@ -227,12 +234,14 @@ it('updateUserInfos', () => {
   const userId = 'abc';
   const userId2 = 'abcd';
   const user2 = {
-    userId: userId2, 
-    displayName: "whatever name2",
-  }
+    userId: userId2,
+    displayName: 'whatever name2'
+  };
   let userIdToInfo: UserIdToInfo = {
     [userId]: {
-      userId, displayName: 'user chosen name', phoneNumber: initialContact.phoneNumber
+      userId,
+      displayName: 'user chosen name',
+      phoneNumber: initialContact.phoneNumber
     },
     [userId2]: user2
   };
@@ -244,9 +253,11 @@ it('updateUserInfos', () => {
     ...initialState,
     userIdToInfo: {
       [userId]: {
-        userId, displayName: initialContact.name, phoneNumber: initialContact.phoneNumber
+        userId,
+        displayName: initialContact.name,
+        phoneNumber: initialContact.phoneNumber
       },
-      [userId2]: user2,
+      [userId2]: user2
     }
   };
   expect(reduce(initialState, action)).toEqual(expectedState);

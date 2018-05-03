@@ -84,7 +84,10 @@ export namespace videoChat {
     if (!localMediaStream) {
       return;
     }
+    // FIX: when you stop a video track, it can never be reopened
+    // set localMediaStream to be null
     localMediaStream.getVideoTracks()[0].stop();
+    localMediaStream = null;
   }
   export function getUserMedia() {
     if (!_isSupported) {
@@ -441,8 +444,8 @@ export namespace videoChat {
   ) {
     console.log(isVideoVisible ? 'Showing video' : 'Showing name');
     const { video, name } = videoName;
-    video.style.display = isVideoVisible ? 'inline' : 'none';
-    name.style.display = isVideoVisible ? 'none' : 'table';
+    video.style.display = isVideoVisible ? 'block' : 'none';
+    name.style.display = isVideoVisible ? 'none' : 'block';
   }
   function setVideoStream(videoName: VideoNameElement, stream: MediaStream) {
     setVideoOrNameVisible(videoName, true);

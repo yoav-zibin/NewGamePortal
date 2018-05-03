@@ -18,17 +18,19 @@ const initialContact = {
 
 // Define different states to input into
 // trimState in order to test its different return values
-// todo: move into test 
+// todo: move into test
 const noChangeState: StoreState = {
   gamesList: [
     {
       gameSpecId: '123',
       gameName: '3 Men Chess',
+      wikipediaUrl: '',
       screenShot: image
     },
     {
       gameSpecId: '456',
       gameName: 'Checkers',
+      wikipediaUrl: '',
       screenShot: image
     }
   ],
@@ -64,11 +66,13 @@ const phoneState: StoreState = {
     {
       gameSpecId: '123',
       gameName: '3 Men Chess',
+      wikipediaUrl: '',
       screenShot: image
     },
     {
       gameSpecId: '456',
       gameName: 'Checkers',
+      wikipediaUrl: '',
       screenShot: image
     }
   ],
@@ -105,11 +109,13 @@ const timestampState: StoreState = {
     {
       gameSpecId: '123',
       gameName: '3 Men Chess',
+      wikipediaUrl: '',
       screenShot: image
     },
     {
       gameSpecId: '456',
       gameName: 'Checkers',
+      wikipediaUrl: '',
       screenShot: image
     }
   ],
@@ -138,6 +144,7 @@ const timestampState: StoreState = {
       game: {
         gameSpecId: '123',
         gameName: '3 Men Chess',
+        wikipediaUrl: '',
         screenShot: image
       },
       participantsUserIds: ['7UbETkgeXxe0RId6KxYioSJdARs1'], // including myself
@@ -150,6 +157,7 @@ const timestampState: StoreState = {
       game: {
         gameSpecId: '456',
         gameName: 'Checkers',
+        wikipediaUrl: '',
         screenShot: image
       },
       participantsUserIds: ['7UbETkgeXxe0RId6KxYioSJdARs1'], // including myself
@@ -183,11 +191,13 @@ const gameSpecState: StoreState = {
     {
       gameSpecId: '123',
       gameName: '3 Men Chess',
+      wikipediaUrl: '',
       screenShot: image
     },
     {
       gameSpecId: '456',
       gameName: 'Checkers',
+      wikipediaUrl: '',
       screenShot: image
     }
   ],
@@ -221,6 +231,7 @@ const gameSpecState: StoreState = {
       game: {
         gameSpecId: '123',
         gameName: '3 Men Chess',
+        wikipediaUrl: '',
         screenShot: image
       },
       participantsUserIds: ['7UbETkgeXxe0RId6KxYioSJdARs1'], // including myself
@@ -233,6 +244,7 @@ const gameSpecState: StoreState = {
       game: {
         gameSpecId: '456',
         gameName: 'Checkers',
+        wikipediaUrl: '',
         screenShot: image
       },
       participantsUserIds: ['7UbETkgeXxe0RId6KxYioSJdARs1'], // including myself

@@ -27,20 +27,6 @@ interface PlayingScreenProps {
 const styles: CSSPropertiesIndexer = {
   playingScreenContainer: {
     overflowY: 'scroll'
-  },
-  videoChatContainer: {
-    padding: 0,
-    margin: 0,
-    bottom: 0,
-    left: 0,
-    width: '100%',
-    minHeight: '160px',
-    overflowY: 'scroll',
-    /*
-      font-size is 0 to avoid spaces between the inline video elements after linebreak.
-      see https://css-tricks.com/fighting-the-space-between-inline-block-elements/
-    */
-    fontSize: 0
   }
 };
 
@@ -79,16 +65,36 @@ class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
       this.props.myUserId,
       this.props.userIdToInfo
     );
-
     const showVideoArea =
       opponents.length >= 1 &&
       videoChat.isSupported() &&
       this.state.videoChatButton;
     console.log('showVideoArea=', showVideoArea, 'opponents=', opponents);
     const videoArea = !showVideoArea ? null : (
-      <div style={styles.videoChatContainer}>
-        <VideoArea opponents={opponents} />
-      </div>
+      <VideoArea opponents={opponents} />
+    );
+    const inviteFriend = this.props.matchInfo!.participantsUserIds.length > 1 ? (
+      <RaisedButton
+        onClick={() => {
+          this.setState({
+            videoChatButton: !this.state.videoChatButton
+          });
+        }}
+        label={
+          this.state.videoChatButton
+            ? 'Stop VideoChatting'
+            : 'Start VideoChatting'
+        }
+        primary={true}
+      />
+    ) : (
+      <RaisedButton
+            onClick={() => {
+              this.props.history.push('/contactsList/' + this.props.matchInfo!.matchId);
+            }}
+            label="Invite a friend to play"
+            primary={true}
+      />
     );
     return (
       <div style={styles.playingScreenContainer}>
@@ -96,21 +102,7 @@ class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
           matchInfo={this.props.matchInfo!}
           gameSpec={this.props.gameSpec}
         />
-        {
-          <RaisedButton
-            onClick={() => {
-              this.setState({
-                videoChatButton: !this.state.videoChatButton
-              });
-            }}
-            label={
-              this.state.videoChatButton
-                ? 'Stop VideoChatting'
-                : 'Start VideoChatting'
-            }
-            primary={true}
-          />
-        }
+        {inviteFriend}
         {videoArea}
       </div>
     );

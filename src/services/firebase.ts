@@ -70,13 +70,15 @@ export namespace ourFirebase {
   ) {
     // Can be called multiple times if the token is updated.
     checkCondition('addFcmToken', /^.{140,200}$/.test(fcmToken));
-    fcmTokensToBeStored.push({fcmToken, platform});
+    fcmTokensToBeStored.push({ fcmToken, platform });
     if (currentUser()) {
       storeFcmTokensAfterLogin();
     }
   }
 
-  export let reactRender = () => {/*no op*/};
+  export let reactRender = () => {
+    /*no op*/
+  };
 
   // Call init exactly once to connect to firebase.
   export function init(testConfig?: Object) {
@@ -94,7 +96,7 @@ export namespace ourFirebase {
     if (!persistedOldStore) {
       reactRender();
     }
-    
+
     firebase.auth().onAuthStateChanged(user => {
       console.log('onAuthStateChanged: hasUser=', !!user);
       if (user) {
@@ -258,11 +260,12 @@ export namespace ourFirebase {
             screenShot: convertImage(
               gameInfoFbr.screenShotImageId,
               screenShotImage
-            )
+            ),
+            wikipediaUrl: gameInfoFbr.wikipediaUrl || ''
           };
           return gameInfo;
         });
-        // TODO: put the best 20 games first, i.e., 
+        // TODO: put the best 20 games first, i.e.,
         // manually decide which 20 games are best and put them first,
         // and the rest can be sorted alphabetically.
         gameList.sort((g1, g2) => g1.gameName.localeCompare(g2.gameName));
