@@ -73,16 +73,7 @@ class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
     const videoArea = !showVideoArea ? null : (
       <VideoArea opponents={opponents} />
     );
-    const inviteFriend = this.props.matchInfo!.participantsUserIds.length > 1 ? null : (
-      <RaisedButton
-            onClick={() => {
-              this.props.history.push('/contactsList/' + this.props.matchInfo!.matchId);
-            }}
-            label="Invite a friend to play"
-            primary={true}
-      />
-    );
-    const openVideo = this.props.matchInfo!.participantsUserIds.length > 1 ? (
+    const inviteFriend = this.props.matchInfo!.participantsUserIds.length > 1 ? (
       <RaisedButton
         onClick={() => {
           this.setState({
@@ -96,14 +87,21 @@ class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
         }
         primary={true}
       />
-    ) : null;
+    ) : (
+      <RaisedButton
+            onClick={() => {
+              this.props.history.push('/contactsList/' + this.props.matchInfo!.matchId);
+            }}
+            label="Invite a friend to play"
+            primary={true}
+      />
+    );
     return (
       <div style={styles.playingScreenContainer}>
         <Board
           matchInfo={this.props.matchInfo!}
           gameSpec={this.props.gameSpec}
         />
-        {openVideo}
         {inviteFriend}
         {videoArea}
       </div>
