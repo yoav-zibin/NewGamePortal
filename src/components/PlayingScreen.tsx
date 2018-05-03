@@ -103,9 +103,12 @@ class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
                 videoChatButton: !this.state.videoChatButton
               });
             }}
-            label={this.state.videoChatButton?'Stop VideoChatting':'Start VideoChatting'}
+            label={
+              this.state.videoChatButton
+                ? 'Stop VideoChatting'
+                : 'Start VideoChatting'
+            }
             primary={true}
-            // style={styles.videoChatContainer}
           />
         }
         {videoArea}
