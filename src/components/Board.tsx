@@ -49,24 +49,20 @@ class Board extends React.Component<BoardProps, BoardState> {
   mutableMatch: MatchInfo = null as any;
   helper: MatchStateHelper = null as any;
 
-  // TODO: don't use a constructor in react.
-  constructor(props: BoardProps) {
-    super(props);
-    this.state = {
-      showCardOptions: false,
-      innerHeight: window.innerHeight,
-      innerWidth: window.innerWidth,
-      selectedPieceIndex: -1,
-      tooltipPosition: {
-        x: 0,
-        y: 0
-      },
-      // for throttling window resize event
-      throttled: false,
-      animatingTime: 0.5,
-      timer: null
-    };
-  }
+  state: BoardState = {
+    showCardOptions: false,
+    innerHeight: window.innerHeight,
+    innerWidth: window.innerWidth,
+    selectedPieceIndex: -1,
+    tooltipPosition: {
+      x: 0,
+      y: 0
+    },
+    // for throttling window resize event
+    throttled: false,
+    animatingTime: 0.5,
+    timer: null
+  };
 
   audioPlaying(sound: HTMLAudioElement) {
     if ((isAndroid || isIos) && !this.props.audioMute) {
@@ -93,7 +89,10 @@ class Board extends React.Component<BoardProps, BoardState> {
   }
 
   componentWillUpdate(nextProps: BoardProps) {
-    const prevMatchState = this.mutableMatch.matchState;
+    const prevMatchState = this.props.matchInfo.matchState;
+    if (prevMatchState.length === 0) {
+      return;
+    }
     const nextMatchState = nextProps.matchInfo.matchState;
     for (let i = 0; i < nextMatchState.length; i++) {
       const imageNode = (this.refs['canvasImage' + i] as CanvasImage).imageNode;
@@ -160,7 +159,7 @@ class Board extends React.Component<BoardProps, BoardState> {
     window.removeEventListener('resize', this.handleResize);
     // make sure to clear the timer before unmounting
     if (this.state.timer) {
-      clearTimeout(this.state.timer);
+      clearTimeout(this.state.timer!);
     }
   }
 
@@ -182,7 +181,7 @@ class Board extends React.Component<BoardProps, BoardState> {
       );
       this.setState({
         throttled: true,
-        timer
+        timer: timer
       });
     }
   };
@@ -360,9 +359,7 @@ class Board extends React.Component<BoardProps, BoardState> {
       let isVisible = piece.cardVisibilityPerIndex[this.selfParticipantIndex()];
       let imageIndex: number =
         pieceSpec.element.elementKind === 'card'
-          ? isVisible
-            ? 0
-            : 1
+          ? isVisible ? 0 : 1
           : piece.currentImageIndex;
       let zIndex = isVisible ? 50 : 1;
       let imageSrc: string = pieceSpec.element.images[imageIndex].downloadURL;
