@@ -17,6 +17,7 @@ import { Action } from '../reducers';
 import { dispatch } from '../stores';
 import MenuItem from 'material-ui/MenuItem';
 import IconMenu from 'material-ui/IconMenu';
+import Toggle from 'material-ui/Toggle';
 
 interface Props {
   matchInfo: MatchInfo;
@@ -140,9 +141,17 @@ class AppHeader extends React.Component<Props, {}> {
                   onClick={this.handleAddFriendClick}
                 />
                 <MenuItem
-                  primaryText="Toggle Sound"
                   onClick={this.handleAudioClick}
                   rightIcon={volume}
+                  leftIcon={
+                    <div style={{maxWidth:250}}>
+                      <Toggle
+                        label="Sound"
+                        toggled={!this.props.audioMute}
+                        style={{maxWidth: 250}}
+                      />
+                    </div>
+                }
                 />
                 <MenuItem
                   primaryText="Show Game Rules"
