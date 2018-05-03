@@ -14,6 +14,7 @@ import { History } from 'history';
 import { getOpponents, findMatch } from '../globals';
 import { videoChat } from '../services/videoChat';
 import RaisedButton from 'material-ui/RaisedButton';
+import Chip from 'material-ui/Chip';
 
 interface PlayingScreenProps {
   myUserId: string;
@@ -27,7 +28,14 @@ interface PlayingScreenProps {
 const styles: CSSPropertiesIndexer = {
   playingScreenContainer: {
     overflowY: 'scroll'
-  }
+  },
+  chip: {
+    margin: 4,
+  },
+  wrapper: {
+    display: 'flex',
+    flexWrap: 'wrap',
+  },
 };
 
 class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
@@ -65,6 +73,7 @@ class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
       this.props.myUserId,
       this.props.userIdToInfo
     );
+
     const showVideoArea =
       opponents.length >= 1 &&
       videoChat.isSupported() &&
@@ -96,6 +105,19 @@ class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
             primary={true}
       />
     );
+    const opponentsArea = this.state.videoChatButton ? null : (
+      <div style={styles.wrapper}>
+      {opponents.map(
+        (opponent) => (
+        <Chip
+          style={styles.chip}
+        >
+         {opponent.name}
+        </Chip>
+        )
+      )}
+      </div>
+    );
     return (
       <div style={styles.playingScreenContainer}>
         <Board
@@ -103,6 +125,7 @@ class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
           gameSpec={this.props.gameSpec}
         />
         {inviteFriend}
+        {opponentsArea}
         {videoArea}
       </div>
     );
