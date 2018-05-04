@@ -151,7 +151,7 @@ if (isIos || isAndroid) {
       console.log('Push Notifications: ', window.PushNotification);
       // initPushNotification();
       const push = window.PushNotification.init({
-        android: {},
+        android: { senderID: '144595629077' },
         ios: {
           alert: 'true',
           badge: true,
