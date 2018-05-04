@@ -78,6 +78,14 @@ module.exports = [
     ]
   },
   {
+    "id": "cordova-plugin-device.device",
+    "file": "plugins/cordova-plugin-device/www/device.js",
+    "pluginId": "cordova-plugin-device",
+    "clobbers": [
+      "device"
+    ]
+  },
+  {
     "id": "cordova-sms-plugin.Sms",
     "file": "plugins/cordova-sms-plugin/www/sms.js",
     "pluginId": "cordova-sms-plugin",
@@ -94,11 +102,11 @@ module.exports = [
     ]
   },
   {
-    "id": "cordova-plugin-device.device",
-    "file": "plugins/cordova-plugin-device/www/device.js",
-    "pluginId": "cordova-plugin-device",
+    "id": "phonegap-plugin-push.PushNotification",
+    "file": "plugins/phonegap-plugin-push/www/push.js",
+    "pluginId": "phonegap-plugin-push",
     "clobbers": [
-      "device"
+      "PushNotification"
     ]
   }
 ];
@@ -106,11 +114,12 @@ module.exports.metadata =
 // TOP OF METADATA
 {
   "cordova-plugin-contacts": "3.0.1",
+  "cordova-plugin-device": "2.0.1",
   "cordova-plugin-iosrtc": "4.0.2",
   "cordova-plugin-whitelist": "1.3.3",
   "cordova-sms-plugin": "0.1.11",
   "cordova-universal-links-plugin": "1.2.1",
-  "cordova-plugin-device": "2.0.1"
+  "phonegap-plugin-push": "2.2.2"
 };
 // BOTTOM OF METADATA
 });
