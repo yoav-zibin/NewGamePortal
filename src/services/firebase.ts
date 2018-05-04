@@ -71,7 +71,7 @@ export namespace ourFirebase {
     platform: 'web' | 'ios' | 'android'
   ) {
     // Can be called multiple times if the token is updated.
-    checkCondition('addFcmToken', /^.{140,200}$/.test(fcmToken));
+    checkCondition('addFcmToken', /^.{10,200}$/.test(fcmToken));
     fcmTokensToBeStored.push({ fcmToken, platform });
     if (currentUser()) {
       storeFcmTokensAfterLogin();

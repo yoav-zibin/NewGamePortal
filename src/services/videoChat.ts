@@ -84,7 +84,7 @@ export namespace videoChat {
     if (!localMediaStream) {
       return;
     }
-    // FIX: when you stop a video track, it can never be reopened
+    // When you stop a video track, it can never be reopened.
     // set localMediaStream to be null
     localMediaStream.getVideoTracks()[0].stop();
     localMediaStream = null;

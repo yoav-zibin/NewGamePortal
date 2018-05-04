@@ -106,6 +106,7 @@ class AppHeader extends React.Component<Props, {}> {
   };
 
   handleGameRulesClick = () => {
+    // TODO: don't use window.open (look in material-ui)
     if (this.props.matchInfo.game.wikipediaUrl) {
       window.open(this.props.matchInfo.game.wikipediaUrl);
     }

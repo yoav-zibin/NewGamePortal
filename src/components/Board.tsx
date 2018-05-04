@@ -42,6 +42,8 @@ let diceAudio = new Audio(daudio);
 let dragStartAudio = new Audio(saudio);
 let dragEndAudio = new Audio(eaudio);
 
+// TODO: fix z-index (when you start to drag something, it should have the max z-index).
+// TODO: shuffling doesn't work (e.g. in scrabble).
 /**
  * A reusable board class, that given a board image and pieces in props
  * can draw the board and piece on top of it using konva.
