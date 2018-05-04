@@ -453,7 +453,10 @@ export namespace ourFirebase {
       if (!matchFb) {
         return;
       }
-      if (receivedMatches[matchId].lastUpdatedOn === matchFb.lastUpdatedOn) {
+      if (
+        receivedMatches[matchId] &&
+        receivedMatches[matchId].lastUpdatedOn === matchFb.lastUpdatedOn
+      ) {
         return; // Ignore my own updates
       }
       const gameSpecId = matchFb.gameSpecId;
