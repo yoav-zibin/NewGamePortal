@@ -1,4 +1,5 @@
 import * as React from 'react';
+import * as Konva from 'konva';
 import { Layer, Stage } from 'react-konva';
 import { MatchInfo, GameSpec } from '../types';
 import CanvasImage from './CanvasImage';
@@ -14,6 +15,7 @@ import { isIos, isAndroid, deepCopy } from '../globals';
 const saudio = require('../sounds/drag-start.mp3');
 const daudio = require('../sounds/dice.mp3');
 const eaudio = require('../sounds/click.mp3');
+// const trashCanImage = require('../images/trashCan.jpg');
 
 interface BoardProps {
   myUserId: string;
@@ -117,14 +119,14 @@ class Board extends React.Component<BoardProps, BoardState> {
           nextMatchState[i].cardVisibilityPerIndex[this.selfParticipantIndex()]
       ) {
         // the card is flipped. Call animation.
-        this.handleAnimation(i);
+        this.handleAnimation(i, kind);
       } else if (
         kind === 'toggable' &&
         prevMatchState[i].currentImageIndex !==
           nextMatchState[i].currentImageIndex
       ) {
         // the piece is toggled. Call animation.
-        this.handleAnimation(i);
+        this.handleAnimation(i, kind);
       } else if (
         kind === 'dice' &&
         prevMatchState[i].zDepth !== nextMatchState[i].zDepth
@@ -133,7 +135,8 @@ class Board extends React.Component<BoardProps, BoardState> {
         // (so that other users can see a rolling dice animation)
         // we add the z-depth of dice
         // So if z-depth is changed, that means the dice is rolled. Call animation.
-        this.handleAnimation(i);
+        this.audioPlaying(diceAudio);
+        this.handleAnimation(i, kind);
       }
     }
     this.mutableMatch = deepCopy(nextProps.matchInfo);
@@ -163,13 +166,34 @@ class Board extends React.Component<BoardProps, BoardState> {
     }
   }
 
-  handleAnimation(index: number) {
+  handleAnimation(index: number, kind: string) {
     const imageNode = (this.refs['canvasImage' + index] as CanvasImage)
       .imageNode;
-    imageNode.to({
-      duration: this.state.animatingTime,
-      rotation: imageNode.rotation() + 720
-    });
+    if (kind === 'card') {
+      let tween = new Konva.Tween({
+        node: imageNode,
+        duration: this.state.animatingTime,
+        scaleX: 0.001,
+        onFinish: function() {
+          tween.reverse();
+        }
+      });
+      tween.play();
+    } else {
+      let tween = new Konva.Tween({
+        node: imageNode,
+        offsetX: imageNode.width() / 2,
+        offsetY: imageNode.height() / 2,
+        x: imageNode.x() + imageNode.width() / 2,
+        y: imageNode.y() + imageNode.height() / 2,
+        duration: this.state.animatingTime,
+        rotation: 360,
+        onFinish: function() {
+          tween.reset();
+        }
+      });
+      tween.play();
+    }
   }
 
   handleResize = () => {
@@ -222,7 +246,6 @@ class Board extends React.Component<BoardProps, BoardState> {
 
   rollDice(index: number) {
     console.log('Roll Dice for index:', index);
-    this.audioPlaying(diceAudio);
     const match: MatchInfo = this.mutableMatch;
     this.helper.rollDice(index);
     ourFirebase.updatePieceState(match, index);
@@ -353,6 +376,16 @@ class Board extends React.Component<BoardProps, BoardState> {
       />
     );
 
+    // let trashLayer = (
+    //   <CanvasImage
+    //     height={width * ratio * 0.25}
+    //     width={width * ratio}
+    //     src={trashCanImage}
+    //     y={height * ratio}
+    //     onTouchStart={() => this.hideCardOptions()}
+    //   />
+    // );
+
     let piecesLayer = this.mutableMatch.matchState.map((piece, index) => {
       const pieceSpec = this.props.gameSpec.pieces[index];
       let kind = pieceSpec.element.elementKind;
@@ -375,8 +408,6 @@ class Board extends React.Component<BoardProps, BoardState> {
           y={piece.y * height / 100 * ratio}
           src={imageSrc}
           z-index={zIndex}
-          // offsetX={pieceSpec.element.width * ratio / 2}
-          // offsetY={pieceSpec.element.height * ratio / 2}
           onTouchStart={() => {
             console.log('onTouchStart');
           }}
@@ -469,6 +500,7 @@ class Board extends React.Component<BoardProps, BoardState> {
         {toolTipLayer}
         <Stage width={width * ratio} height={height * ratio}>
           <Layer ref={() => 'boardLayer'}>{boardLayer}</Layer>
+          {/* <Layer ref={() => 'trashLayer'}>{trashLayer}</Layer> */}
           <Layer ref={() => 'piecesLayer'}>{piecesLayer}</Layer>
         </Stage>
       </div>
