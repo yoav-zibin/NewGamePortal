@@ -21,6 +21,12 @@
     -->
     <title>React App</title>
 <style>
+/* https://css-tricks.com/snippets/css/turn-off-number-input-spinners/ */
+input[type=number]::-webkit-inner-spin-button, 
+input[type=number]::-webkit-outer-spin-button { 
+  -webkit-appearance: none; 
+  margin: 0; 
+}
 /** Material spinner from https://codepen.io/jczimm/pen/vEBpoL */
 .loadingSpinner {
   position: absolute; display:block; left: 0; top: 100px; right: 0;

@@ -252,6 +252,7 @@ class Login extends React.Component<Props, {}> {
             <br />
             <TextField
               id="phoneNum"
+              type="number"
               floatingLabelText="Phone Number"
               hintText="Enter your phone number"
               errorText={this.state.errorText}
@@ -268,12 +269,12 @@ class Login extends React.Component<Props, {}> {
             <br />
             <TextField
               id="veriCode"
+              type="number"
               floatingLabelText="Verification Code"
               hintText="Enter your verification code"
               errorText={this.state.veriErrorText}
               onChange={this.handleCodeInput}
               disabled={this.state.veriDisabled}
-              type={'number'}
             />
             <br />
             <br />
