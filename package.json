@@ -6,6 +6,7 @@
   "dependencies": {
     "@types/prop-types": "^15.5.2",
     "konva": "^2.0.0",
+    "npm": "^6.0.0",
     "raven-js": "^3.24.0",
     "react": "^16.3.1",
     "react-dice": "^1.0.1",

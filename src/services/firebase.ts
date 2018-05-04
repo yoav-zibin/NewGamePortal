@@ -10,7 +10,9 @@ import {
   isTests,
   UNKNOWN_NAME,
   getPhoneNumberToUserInfo,
-  shallowCopy
+  shallowCopy,
+  deepFreeze,
+  deepCopy
 } from '../globals';
 import {
   BooleanIndexer,
@@ -451,6 +453,9 @@ export namespace ourFirebase {
       if (!matchFb) {
         return;
       }
+      if (receivedMatches[matchId].lastUpdatedOn === matchFb.lastUpdatedOn) {
+        return; // Ignore my own updates
+      }
       const gameSpecId = matchFb.gameSpecId;
       const newMatchStates = convertPiecesStateToMatchState(
         matchFb.pieces,
@@ -594,8 +599,7 @@ export namespace ourFirebase {
       matchState,
       match.gameSpecId
     );
-    updates['lastUpdatedOn'] = getTimestamp();
-    refUpdate(getRef(`/gamePortal/matches/${match.matchId}`), updates);
+    updateMatch(match, updates);
   }
 
   // Call this after updating a single piece.
@@ -604,8 +608,20 @@ export namespace ourFirebase {
     const pieceState: PieceState = match.matchState[pieceIndex];
     const updates: AnyIndexer = {};
     updates[`pieces/${pieceIndex}`] = convertPieceState(pieceState);
-    updates['lastUpdatedOn'] = getTimestamp();
+    updateMatch(match, updates);
+  }
+
+  function updateMatch(match: MatchInfo, updates: AnyIndexer) {
+    updates['lastUpdatedOn'] = getLocalTime();
+    const frozenMatch = deepCopy(match);
+    deepFreeze(frozenMatch);
+    receivedMatches[frozenMatch.matchId] = frozenMatch;
+    dispatchSetMatchesList();
     refUpdate(getRef(`/gamePortal/matches/${match.matchId}`), updates);
+  }
+
+  function getLocalTime() {
+    return new Date().getTime();
   }
 
   export function checkMatchState(matchState: MatchState, gameSpecId: string) {
