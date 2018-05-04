@@ -444,8 +444,8 @@ export namespace videoChat {
   ) {
     console.log(isVideoVisible ? 'Showing video' : 'Showing name');
     const { video, name } = videoName;
-    video.style.display = isVideoVisible ? 'block' : 'none';
-    name.style.display = isVideoVisible ? 'none' : 'block';
+    video.style.display = isVideoVisible ? 'inline' : 'none';
+    name.style.display = isVideoVisible ? 'none' : 'inline';
   }
   function setVideoStream(videoName: VideoNameElement, stream: MediaStream) {
     setVideoOrNameVisible(videoName, true);
@@ -457,18 +457,20 @@ export namespace videoChat {
         ? window.URL.createObjectURL(stream)
         : stream;
     }
-    if ('getVideoTracks' in stream) {
-      const videoTrack = stream.getVideoTracks()[0];
-      if ('getSettings' in videoTrack) {
-        const settings = videoTrack.getSettings();
-        if (settings.width && settings.height) {
-          const width = settings.width + 'px';
-          const height = settings.height + 'px';
-          setWidthHeight(video, width, height);
-          setWidthHeight(name, width, height);
-        }
-      }
-    }
+    // if ('getVideoTracks' in stream) {
+    //   const videoTrack = stream.getVideoTracks()[0];
+    //   if ('getSettings' in videoTrack) {
+    //     const settings = videoTrack.getSettings();
+    //     if (settings.width && settings.height) {
+    //       const width = settings.width + 'px';
+    //       const height = settings.height + 'px';
+    //       setWidthHeight(video, width, height);
+    //       setWidthHeight(name, width, height);
+    //     }
+    //   }
+    // }
+    setWidthHeight(video, '150px', '150px');
+    setWidthHeight(name, '150px', '150px');
     // for iOS: tell the plugin to handle your video tag manually
     if (isIos) {
       window.cordova.plugins.iosrtc.observeVideo(video);
@@ -479,9 +481,9 @@ export namespace videoChat {
     const style = elem.style;
     style.width = width;
     style.height = height;
-    style.minWidth = width;
-    style.minHeight = height;
-    style.maxWidth = width;
-    style.maxHeight = height;
+    style.minWidth = '150px';
+    style.minHeight = '150px';
+    style.maxWidth = '150px';
+    style.maxHeight = '150px';
   }
 }
