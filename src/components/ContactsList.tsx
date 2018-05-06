@@ -58,14 +58,7 @@ interface Props {
   myUserId: string;
   myCountryCode: string;
   history: History;
-  searchByNumber: boolean;
-}
-
-declare let ContactFindOptions: any;
-
-class ContactsList extends React.Component<Props, {}> {
-
-  // TODO: if Object.keys(state.phoneNumberToContact)=[] (i.e., the user didn't give
+  // if Object.keys(state.phoneNumberToContact)=[] (i.e., the user didn't give
   // the permission to fetch contacts), then let's ALSO ask the user to enter his
   // friends phone number (in addition to showing the regular UI because there user
   // might have contacts from previously searching for phone number).
@@ -73,6 +66,13 @@ class ContactsList extends React.Component<Props, {}> {
   // that number to an international number, and verify it's a valid mobile number.
   // If so, call ourFirebase.searchPhoneNumber to see if that phone number is a user or not,
   // and then either add that user as a participant or send invite SMS.
+  searchByNumber: boolean;
+}
+
+declare let ContactFindOptions: any;
+
+class ContactsList extends React.Component<Props, {}> {
+
   state = {
     filterValue: '',
     message: 'Message sent',
@@ -81,7 +81,6 @@ class ContactsList extends React.Component<Props, {}> {
   };
 
   fetchContacts = () => {
-    // TODO: show per-premission screen.
     if (!navigator.contacts) {
       console.error('No navigator.contacts!');
       return;
@@ -429,7 +428,7 @@ const mapStateToProps = (state: StoreState, ownProps: Props) => {
     currentMatch,
     myUserId: state.myUser.myUserId,
     myCountryCode: state.myUser.myCountryCode,
-    searchByNumber: Object.keys(state.phoneNumberToContact).length<=0
+    searchByNumber: Object.keys(state.phoneNumberToContact).length === 0
   };
 };
 export default connect(mapStateToProps)(ContactsList);

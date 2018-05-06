@@ -66,6 +66,7 @@ export interface IdIndexer<T> {
 export type UserIdToInfo = IdIndexer<UserInfo>;
 export type StringIndexer = IdIndexer<string>;
 export type BooleanIndexer = IdIndexer<boolean>;
+export type NumberIndexer = IdIndexer<number>;
 export type CSSPropertiesIndexer = IdIndexer<CSSProperties>;
 export type AnyIndexer = IdIndexer<any>;
 
