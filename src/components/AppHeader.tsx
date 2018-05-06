@@ -36,6 +36,11 @@ class AppHeader extends React.Component<Props, {}> {
     '/': 'My games'
   };
 
+  state = {
+    showRules: false,
+    HTML:""
+  }
+
   onPlayingScreen() {
     let pathname: string = this.props.location.pathname;
     if (pathname.startsWith('/matches/')) {
@@ -107,9 +112,33 @@ class AppHeader extends React.Component<Props, {}> {
 
   handleGameRulesClick = () => {
     // TODO: don't use window.open (look in material-ui)
-    if (this.props.matchInfo.game.wikipediaUrl) {
-      window.open(this.props.matchInfo.game.wikipediaUrl);
+    console.log("Clicked game rules");
+    const url = this.props.matchInfo.game.wikipediaUrl;
+    if (url) {
+      // https://en.wikipedia.org/wiki/Dominion_(card_game)#Gameplay
+      // Parse URL for title
+      // const name =
+      const index = url.indexOf("/wiki/") + 6;
+      const name = url.slice(index);
+      console.log("EXTRACTED URL", name);
+      const wikiUrl = "https://en.wikipedia.org/w/api.php?action=query&origin=*" +
+      "&titles="+ name +"&format=jsonfm";
+      const req = new XMLHttpRequest();
+      req.open('GET', wikiUrl, true);
+      req.setRequestHeader("Access-Control-Allow-Credentials", "true");
+      req.setRequestHeader("Access-Control-Allow-Origin","*");
+      req.setRequestHeader("Origin", "*");
+      req.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
+      req.addEventListener('load', function(){
+        console.log(req.responseText);
+      });
+      req.send()
+
+      // make request to wiki API for JSON information
+
+      // this.setState({ showRules: !this.state.showRules })
     }
+    return null;
   };
 
   handleResetMatchClick = () => {
@@ -121,7 +150,8 @@ class AppHeader extends React.Component<Props, {}> {
 
   render() {
     let volume = this.props.audioMute ? <VolumeMute /> : <VolumeUp />;
-    if (this.onPlayingScreen()) {
+    console.log("This.showrules: ", this.state.showRules)
+    if (this.onPlayingScreen() && !this.state.showRules) {
       // We're on Playing Screen, which needs 'add' button and mute button
       console.log('ON PLAYING SCREEN');
       return (
@@ -153,12 +183,56 @@ class AppHeader extends React.Component<Props, {}> {
                   rightIcon={volume}
                 />
                 <MenuItem
+                  primaryText="Reset Match"
+                  onClick={this.handleResetMatchClick}
+                />
+                <MenuItem
                   primaryText="Show Game Rules"
-                  onClick={this.handleGameRulesClick.bind(this)}
+                  onClick={this.handleGameRulesClick}
+                />
+              </IconMenu>
+            </div>
+          }
+          title={this.getLocation()}
+        />
+      );
+    } else if(this.onPlayingScreen()){
+      return (
+        <AppBar
+          iconElementLeft={
+            <IconButton>
+              <NavigationArrowBack onClick={this.handleNavigationClick} />
+            </IconButton>
+          }
+          iconElementRight={
+            <div>
+              <IconMenu
+                open={true}
+                iconButtonElement={
+                  <IconButton>
+                    <MoreVertIcon />
+                  </IconButton>
+                }
+                iconStyle={{ color: 'white' }}
+                targetOrigin={{ horizontal: 'right', vertical: 'top' }}
+                anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+              >
+                <MenuItem
+                  primaryText="Invite a Friend"
+                  onClick={this.handleAddFriendClick}
+                />
+                <MenuItem
+                  primaryText="Toggle Sound"
+                  onClick={this.handleAudioClick}
+                  rightIcon={volume}
                 />
                 <MenuItem
                   primaryText="Reset Match"
                   onClick={this.handleResetMatchClick.bind(this)}
+                />
+                <MenuItem
+                  primaryText={this.state.HTML}
+                  onClick={this.handleGameRulesClick}
                 />
               </IconMenu>
             </div>
