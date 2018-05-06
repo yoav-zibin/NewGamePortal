@@ -1,3 +1,5 @@
+import { isIos } from '../globals';
+
 const configuration = {
     'iceServers': [{
         'urls': 'stun:stun.l.google.com:19302'
@@ -13,19 +15,19 @@ navigator.mediaDevices.getUserMedia({
     "video": {
         facingMode: "user", width: 150, height: 150
     }
-})
-    .then(
-        (_localStream) => {
-            localStream = _localStream;
-            console.log("getUserMedia response: ", localStream);
-            setVideoStream('localVideo', localStream);
-            createPCs(localStream);
-        }
-    );
+}).then((_localStream) => {
+    localStream = _localStream;
+    console.log("getUserMedia response: ", localStream);
+    setVideoStream('localVideo', localStream);
+    createPCs(localStream);
+});
 
 function setVideoStream(videoId: string, stream: MediaStream) {
     const video: HTMLVideoElement = <HTMLVideoElement>document.getElementById(videoId)!;
     video.srcObject = stream;
+    if (isIos) {
+        window.cordova.plugins.iosrtc.observeVideo(video);
+    }
 }
 function createPCs(_localStream: MediaStream) {
     pc1.addStream(_localStream);
