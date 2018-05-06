@@ -56,7 +56,7 @@ export function trimState(state: StoreState): StoreState {
   if (Object.keys(state.gameSpecs.gameSpecIdToGameSpec).length > 0) {
     let gameSpecsToDelete = [];
     for (let specId of Object.keys(state.gameSpecs.gameSpecIdToGameSpec)) {
-      let specIdInMatch = state.matchesList.find( m => m.gameSpecId === specId);
+      let specIdInMatch = state.matchesList.find(m => m.gameSpecId === specId);
       if (!specIdInMatch) {
         gameSpecsToDelete.push(specId);
       }
@@ -72,18 +72,12 @@ export function trimState(state: StoreState): StoreState {
   }
   // If there are matches, delete the match that has the oldest lastUpdatedOn and return.
   if (state.matchesList.length > 0) {
-    let oldestIndex = 0;
-    let oldestTimestamp = state.matchesList[oldestIndex].lastUpdatedOn;
-    // todo: use reduce 
-    for (let i = 1; i < state.matchesList.length; i++) {
-      let timestamp = state.matchesList[i].lastUpdatedOn;
-      if (timestamp < oldestTimestamp) {
-        oldestTimestamp = timestamp;
-        oldestIndex = i;
-      }
-    }
-    // delete state.matchesList[oldestIndex];
-    state.matchesList.splice(oldestIndex, 1);
+    let oldestMatch = state.matchesList.reduce((accum, curr) => {
+      return accum.lastUpdatedOn > curr.lastUpdatedOn ? curr : accum;
+    }, state.matchesList[0]);
+
+    const oldestIdx = state.matchesList.indexOf(oldestMatch);
+    state.matchesList.splice(oldestIdx, 1);
     return state;
   }
   if (Object.keys(state.phoneNumberToContact).length > 0) {
