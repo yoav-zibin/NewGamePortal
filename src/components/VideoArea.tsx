@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { CSSPropertiesIndexer, Opponent } from '../types/index';
 // import { videoChat } from '../services/videoChat';
-import { simpleVideo } from '../services/simpleVideo';
+// import { simpleVideo } from '../services/simpleVideo';
 
 // import { checkCondition } from '../globals';
 
@@ -41,7 +41,7 @@ class VideoArea extends React.Component<Props> {
     //     );
     //   }
     // });
-    simpleVideo.init();
+    require('../services/simpleVideo');
   }
 
   // componentWillUnmount() {
