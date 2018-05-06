@@ -1,5 +1,6 @@
 import { isIos } from '../globals';
 
+// tslint:disable
 const configuration = {
     'iceServers': [{
         'urls': 'stun:stun.l.google.com:19302'
@@ -15,12 +16,15 @@ navigator.mediaDevices.getUserMedia({
     "video": {
         facingMode: "user", width: 150, height: 150
     }
-}).then((_localStream) => {
-    localStream = _localStream;
-    console.log("getUserMedia response: ", localStream);
-    setVideoStream('localVideo', localStream);
-    createPCs(localStream);
-});
+})
+    .then(
+        (_localStream) => {
+            localStream = _localStream;
+            console.log("getUserMedia response: ", localStream);
+            setVideoStream('localVideo', localStream);
+            createPCs(localStream);
+        }
+    );
 
 function setVideoStream(videoId: string, stream: MediaStream) {
     const video: HTMLVideoElement = <HTMLVideoElement>document.getElementById(videoId)!;
@@ -29,8 +33,8 @@ function setVideoStream(videoId: string, stream: MediaStream) {
         window.cordova.plugins.iosrtc.observeVideo(video);
     }
 }
-function createPCs(_localStream: MediaStream) {
-    pc1.addStream(_localStream);
+function createPCs(localStream: MediaStream) {
+    pc1.addStream(localStream);
     pc1.onicecandidate = (evt) => onicecandidate(pc2, evt);
     pc2.onicecandidate = (evt) => onicecandidate(pc1, evt);
     pc1.onaddstream = (evt) => onaddstream(pc1, evt);
@@ -50,9 +54,7 @@ function onicecandidate(targetPC: RTCPeerConnection, evt: RTCPeerConnectionIceEv
 function onaddstream(myPC: RTCPeerConnection, evt: MediaStreamEvent) {
     console.log("onaddstream: ", evt);
     if (evt.stream) {
-        if (myPC === pc1) {
-            throw new Error("Internal bug");
-        }
+        if (myPC == pc1) throw new Error("Internal bug");
         setVideoStream('pcVideo', evt.stream);
     }
 }
@@ -68,6 +70,6 @@ function gotDescription(isOffer: boolean, myPC: RTCPeerConnection, targetPC: RTC
         (err: any) => { console.error("Error in setRemoteDescription: ", err); }
     );
     if (isOffer) {
-        targetPC.createAnswer().then((_desc) => gotDescription(false, pc2, pc1, _desc));
+        targetPC.createAnswer().then((desc) => gotDescription(false, pc2, pc1, desc));
     }
 }
