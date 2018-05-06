@@ -72,8 +72,7 @@ export function trimState(state: StoreState): StoreState {
   }
   // If there are matches, delete the match that has the oldest lastUpdatedOn and return.
   if (state.matchesList.length > 0) {
-    let oldestMatch = state.matchesList.reduce(
-      (accum, curr) => {
+    let oldestMatch = state.matchesList.reduce((accum, curr) => {
       return accum.lastUpdatedOn > curr.lastUpdatedOn ? curr : accum;
     }, state.matchesList[0]);
 
