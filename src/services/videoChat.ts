@@ -20,6 +20,83 @@ interface VideoNameElement {
 }
 
 export namespace videoChat {
+  // TODO: delete
+  namespace simpleVideo {
+    const simpleConfiguration = {
+      iceServers: [
+        {
+          urls: 'stun:stun.l.google.com:19302'
+        }
+      ]
+    };
+    const pc1 = new RTCPeerConnection(simpleConfiguration);
+    const pc2 = new RTCPeerConnection(simpleConfiguration);
+    export function createPCs(localStream: MediaStream) {
+      pc1.addStream(localStream);
+      pc1.onicecandidate = evt => onicecandidate(pc2, evt);
+      pc2.onicecandidate = evt => onicecandidate(pc1, evt);
+      pc1.onaddstream = evt => onaddstream(pc1, evt);
+      pc2.onaddstream = evt => onaddstream(pc2, evt);
+
+      pc1.createOffer().then(desc => gotDescription(true, pc1, pc2, desc));
+    }
+    function onicecandidate(
+      targetPC: RTCPeerConnection,
+      evt: RTCPeerConnectionIceEvent
+    ) {
+      console.log('onicecandidate: ', evt);
+      if (evt.candidate) {
+        targetPC.addIceCandidate(new RTCIceCandidate(<any>evt.candidate)).then(
+          () => {
+            console.log('addIceCandidate success');
+          },
+          (err: any) => {
+            console.error('Error in addIceCandidate: ', err);
+          }
+        );
+      }
+    }
+    function onaddstream(myPC: RTCPeerConnection, evt: MediaStreamEvent) {
+      console.log('onaddstream: ', evt);
+      if (evt.stream) {
+        if (myPC === pc1) {
+          throw new Error('Internal bug');
+        }
+        setVideoStream(getVideoElement(1), evt.stream);
+      }
+    }
+    function gotDescription(
+      isOffer: boolean,
+      myPC: RTCPeerConnection,
+      targetPC: RTCPeerConnection,
+      desc: any
+    ) {
+      console.log('gotDescription: ', desc);
+      myPC.setLocalDescription(desc).then(
+        () => {
+          console.log('setLocalDescription success');
+        },
+        (err: any) => {
+          console.error('Error in setLocalDescription: ', err);
+        }
+      );
+
+      targetPC.setRemoteDescription(<any>new RTCSessionDescription(desc)).then(
+        () => {
+          console.log('setRemoteDescription success');
+        },
+        (err: any) => {
+          console.error('Error in setRemoteDescription: ', err);
+        }
+      );
+      if (isOffer) {
+        targetPC
+          .createAnswer()
+          .then(desc2 => gotDescription(false, pc2, pc1, desc2));
+      }
+    }
+  }
+
   interface UserIdToSignals {
     [userId: string]: SignalMsg[];
   }
@@ -167,54 +244,6 @@ export namespace videoChat {
       peerConnections[userId].close();
     }
     delete peerConnections[userId];
-  }
-
-  // TODO: delete
-  module simpleVideo {
-    const pc1 = new RTCPeerConnection(configuration);
-    const pc2 = new RTCPeerConnection(configuration);
-    export function createPCs(localStream: MediaStream) {
-      pc1.addStream(localStream);
-      pc1.onicecandidate = (evt) => onicecandidate(pc2, evt);
-      pc2.onicecandidate = (evt) => onicecandidate(pc1, evt);
-      pc1.onaddstream = (evt) => onaddstream(pc1, evt);
-      pc2.onaddstream = (evt) => onaddstream(pc2, evt);
-
-      pc1.createOffer().then((desc) => gotDescription(true, pc1, pc2, desc));
-    }
-    function onicecandidate(targetPC: RTCPeerConnection, evt: RTCPeerConnectionIceEvent) {
-      console.log("onicecandidate: ", evt);
-      if (evt.candidate) {
-          targetPC.addIceCandidate(new RTCIceCandidate(<any>evt.candidate)).then(
-              () => { console.log("addIceCandidate success"); },
-              (err: any) => { console.error("Error in addIceCandidate: ", err); }
-          );
-      }
-    }
-    function onaddstream(myPC: RTCPeerConnection, evt: MediaStreamEvent) {
-      console.log("onaddstream: ", evt);
-      if (evt.stream) {
-          if (myPC === pc1) {
-            throw new Error("Internal bug");
-          }
-          setVideoStream(getVideoElement(1), evt.stream);
-      }
-    }
-    function gotDescription(isOffer: boolean, myPC: RTCPeerConnection, targetPC: RTCPeerConnection, desc: any) {
-      console.log("gotDescription: ", desc);
-      myPC.setLocalDescription(desc).then(
-          () => { console.log("setLocalDescription success"); },
-          (err: any) => { console.error("Error in setLocalDescription: ", err); }
-      );
-
-      targetPC.setRemoteDescription(<any>new RTCSessionDescription(desc)).then(
-          () => { console.log("setRemoteDescription success"); },
-          (err: any) => { console.error("Error in setRemoteDescription: ", err); }
-      );
-      if (isOffer) {
-          targetPC.createAnswer().then((desc2) => gotDescription(false, pc2, pc1, desc2));
-      }
-    }
   }
 
   // See:
