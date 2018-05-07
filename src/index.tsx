@@ -53,13 +53,14 @@ Raven.config('https://efc65f7e50c14bd9a3482e2ad2ae3b9d@sentry.io/939406', {
   release: release
 }).install();
 
-console.log('Page init with parameters:', window.location.search);
+const searchParameters = window.location.search;
+console.log('Page init with parameters:', searchParameters);
 ourFirebase.reactRender = reactRender;
 ourFirebase.init(); // might call reactRender immediately if there is nothing in the local storage.
 registerServiceWorker();
 
-if (window.location.search.match('^[?][0-9]$')) {
-  const myUserIndex = Number(window.location.search.substr(1));
+if (searchParameters.match('^[?][0-9]$')) {
+  const myUserIndex = Number(searchParameters.substr(1));
   // These phone numbers are also in our firebase rules (so we can do testing).
   const testUsers: Contact[] = [];
   for (let i = 0; i < 10; i++) {
@@ -69,7 +70,6 @@ if (window.location.search.match('^[?][0-9]$')) {
     });
   }
   // For faking our contacts on web.
-  
   const myUser = testUsers[myUserIndex] || testUsers[0];
   console.log('My fake user is: ', myUser);
   ourFirebase.signInAnonymously(myUser.phoneNumber, 'Test user ' + myUserIndex);

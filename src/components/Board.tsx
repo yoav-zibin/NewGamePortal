@@ -99,8 +99,11 @@ class Board extends React.Component<BoardProps, BoardState> {
     }
     const nextMatchState = nextProps.matchInfo.matchState;
     for (let i = 0; i < nextMatchState.length; i++) {
-      const imageNode = (this.refs['canvasImage' + i] as CanvasImage).imageNode;
       const kind = this.props.gameSpec.pieces[i].element.elementKind;
+      if (kind.endsWith('Deck')) {
+        continue;
+      }
+      const imageNode = (this.refs['canvasImage' + i] as CanvasImage).imageNode;
       if (
         prevMatchState[i].x !== nextMatchState[i].x ||
         prevMatchState[i].y !== nextMatchState[i].y
@@ -391,13 +394,12 @@ class Board extends React.Component<BoardProps, BoardState> {
     let piecesLayer = this.mutableMatch.matchState.map((piece, index) => {
       const pieceSpec = this.props.gameSpec.pieces[index];
       let kind = pieceSpec.element.elementKind;
+      if (kind.endsWith('Deck')) {
+        return null;
+      }
       let isVisible = piece.cardVisibilityPerIndex[this.selfParticipantIndex()];
       let imageIndex: number =
-        pieceSpec.element.elementKind === 'card'
-          ? isVisible
-            ? 0
-            : 1
-          : piece.currentImageIndex;
+        kind === 'card' ? (isVisible ? 0 : 1) : piece.currentImageIndex;
       let zIndex = isVisible ? 50 : 1;
       let imageSrc: string = pieceSpec.element.images[imageIndex].downloadURL;
       let startX: number, startY: number;

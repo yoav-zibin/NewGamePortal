@@ -12,7 +12,12 @@ import {
   UserIdToInfo
 } from '../types';
 import { storeStateDefault } from '../stores/defaults';
-import { checkCondition, getPhoneNumberToUserInfo, deepFreeze, shallowCopy } from '../globals';
+import {
+  checkCondition,
+  getPhoneNumberToUserInfo,
+  deepFreeze,
+  shallowCopy
+} from '../globals';
 
 export interface Action {
   // Actions that start with "set" mean that they replace the matching
@@ -27,7 +32,7 @@ export interface Action {
   setMyUser?: MyUser;
   setSignals?: SignalEntry[];
   restoreOldStore?: StoreState;
-  setAudioMute? :boolean;
+  setAudioMute?: boolean;
 }
 
 export function mergeMaps<T>(
@@ -36,6 +41,23 @@ export function mergeMaps<T>(
 ): IdIndexer<T> {
   const copy = shallowCopy(original);
   return Object.assign(copy, updateWithEntries);
+}
+
+export function mergeUserInfos(
+  original: UserIdToInfo,
+  updateWithEntries: UserIdToInfo
+): UserIdToInfo {
+  const result = mergeMaps(original, updateWithEntries);
+  // The problem is that we might have lost phone numbers, e.g.,
+  // if the original had {userId: X, phoneNumber: Y, displayName: Z}
+  // and updateWithEntries had {userId: X, displayName: Z'}
+  // Then we lost phoneNumber.
+  for (let [k, v] of Object.entries(updateWithEntries)) {
+    if (!v.phoneNumber && original[k]) {
+      result[k].phoneNumber = original[k].phoneNumber;
+    }
+  }
+  return result;
 }
 
 export function checkMatchStateInStore(
@@ -107,7 +129,7 @@ function reduce(state: StoreState, action: Action) {
   } else if (undefined !== action.updateUserIdToInfo) {
     let { userIdToInfo, ...rest } = state;
     return setNamesFromContacts({
-      userIdToInfo: mergeMaps(userIdToInfo, action.updateUserIdToInfo),
+      userIdToInfo: mergeUserInfos(userIdToInfo, action.updateUserIdToInfo),
       ...rest
     });
   } else if (undefined !== action.updatePhoneNumberToContact) {
@@ -141,13 +163,13 @@ function reduce(state: StoreState, action: Action) {
       },
       ...rest
     };
-  }else if(undefined !== action.setAudioMute){
+  } else if (undefined !== action.setAudioMute) {
     let audio = action.setAudioMute;
-    let {audioMute,...rest} = state;
+    let { audioMute, ...rest } = state;
     return {
-        ...rest,
-        audioMute: audio
-    }
+      ...rest,
+      audioMute: audio
+    };
   } else {
     return state;
   }

@@ -469,7 +469,7 @@ export namespace ourFirebase {
           participants[uid1].participantIndex -
           participants[uid2].participantIndex
       );
-      addMissingUserIdsToContacts(participantsUserIds);
+      fetchDisplayNameForUserIds(participantsUserIds);
 
       const gameInfo = findGameInfo(gameSpecId);
       if (!gameInfo) {
@@ -503,11 +503,12 @@ export namespace ourFirebase {
       addUserInfo(userId, displayName);
     });
   }
-  function addMissingUserIdsToContacts(participantsUserIds: string[]) {
+  function fetchDisplayNameForUserIds(participantsUserIds: string[]) {
     const uid = assertLoggedIn().uid;
-    const contacts = store.getState().phoneNumberToContact;
+    const state = store.getState();
+    const userIdToInfo = state.userIdToInfo;
     participantsUserIds.forEach(userId => {
-      if (userId !== uid && !contacts[userId]) {
+      if (userId !== uid && !userIdToInfo[userId]) {
         fetchDisplayNameForUserId(userId);
       }
     });
