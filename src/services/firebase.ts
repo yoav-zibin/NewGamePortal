@@ -623,7 +623,11 @@ export namespace ourFirebase {
     updateMatch(deepCopy(match), updates);
   }
   function updateMatch(match: MatchInfo, updates: AnyIndexer) {
+    const uid = getUserId();
+    match.updatedByUserId = uid;
+    match.lastUpdatedOn = new Date().getTime(); // We show the time in the matches list ("updated 3 minutes ago")
     updates['lastUpdatedOn'] = getTimestamp();
+    updates['updatedByUserId'] = uid;
     deepFreeze(match);
     receivedMatches[match.matchId] = match;
     dispatchSetMatchesList();
