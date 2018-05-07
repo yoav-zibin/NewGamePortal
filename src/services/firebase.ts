@@ -335,6 +335,10 @@ export namespace ourFirebase {
   }
   function convertObjectToArray<T>(obj: IdIndexer<T>): T[] {
     let vals: T[] = [];
+    if (!obj) {
+      // "Fake" decks (created via write-gamesInfoAndSpec.js), have an empty images array.
+      return vals;
+    }
     let count = 0;
     for (let [key, val] of Object.entries(obj)) {
       checkCondition('index is int', /^(0|[1-9]\d*)$/.test(key));
