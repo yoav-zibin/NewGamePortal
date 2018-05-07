@@ -977,7 +977,7 @@ export namespace ourFirebase {
           ` value=` +
           prettyJson(val);
         console.error(msg);
-        throw new Error(msg);
+        Raven.captureMessage(msg);
       }
     };
   }
