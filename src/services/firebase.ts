@@ -471,7 +471,10 @@ export namespace ourFirebase {
       );
       addMissingUserIdsToContacts(participantsUserIds);
 
-      const gameInfo = checkNotNull(findGameInfo(gameSpecId));
+      const gameInfo = findGameInfo(gameSpecId);
+      if (!gameInfo) {
+        return; // I've deleted some crappy games, but there are some existing matches.
+      }
       fetchGameSpec(gameInfo);
       const match: MatchInfo = {
         matchId: matchId,
