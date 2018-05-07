@@ -4,7 +4,8 @@ import {
   PlatformType,
   MatchInfo,
   PhoneNumInfo,
-  UserIdToInfo
+  UserIdToInfo,
+  ContactWithUserId
 } from './types';
 
 require('./js/trans-compiled');
@@ -206,3 +207,41 @@ function deepCopyHelper<T>(obj: T, cycleDetector: Set<any>): T {
   }
   return result;
 }
+
+export const studentsUsers: ContactWithUserId[] = [
+  {
+    userId: "HIfpdxPucXXUEffw8V4yezzUtKv1",
+    phoneNumber: '+19175730795',
+    name: 'Yoav Zibin'
+  },
+  {
+    userId: "Kw9aO9pQSQYMKuTXcBGe3bT1qoh1",
+    phoneNumber: '+17326476905',
+    name: 'Herbert Li'
+  },
+  {
+    userId: 'wbrj6fHArqUPw8ToKN4Y728oz6i1',
+    phoneNumber: '+17187107933',
+    name: 'Jiaqi Zou'
+  },
+  {
+    userId: '3owDcSbVfPXeoBJG0clhqlXwfYQ2',
+    phoneNumber: '+17185525029',
+    name: 'Priyanka vaidya'
+  },
+  {
+    userId: 'LaDyFTfdfXfMM4j0H9CzXDIwB9S2',
+    phoneNumber: '+12038859211',
+    name: 'Radhika Mattoo'
+  },
+  {
+    userId: 'qeoTOlU2kBN0Uz4FfaO6cxNB05h2',
+    phoneNumber: '+15513586613',
+    name: 'Sisi Li'
+  },
+  {
+    userId: 'lNSwl0Y5uMe4x8tA6uftkhqx8jC3',
+    phoneNumber: '+19174021465',
+    name: 'Yiwei Wu'
+  }
+];

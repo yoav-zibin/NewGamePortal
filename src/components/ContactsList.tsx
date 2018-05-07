@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Contact, RouterMatchParams, UserInfo, PhoneNumInfo } from '../types';
+import { Contact, RouterMatchParams, UserInfo, PhoneNumInfo, BooleanIndexer } from '../types';
 import { MatchInfo } from '../types';
 import { List, ListItem } from 'material-ui/List';
 import Divider from 'material-ui/Divider';
@@ -21,7 +21,8 @@ import {
   findMatch,
   getPhoneNumberToUserInfo,
   checkPhoneNumber,
-  UNKNOWN_NAME
+  UNKNOWN_NAME,
+  studentsUsers
 } from '../globals';
 
 const style: React.CSSProperties = {
@@ -403,8 +404,15 @@ const mapStateToProps = (state: StoreState, ownProps: Props) => {
       allUserNames.push(userName);
     }
   }
+  const studentUserIds: BooleanIndexer = {};
+  for (let student of studentsUsers) {
+    studentUserIds[student.userId] = true;
+    if (student.userId !== state.myUser.myUserId) {
+      users.push({displayName: student.name + " (Mentor)", phoneNumber: '', userId: student.userId});
+    }
+  }
   for (let [userId, userInfo] of Object.entries(state.userIdToInfo)) {
-    if (userId === state.myUser.myUserId) {
+    if (userId === state.myUser.myUserId || studentUserIds[userId]) {
       // Ignore my user (in case I have my own phone number in my contacts)
     } else {
       users.push(userInfo);

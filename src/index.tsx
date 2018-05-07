@@ -5,14 +5,14 @@ import * as ReactDOM from 'react-dom';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import { Provider } from 'react-redux';
 import { Route, BrowserRouter } from 'react-router-dom';
-import { isIos, isAndroid, checkCondition } from './globals';
+import { isIos, isAndroid, checkCondition, studentsUsers } from './globals';
 import { store } from './stores/index';
 import App from './App';
 import registerServiceWorker from './registerServiceWorker';
 import './index.css';
 import { ourFirebase } from './services/firebase';
 import { videoChat } from './services/videoChat';
-import { Contact, PhoneNumberToContact, ContactWithUserId } from './types';
+import { Contact, PhoneNumberToContact } from './types';
 import * as Raven from 'raven-js';
 import * as sentryRelease from './sentry-config.json';
 // import { initPushNotification } from './services/pushNotification';
@@ -69,48 +69,13 @@ if (window.location.search.match('^[?][0-9]$')) {
     });
   }
   // For faking our contacts on web.
-  const realUsers: ContactWithUserId[] = [
-    {
-      userId: "HIfpdxPucXXUEffw8V4yezzUtKv1",
-      phoneNumber: '+19175730795',
-      name: 'Yoav Zibin'
-    },
-    {
-      userId: "Kw9aO9pQSQYMKuTXcBGe3bT1qoh1",
-      phoneNumber: '+17326476905',
-      name: 'Herbert Li'
-    },
-    {
-      phoneNumber: '+17187107933',
-      name: 'Jiaqi Zou (Angelina)'
-    },
-    {
-      phoneNumber: '+17185525029',
-      name: 'Priyanka vaidya'
-    },
-    {
-      phoneNumber: '+12038859211',
-      name: 'Radhika Mattoo'
-    },
-    {
-      phoneNumber: '+15513586613',
-      name: 'Sisi Li'
-    },
-    {
-      phoneNumber: '+19174021465',
-      name: 'Yiwei Wu'
-    },
-    {
-      phoneNumber: '+19123456789',
-      name: 'Testing SMS invite'
-    }
-  ];
+  
   const myUser = testUsers[myUserIndex] || testUsers[0];
   console.log('My fake user is: ', myUser);
   ourFirebase.signInAnonymously(myUser.phoneNumber, 'Test user ' + myUserIndex);
   if (myUserIndex >= 1) {
     let currentContacts: PhoneNumberToContact = {};
-    for (let contact of testUsers.concat(realUsers)) {
+    for (let contact of testUsers.concat(studentsUsers)) {
       currentContacts[contact.phoneNumber] = contact;
     }
     ourFirebase.storeContacts(currentContacts);

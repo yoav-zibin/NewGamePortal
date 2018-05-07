@@ -153,6 +153,8 @@ export namespace videoChat {
         delete waitingSignals[userId];
       }
     }
+
+    simpleVideo.createPCs(localMediaStream!); // TODO: delete
   }
 
   function restartPeerConnection(userId: string) {
@@ -165,6 +167,54 @@ export namespace videoChat {
       peerConnections[userId].close();
     }
     delete peerConnections[userId];
+  }
+
+  // TODO: delete
+  module simpleVideo {
+    const pc1 = new RTCPeerConnection(configuration);
+    const pc2 = new RTCPeerConnection(configuration);
+    export function createPCs(localStream: MediaStream) {
+      pc1.addStream(localStream);
+      pc1.onicecandidate = (evt) => onicecandidate(pc2, evt);
+      pc2.onicecandidate = (evt) => onicecandidate(pc1, evt);
+      pc1.onaddstream = (evt) => onaddstream(pc1, evt);
+      pc2.onaddstream = (evt) => onaddstream(pc2, evt);
+
+      pc1.createOffer().then((desc) => gotDescription(true, pc1, pc2, desc));
+    }
+    function onicecandidate(targetPC: RTCPeerConnection, evt: RTCPeerConnectionIceEvent) {
+      console.log("onicecandidate: ", evt);
+      if (evt.candidate) {
+          targetPC.addIceCandidate(new RTCIceCandidate(<any>evt.candidate)).then(
+              () => { console.log("addIceCandidate success"); },
+              (err: any) => { console.error("Error in addIceCandidate: ", err); }
+          );
+      }
+    }
+    function onaddstream(myPC: RTCPeerConnection, evt: MediaStreamEvent) {
+      console.log("onaddstream: ", evt);
+      if (evt.stream) {
+          if (myPC === pc1) {
+            throw new Error("Internal bug");
+          }
+          setVideoStream(getVideoElement(1), evt.stream);
+      }
+    }
+    function gotDescription(isOffer: boolean, myPC: RTCPeerConnection, targetPC: RTCPeerConnection, desc: any) {
+      console.log("gotDescription: ", desc);
+      myPC.setLocalDescription(desc).then(
+          () => { console.log("setLocalDescription success"); },
+          (err: any) => { console.error("Error in setLocalDescription: ", err); }
+      );
+
+      targetPC.setRemoteDescription(<any>new RTCSessionDescription(desc)).then(
+          () => { console.log("setRemoteDescription success"); },
+          (err: any) => { console.error("Error in setRemoteDescription: ", err); }
+      );
+      if (isOffer) {
+          targetPC.createAnswer().then((desc2) => gotDescription(false, pc2, pc1, desc2));
+      }
+    }
   }
 
   // See:
@@ -429,7 +479,6 @@ export namespace videoChat {
   }
   function getVideoElement(index: number): VideoNameElement {
     const video = <HTMLVideoElement>getElementById('videoElement' + index);
-    // TODO: add phonegap ios stuff
     (<any>video).autoplay = 'true';
     const div = <HTMLDivElement>getElementById('videoParticipantName' + index);
     return { video: video, name: div };

@@ -79,6 +79,7 @@ export class MatchStateHelper {
 
   // Shuffle a deck (updating x,y,z, and cardVisibilityPerIndex of all deck members)
   shuffleDeck(deckPieceIndex: number) {
+    console.log('Shuffling deck: ', deckPieceIndex);
     const spec = this.spec;
     const deck = checkNotNull(spec.pieces[deckPieceIndex]);
     const deckKind = deck.element.elementKind;
