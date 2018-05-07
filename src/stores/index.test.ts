@@ -16,264 +16,93 @@ const initialContact = {
   name: 'contact name'
 };
 
-// Define different states to input into
-// trimState in order to test its different return values
-// todo: move into test
-const noChangeState: StoreState = {
-  gamesList: [
-    {
-      gameSpecId: '123',
-      gameName: '3 Men Chess',
-      wikipediaUrl: '',
-      screenShot: image
-    },
-    {
-      gameSpecId: '456',
-      gameName: 'Checkers',
-      wikipediaUrl: '',
-      screenShot: image
-    }
-  ],
-  gameSpecs: {
-    imageIdToImage: {
-      [image.imageId]: image
-    },
-    elementIdToElement: {},
-    gameSpecIdToGameSpec: {}
-  },
-  matchesList: [],
-  phoneNumberToContact: {},
-  userIdToInfo: {},
-  myUser: {
-    myName: 'Name 111',
-    myPhoneNumber: '111111111',
-    myCountryCode: '',
-    myUserId: '7UbETkgeXxe0RId6KxYioSJdARs1'
-  },
-  signals: [
-    {
-      addedByUid: '7UbETkgeXxe0RId6KxYioSJdARs1',
-      timestamp: 1234,
-      signalType: 'sdp1',
-      signalData: '3 Men Chess'
-    }
-  ],
-  audioMute: false
-};
-
-const phoneState: StoreState = {
-  gamesList: [
-    {
-      gameSpecId: '123',
-      gameName: '3 Men Chess',
-      wikipediaUrl: '',
-      screenShot: image
-    },
-    {
-      gameSpecId: '456',
-      gameName: 'Checkers',
-      wikipediaUrl: '',
-      screenShot: image
-    }
-  ],
-  gameSpecs: {
-    imageIdToImage: {
-      [image.imageId]: image
-    },
-    elementIdToElement: {},
-    gameSpecIdToGameSpec: {}
-  },
-  matchesList: [],
-  phoneNumberToContact: {
-    [initialContact.phoneNumber]: initialContact
-  },
-  userIdToInfo: {},
-  myUser: {
-    myName: 'Name 111',
-    myPhoneNumber: '111111111',
-    myCountryCode: '',
-    myUserId: '7UbETkgeXxe0RId6KxYioSJdARs1'
-  },
-  signals: [
-    {
-      addedByUid: '7UbETkgeXxe0RId6KxYioSJdARs1',
-      timestamp: 1234,
-      signalType: 'sdp1',
-      signalData: '3 Men Chess'
-    }
-  ],
-  audioMute: false
-};
-const timestampState: StoreState = {
-  gamesList: [
-    {
-      gameSpecId: '123',
-      gameName: '3 Men Chess',
-      wikipediaUrl: '',
-      screenShot: image
-    },
-    {
-      gameSpecId: '456',
-      gameName: 'Checkers',
-      wikipediaUrl: '',
-      screenShot: image
-    }
-  ],
-  gameSpecs: {
-    imageIdToImage: {
-      [image.imageId]: image
-    },
-    elementIdToElement: {},
-    gameSpecIdToGameSpec: {
-      '123': {
-        gameSpecId: '123',
-        board: image,
-        pieces: []
-      },
-      '456': {
-        gameSpecId: '456',
-        board: image,
-        pieces: []
-      }
-    }
-  },
-  matchesList: [
-    {
-      matchId: '1',
-      gameSpecId: '123',
-      game: {
-        gameSpecId: '123',
-        gameName: '3 Men Chess',
-        wikipediaUrl: '',
-        screenShot: image
-      },
-      participantsUserIds: ['7UbETkgeXxe0RId6KxYioSJdARs1'], // including myself
-      lastUpdatedOn: 1234,
-      matchState: []
-    },
-    {
-      matchId: '2',
-      gameSpecId: '456',
-      game: {
-        gameSpecId: '456',
-        gameName: 'Checkers',
-        wikipediaUrl: '',
-        screenShot: image
-      },
-      participantsUserIds: ['7UbETkgeXxe0RId6KxYioSJdARs1'], // including myself
-      lastUpdatedOn: 5678,
-      matchState: []
-    }
-  ],
-  phoneNumberToContact: {
-    [initialContact.phoneNumber]: initialContact
-  },
-  userIdToInfo: {},
-  myUser: {
-    myName: 'Name 111',
-    myPhoneNumber: '111111111',
-    myCountryCode: '',
-    myUserId: '7UbETkgeXxe0RId6KxYioSJdARs1'
-  },
-  signals: [
-    {
-      addedByUid: '7UbETkgeXxe0RId6KxYioSJdARs1',
-      timestamp: 1234,
-      signalType: 'sdp1',
-      signalData: '3 Men Chess'
-    }
-  ],
-  audioMute: false
-};
-
-const gameSpecState: StoreState = {
-  gamesList: [
-    {
-      gameSpecId: '123',
-      gameName: '3 Men Chess',
-      wikipediaUrl: '',
-      screenShot: image
-    },
-    {
-      gameSpecId: '456',
-      gameName: 'Checkers',
-      wikipediaUrl: '',
-      screenShot: image
-    }
-  ],
-  gameSpecs: {
-    imageIdToImage: {
-      [image.imageId]: image
-    },
-    elementIdToElement: {},
-    gameSpecIdToGameSpec: {
-      '123': {
-        gameSpecId: '123',
-        board: image,
-        pieces: []
-      },
-      '456': {
-        gameSpecId: '456',
-        board: image,
-        pieces: []
-      },
-      '789': {
-        gameSpecId: '789',
-        board: image,
-        pieces: []
-      }
-    }
-  },
-  matchesList: [
-    {
-      matchId: '1',
-      gameSpecId: '123',
-      game: {
-        gameSpecId: '123',
-        gameName: '3 Men Chess',
-        wikipediaUrl: '',
-        screenShot: image
-      },
-      participantsUserIds: ['7UbETkgeXxe0RId6KxYioSJdARs1'], // including myself
-      lastUpdatedOn: 1234,
-      matchState: []
-    },
-    {
-      matchId: '2',
-      gameSpecId: '456',
-      game: {
-        gameSpecId: '456',
-        gameName: 'Checkers',
-        wikipediaUrl: '',
-        screenShot: image
-      },
-      participantsUserIds: ['7UbETkgeXxe0RId6KxYioSJdARs1'], // including myself
-      lastUpdatedOn: 5678,
-      matchState: []
-    }
-  ],
-  phoneNumberToContact: {
-    [initialContact.phoneNumber]: initialContact
-  },
-  userIdToInfo: {},
-  myUser: {
-    myName: 'Name 111',
-    myPhoneNumber: '111111111',
-    myCountryCode: '',
-    myUserId: '7UbETkgeXxe0RId6KxYioSJdARs1'
-  },
-  signals: [
-    {
-      addedByUid: '7UbETkgeXxe0RId6KxYioSJdARs1',
-      timestamp: 1234,
-      signalType: 'sdp1',
-      signalData: '3 Men Chess'
-    }
-  ],
-  audioMute: false
-};
-
 it('Deletes unused gameSpecs, if there', () => {
+  const gameSpecState: StoreState = {
+    gamesList: [
+      {
+        gameSpecId: '123',
+        gameName: '3 Men Chess',
+        wikipediaUrl: '',
+        screenShot: image
+      },
+      {
+        gameSpecId: '456',
+        gameName: 'Checkers',
+        wikipediaUrl: '',
+        screenShot: image
+      }
+    ],
+    gameSpecs: {
+      imageIdToImage: {
+        [image.imageId]: image
+      },
+      elementIdToElement: {},
+      gameSpecIdToGameSpec: {
+        '123': {
+          gameSpecId: '123',
+          board: image,
+          pieces: []
+        },
+        '456': {
+          gameSpecId: '456',
+          board: image,
+          pieces: []
+        },
+        '789': {
+          gameSpecId: '789',
+          board: image,
+          pieces: []
+        }
+      }
+    },
+    matchesList: [
+      {
+        matchId: '1',
+        gameSpecId: '123',
+        game: {
+          gameSpecId: '123',
+          gameName: '3 Men Chess',
+          wikipediaUrl: '',
+          screenShot: image
+        },
+        participantsUserIds: ['7UbETkgeXxe0RId6KxYioSJdARs1'], // including myself
+        lastUpdatedOn: 1234,
+        matchState: []
+      },
+      {
+        matchId: '2',
+        gameSpecId: '456',
+        game: {
+          gameSpecId: '456',
+          gameName: 'Checkers',
+          wikipediaUrl: '',
+          screenShot: image
+        },
+        participantsUserIds: ['7UbETkgeXxe0RId6KxYioSJdARs1'], // including myself
+        lastUpdatedOn: 5678,
+        matchState: []
+      }
+    ],
+    phoneNumberToContact: {
+      [initialContact.phoneNumber]: initialContact
+    },
+    userIdToInfo: {},
+    myUser: {
+      myName: 'Name 111',
+      myPhoneNumber: '111111111',
+      myCountryCode: '',
+      myUserId: '7UbETkgeXxe0RId6KxYioSJdARs1'
+    },
+    signals: [
+      {
+        addedByUid: '7UbETkgeXxe0RId6KxYioSJdARs1',
+        timestamp: 1234,
+        signalType: 'sdp1',
+        signalData: '3 Men Chess'
+      }
+    ],
+    audioMute: false
+  };
   const oldLength = Object.keys(gameSpecState.gameSpecs.gameSpecIdToGameSpec)
     .length;
   const newState = trimState(gameSpecState);
@@ -282,17 +111,184 @@ it('Deletes unused gameSpecs, if there', () => {
 });
 
 it('Deletes Match with oldest timestamp, if there', () => {
+  const timestampState: StoreState = {
+    gamesList: [
+      {
+        gameSpecId: '123',
+        gameName: '3 Men Chess',
+        wikipediaUrl: '',
+        screenShot: image
+      },
+      {
+        gameSpecId: '456',
+        gameName: 'Checkers',
+        wikipediaUrl: '',
+        screenShot: image
+      }
+    ],
+    gameSpecs: {
+      imageIdToImage: {
+        [image.imageId]: image
+      },
+      elementIdToElement: {},
+      gameSpecIdToGameSpec: {
+        '123': {
+          gameSpecId: '123',
+          board: image,
+          pieces: []
+        },
+        '456': {
+          gameSpecId: '456',
+          board: image,
+          pieces: []
+        }
+      }
+    },
+    matchesList: [
+      {
+        matchId: '1',
+        gameSpecId: '123',
+        game: {
+          gameSpecId: '123',
+          gameName: '3 Men Chess',
+          wikipediaUrl: '',
+          screenShot: image
+        },
+        participantsUserIds: ['7UbETkgeXxe0RId6KxYioSJdARs1'], // including myself
+        lastUpdatedOn: 1234,
+        matchState: []
+      },
+      {
+        matchId: '2',
+        gameSpecId: '456',
+        game: {
+          gameSpecId: '456',
+          gameName: 'Checkers',
+          wikipediaUrl: '',
+          screenShot: image
+        },
+        participantsUserIds: ['7UbETkgeXxe0RId6KxYioSJdARs1'], // including myself
+        lastUpdatedOn: 5678,
+        matchState: []
+      }
+    ],
+    phoneNumberToContact: {
+      [initialContact.phoneNumber]: initialContact
+    },
+    userIdToInfo: {},
+    myUser: {
+      myName: 'Name 111',
+      myPhoneNumber: '111111111',
+      myCountryCode: '',
+      myUserId: '7UbETkgeXxe0RId6KxYioSJdARs1'
+    },
+    signals: [
+      {
+        addedByUid: '7UbETkgeXxe0RId6KxYioSJdARs1',
+        timestamp: 1234,
+        signalType: 'sdp1',
+        signalData: '3 Men Chess'
+      }
+    ],
+    audioMute: false
+  };
+  const newer = timestampState['matchesList'][1];
   const newState = trimState(timestampState);
-  // todo: test that the delete performed is on the oldest one
   expect(newState.matchesList.length).toEqual(1);
+  expect(newState.matchesList[0]).toEqual(newer);
 });
 
 it('Deletes phoneNumberToContact if there', () => {
+  const phoneState: StoreState = {
+    gamesList: [
+      {
+        gameSpecId: '123',
+        gameName: '3 Men Chess',
+        wikipediaUrl: '',
+        screenShot: image
+      },
+      {
+        gameSpecId: '456',
+        gameName: 'Checkers',
+        wikipediaUrl: '',
+        screenShot: image
+      }
+    ],
+    gameSpecs: {
+      imageIdToImage: {
+        [image.imageId]: image
+      },
+      elementIdToElement: {},
+      gameSpecIdToGameSpec: {}
+    },
+    matchesList: [],
+    phoneNumberToContact: {
+      [initialContact.phoneNumber]: initialContact
+    },
+    userIdToInfo: {},
+    myUser: {
+      myName: 'Name 111',
+      myPhoneNumber: '111111111',
+      myCountryCode: '',
+      myUserId: '7UbETkgeXxe0RId6KxYioSJdARs1'
+    },
+    signals: [
+      {
+        addedByUid: '7UbETkgeXxe0RId6KxYioSJdARs1',
+        timestamp: 1234,
+        signalType: 'sdp1',
+        signalData: '3 Men Chess'
+      }
+    ],
+    audioMute: false
+  };
   const newState = trimState(phoneState);
   expect(Object.keys(newState.phoneNumberToContact).length).toEqual(0);
 });
 
 it('Returns default state with user otherwise', () => {
+  const noChangeState: StoreState = {
+    gamesList: [
+      {
+        gameSpecId: '123',
+        gameName: '3 Men Chess',
+        wikipediaUrl: '',
+        screenShot: image
+      },
+      {
+        gameSpecId: '456',
+        gameName: 'Checkers',
+        wikipediaUrl: '',
+        screenShot: image
+      }
+    ],
+    gameSpecs: {
+      imageIdToImage: {
+        [image.imageId]: image
+      },
+      elementIdToElement: {},
+      gameSpecIdToGameSpec: {}
+    },
+    matchesList: [],
+    phoneNumberToContact: {},
+    userIdToInfo: {},
+    myUser: {
+      myName: 'Name 111',
+      myPhoneNumber: '111111111',
+      myCountryCode: '',
+      myUserId: '7UbETkgeXxe0RId6KxYioSJdARs1'
+    },
+    signals: [
+      {
+        addedByUid: '7UbETkgeXxe0RId6KxYioSJdARs1',
+        timestamp: 1234,
+        signalType: 'sdp1',
+        signalData: '3 Men Chess'
+      }
+    ],
+    audioMute: false
+  };
+
   const newState = trimState(noChangeState);
   const expectedState = deepCopy(storeStateDefault);
   expectedState.myUser = noChangeState.myUser;

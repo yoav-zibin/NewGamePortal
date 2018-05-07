@@ -394,10 +394,13 @@ class Board extends React.Component<BoardProps, BoardState> {
       let isVisible = piece.cardVisibilityPerIndex[this.selfParticipantIndex()];
       let imageIndex: number =
         pieceSpec.element.elementKind === 'card'
-          ? isVisible ? 0 : 1
+          ? isVisible
+            ? 0
+            : 1
           : piece.currentImageIndex;
       let zIndex = isVisible ? 50 : 1;
       let imageSrc: string = pieceSpec.element.images[imageIndex].downloadURL;
+      let startX: number, startY: number;
       console.log('zIndex is: ', zIndex);
       return (
         <CanvasImage
@@ -411,17 +414,21 @@ class Board extends React.Component<BoardProps, BoardState> {
           src={imageSrc}
           z-index={zIndex}
           onTouchStart={() => {
+            startX = piece.x;
+            startY = piece.y;
             console.log('onTouchStart');
           }}
           onTouchEnd={() => {
             console.log('onTouchEnd');
-            let startX = piece.x;
-            let startY = piece.y;
             this.handleTouchEnd(index, kind, startX, startY, ratio);
+            startX = -1;
+            startY = -1;
           }}
           onDragStart={() => {
             this.audioPlaying(dragStartAudio);
             console.log('onDragStart');
+            startX = piece.x;
+            startY = piece.y;
             this.setState({
               showCardOptions: false
             });
@@ -429,6 +436,9 @@ class Board extends React.Component<BoardProps, BoardState> {
           onDragEnd={() => {
             this.audioPlaying(dragEndAudio);
             console.log('onDragEnd');
+            this.handleTouchEnd(index, kind, startX, startY, ratio);
+            startX = -1;
+            startY = -1;
           }}
         />
       );
