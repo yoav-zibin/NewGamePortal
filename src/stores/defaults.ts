@@ -1,4 +1,14 @@
-import { StoreState } from '../types';
+import { StoreState, UserIdToInfo } from '../types';
+import { studentsUsers } from '../globals';
+
+const userIdToInfo: UserIdToInfo = {};
+for (let student of studentsUsers) {
+  userIdToInfo[student.userId] = {
+    displayName: student.name + ' (Mentor)',
+    phoneNumber: student.phoneNumber,
+    userId: student.userId
+  };
+}
 
 export const storeStateDefault: StoreState = {
   gamesList: [],
@@ -8,7 +18,7 @@ export const storeStateDefault: StoreState = {
     gameSpecIdToGameSpec: {}
   },
   matchesList: [],
-  userIdToInfo: {},
+  userIdToInfo: userIdToInfo,
   phoneNumberToContact: {},
   myUser: {
     myName: '',

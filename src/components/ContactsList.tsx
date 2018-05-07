@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Contact, RouterMatchParams, UserInfo, PhoneNumInfo, BooleanIndexer } from '../types';
+import { Contact, RouterMatchParams, UserInfo, PhoneNumInfo } from '../types';
 import { MatchInfo } from '../types';
 import { List, ListItem } from 'material-ui/List';
 import Divider from 'material-ui/Divider';
@@ -21,8 +21,7 @@ import {
   findMatch,
   getPhoneNumberToUserInfo,
   checkPhoneNumber,
-  UNKNOWN_NAME,
-  studentsUsers
+  UNKNOWN_NAME
 } from '../globals';
 
 const style: React.CSSProperties = {
@@ -73,7 +72,6 @@ interface Props {
 declare let ContactFindOptions: any;
 
 class ContactsList extends React.Component<Props, {}> {
-
   state = {
     filterValue: '',
     message: 'Message sent',
@@ -195,17 +193,16 @@ class ContactsList extends React.Component<Props, {}> {
     );
     console.log(phoneInfo);
     if (phoneInfo && phoneInfo.isValidNumber) {
-      ourFirebase.searchPhoneNumber(phoneInfo.e164Format).then((user)=>{
-        if(user==null){
-          let userInfo:Contact = {
+      ourFirebase.searchPhoneNumber(phoneInfo.e164Format).then(user => {
+        if (user == null) {
+          let userInfo: Contact = {
             phoneNumber: phoneInfo!.e164Format,
-            name: " "
+            name: ' '
           };
-          this.setState({notUsers: [userInfo]})
+          this.setState({ notUsers: [userInfo] });
         }
       });
     }
-
   };
 
   handleAddNotUser = (contact: Contact) => {
@@ -282,57 +279,58 @@ class ContactsList extends React.Component<Props, {}> {
   }
 
   render() {
-    let searchField =
-      this.props.searchByNumber ? (
-        <AutoComplete
-          floatingLabelText="Search By PhoneNumber"
-          filter={AutoComplete.fuzzyFilter}
-          dataSource={this.props.allUserNames.map((username: UserName) => ({
-            text: username.name,
-            value: (
-              <MenuItem
-                primaryText={username.name}
-                secondaryText={username.userType}
-              />
-            )
-          }))}
-          maxSearchResults={5}
-          fullWidth={true}
-          onNewRequest={this.handleRequestNumber}
-        />
-      ) : (
-        <AutoComplete
-          floatingLabelText="Search"
-          filter={AutoComplete.fuzzyFilter}
-          dataSource={this.props.allUserNames.map((username: UserName) => ({
-            text: username.name,
-            value: (
-              <MenuItem
-                primaryText={username.name}
-                secondaryText={username.userType}
-              />
-            )
-          }))}
-          maxSearchResults={5}
-          fullWidth={true}
-          onNewRequest={this.handleRequest}
-          onUpdateInput={this.handleUpdate}
-        />
-      );
+    let searchField = this.props.searchByNumber ? (
+      <AutoComplete
+        floatingLabelText="Search By PhoneNumber"
+        filter={AutoComplete.fuzzyFilter}
+        dataSource={this.props.allUserNames.map((username: UserName) => ({
+          text: username.name,
+          value: (
+            <MenuItem
+              primaryText={username.name}
+              secondaryText={username.userType}
+            />
+          )
+        }))}
+        maxSearchResults={5}
+        fullWidth={true}
+        onNewRequest={this.handleRequestNumber}
+      />
+    ) : (
+      <AutoComplete
+        floatingLabelText="Search"
+        filter={AutoComplete.fuzzyFilter}
+        dataSource={this.props.allUserNames.map((username: UserName) => ({
+          text: username.name,
+          value: (
+            <MenuItem
+              primaryText={username.name}
+              secondaryText={username.userType}
+            />
+          )
+        }))}
+        maxSearchResults={5}
+        fullWidth={true}
+        onNewRequest={this.handleRequest}
+        onUpdateInput={this.handleUpdate}
+      />
+    );
 
     return (
       <div>
         <div style={searchStyle}>{searchField}</div>
-        {this.state.didFetchContacts ? null : <RaisedButton 
-          onClick={() => {
-            this.fetchContacts()
-            this.setState({
-              didFetchContacts: true
-            })
-          }}
-          label={'Import My Contacts'}
-          style={searchStyle}
-        />}
+        {this.state.didFetchContacts ? null : (
+          <RaisedButton
+            onClick={() => {
+              this.fetchContacts();
+              this.setState({
+                didFetchContacts: true
+              });
+            }}
+            label={'Import My Contacts'}
+            style={searchStyle}
+          />
+        )}
         <List>
           <Subheader>Game User</Subheader>
           {this.filterParticipants(this.filterUsers(this.props.users)).map(
@@ -404,15 +402,8 @@ const mapStateToProps = (state: StoreState, ownProps: Props) => {
       allUserNames.push(userName);
     }
   }
-  const studentUserIds: BooleanIndexer = {};
-  for (let student of studentsUsers) {
-    studentUserIds[student.userId] = true;
-    if (student.userId !== state.myUser.myUserId) {
-      users.push({displayName: student.name + " (Mentor)", phoneNumber: '', userId: student.userId});
-    }
-  }
   for (let [userId, userInfo] of Object.entries(state.userIdToInfo)) {
-    if (userId === state.myUser.myUserId || studentUserIds[userId]) {
+    if (userId === state.myUser.myUserId) {
       // Ignore my user (in case I have my own phone number in my contacts)
     } else {
       users.push(userInfo);
