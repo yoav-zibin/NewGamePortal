@@ -12,7 +12,7 @@ import registerServiceWorker from './registerServiceWorker';
 import './index.css';
 import { ourFirebase } from './services/firebase';
 import { videoChat } from './services/videoChat';
-import { Contact, PhoneNumberToContact } from './types';
+import { Contact, PhoneNumberToContact, ContactWithUserId } from './types';
 import * as Raven from 'raven-js';
 import * as sentryRelease from './sentry-config.json';
 // import { initPushNotification } from './services/pushNotification';
@@ -69,16 +69,14 @@ if (window.location.search.match('^[?][0-9]$')) {
     });
   }
   // For faking our contacts on web.
-  const realUsers: Contact[] = [
+  const realUsers: ContactWithUserId[] = [
     {
+      userId: "HIfpdxPucXXUEffw8V4yezzUtKv1",
       phoneNumber: '+19175730795',
       name: 'Yoav Zibin'
     },
     {
-      phoneNumber: '+12016824408',
-      name: 'Amanpreet Singh'
-    },
-    {
+      userId: "Kw9aO9pQSQYMKuTXcBGe3bT1qoh1",
       phoneNumber: '+17326476905',
       name: 'Herbert Li'
     },
