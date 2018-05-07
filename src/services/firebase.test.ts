@@ -4,7 +4,6 @@
 import { ourFirebase } from './firebase';
 import {
   MatchInfo,
-  UserIdToInfo,
   PhoneNumberToContact,
   GameSpecs,
   UserInfo
@@ -32,10 +31,6 @@ ourFirebase.init(testConfig);
 
 // If you remove all gamePortalUsers, then remember to create one for the test.
 const existingUserId = 'wnSB3rTfCLRHkgfGM6jZtaw7EpB3';
-const existingUserInfo: UserInfo = {
-  displayName: 'Unit tests user',
-  userId: 'wnSB3rTfCLRHkgfGM6jZtaw7EpB3'
-};
 
 function createMatch() {
   const state = store.getState();
@@ -251,31 +246,20 @@ it('addFcmTokens', () => {
   ourFirebase.addFcmToken('1'.repeat(140), 'android');
 });
 
-it('addParticipants', done => {
+it('addParticipants', () => {
   const match: MatchInfo = createMatch();
   ourFirebase.addParticipant(match, existingUserId);
-  store.subscribe(() => {
-    const state = store.getState();
-    const matchesList = state.matchesList;
-    const thisMatch = findMatch(matchesList, match.matchId);
-    if (
-      thisMatch &&
-      thisMatch.participantsUserIds.indexOf(existingUserId) !== -1
-    ) {
-      done();
-    }
-  });
+
+  const state = store.getState();
+  const matchesList = state.matchesList;
+  expectEqual(findMatch(matchesList, match.matchId)!.participantsUserIds.indexOf(existingUserId) !== -1, true);
 });
 
-it('fetch match list from firebase', done => {
+it('fetch match list from firebase', () => {
   const matchId = createMatch().matchId;
-  store.subscribe(() => {
-    const matchesList = store.getState().matchesList;
-    const match = findMatch(matchesList, matchId);
-    if (match) {
-      done();
-    }
-  });
+  const matchesList = store.getState().matchesList;
+  const match = findMatch(matchesList, matchId)!;
+  expectEqual(match.matchId, matchId);
 });
 
 it('Should update the phone numbers', done => {
@@ -302,16 +286,13 @@ it('Should update the phone numbers', done => {
   store.subscribe(() => {
     const userIdToInfo = store.getState().userIdToInfo;
     const uid = ourFirebase.getUserId();
-    const expectedUserIdToInfo: UserIdToInfo = {
-      [uid]: {
+    const expectedUserInfo: UserInfo = {
         userId: uid,
         phoneNumber: magicPhoneNumberForTest,
         displayName: displayName
-      },
-      [existingUserId]: existingUserInfo
-    };
+      };
     if (userIdToInfo[uid]) {
-      expectEqual(userIdToInfo, expectedUserIdToInfo);
+      expectEqual(userIdToInfo[uid], expectedUserInfo);
       done();
     }
   });

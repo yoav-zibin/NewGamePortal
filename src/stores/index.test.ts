@@ -67,6 +67,7 @@ it('Deletes unused gameSpecs, if there', () => {
         },
         participantsUserIds: ['7UbETkgeXxe0RId6KxYioSJdARs1'], // including myself
         lastUpdatedOn: 1234,
+        updatedByUserId: 'uid',
         matchState: []
       },
       {
@@ -80,6 +81,7 @@ it('Deletes unused gameSpecs, if there', () => {
         },
         participantsUserIds: ['7UbETkgeXxe0RId6KxYioSJdARs1'], // including myself
         lastUpdatedOn: 5678,
+        updatedByUserId: 'uid',
         matchState: []
       }
     ],
@@ -156,6 +158,7 @@ it('Deletes Match with oldest timestamp, if there', () => {
         },
         participantsUserIds: ['7UbETkgeXxe0RId6KxYioSJdARs1'], // including myself
         lastUpdatedOn: 1234,
+        updatedByUserId: 'uid',
         matchState: []
       },
       {
@@ -169,6 +172,7 @@ it('Deletes Match with oldest timestamp, if there', () => {
         },
         participantsUserIds: ['7UbETkgeXxe0RId6KxYioSJdARs1'], // including myself
         lastUpdatedOn: 5678,
+        updatedByUserId: 'uid',
         matchState: []
       }
     ],

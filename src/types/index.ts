@@ -149,6 +149,7 @@ export interface MatchInfo {
   game: GameInfo;
   participantsUserIds: string[]; // including myself
   lastUpdatedOn: number /*firebase.database.ServerValue.TIMESTAMP*/;
+  updatedByUserId: string;
   matchState: MatchState;
 }
 

@@ -277,7 +277,8 @@ declare namespace fbr { // fbr stands for Fire Base Rules
   interface Match {
     participants: Participants;
     createdOn: number /*firebase.database.ServerValue.TIMESTAMP*/;
-    lastUpdatedOn: number /*firebase.database.ServerValue.TIMESTAMP*/;
+    lastUpdatedOn: number;
+    updatedByUserId: string;
     gameSpecId: string;
     pieces: PiecesState;
   }

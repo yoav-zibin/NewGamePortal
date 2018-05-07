@@ -450,9 +450,10 @@ export namespace ourFirebase {
       if (!matchFb) {
         return;
       }
+      const uid = getUserId();
       if (
         receivedMatches[matchId] &&
-        receivedMatches[matchId].lastUpdatedOn === matchFb.lastUpdatedOn
+        receivedMatches[matchId].updatedByUserId === uid
       ) {
         return; // Ignore my own updates
       }
@@ -478,6 +479,7 @@ export namespace ourFirebase {
         game: gameInfo,
         participantsUserIds: participantsUserIds,
         lastUpdatedOn: matchFb.lastUpdatedOn,
+        updatedByUserId: matchFb.updatedByUserId || uid,
         matchState: newMatchStates
       };
 
@@ -536,6 +538,7 @@ export namespace ourFirebase {
       participants: participants,
       createdOn: getTimestamp(),
       lastUpdatedOn: getTimestamp(),
+      updatedByUserId: uid,
       pieces: {}
     };
     refSet(matchRef, newFBMatch);
@@ -547,6 +550,7 @@ export namespace ourFirebase {
       game: game,
       participantsUserIds: [uid],
       lastUpdatedOn: newFBMatch.lastUpdatedOn,
+      updatedByUserId: uid,
       matchState: []
     };
 
@@ -583,10 +587,11 @@ export namespace ourFirebase {
       participantIndex: participantNumber,
       pingOpponents: getTimestamp()
     };
-    refSet(
-      getRef(`/gamePortal/matches/${matchId}/participants/${userId}`),
-      participantUserObj
-    );
+    const toBeFrozenMatch = deepCopy(match);
+    toBeFrozenMatch.participantsUserIds.push(userId);
+    const updates: AnyIndexer = {};
+    updates[`participants/${userId}`] = participantUserObj;
+    updateMatch(toBeFrozenMatch, updates);
     addMatchMembership(userId, matchId);
   }
 
@@ -599,7 +604,7 @@ export namespace ourFirebase {
       matchState,
       match.gameSpecId
     );
-    updateMatch(match, updates);
+    updateMatchUsingCopy(match, updates);
   }
 
   // Call this after updating a single piece.
@@ -608,20 +613,18 @@ export namespace ourFirebase {
     const pieceState: PieceState = match.matchState[pieceIndex];
     const updates: AnyIndexer = {};
     updates[`pieces/${pieceIndex}`] = convertPieceState(pieceState);
-    updateMatch(match, updates);
+    updateMatchUsingCopy(match, updates);
   }
 
+  function updateMatchUsingCopy(match: MatchInfo, updates: AnyIndexer) {
+    updateMatch(deepCopy(match), updates);
+  }
   function updateMatch(match: MatchInfo, updates: AnyIndexer) {
-    updates['lastUpdatedOn'] = getLocalTime();
-    const frozenMatch = deepCopy(match);
-    deepFreeze(frozenMatch);
-    receivedMatches[frozenMatch.matchId] = frozenMatch;
+    updates['lastUpdatedOn'] = getTimestamp();
+    deepFreeze(match);
+    receivedMatches[match.matchId] = match;
     dispatchSetMatchesList();
     refUpdate(getRef(`/gamePortal/matches/${match.matchId}`), updates);
-  }
-
-  function getLocalTime() {
-    return new Date().getTime();
   }
 
   export function checkMatchState(matchState: MatchState, gameSpecId: string) {
