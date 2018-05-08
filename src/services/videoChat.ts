@@ -551,6 +551,7 @@ export namespace videoChat {
     setWidthHeight(name, '150px', '150px');
     // for iOS: tell the plugin to handle your video tag manually
     if (isIos) {
+      window.cordova.plugins.iosrtc.refreshVideos();
       window.cordova.plugins.iosrtc.observeVideo(video);
     }
   }
