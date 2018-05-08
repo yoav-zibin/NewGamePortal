@@ -4,7 +4,6 @@ import {
   Opponent 
 } from '../types/index';
 import { videoChat } from '../services/videoChat';
-// import { simpleVideo } from '../services/simpleVideo';
 
 import { checkCondition } from '../globals';
 
@@ -44,7 +43,6 @@ class VideoArea extends React.Component<Props> {
         );
       }
     });
-    // require('../services/simpleVideo');
   }
 
   componentWillUnmount() {
@@ -70,8 +68,6 @@ class VideoArea extends React.Component<Props> {
             </div>
           </div>
         ))}
-          {/* local Video: <video id="localVideo" autoPlay={true} /><br/> */}
-          {/* Peer connection Video: <video id="pcVideo" autoPlay={true} /><br/> */}
       </div>
     );
   }
