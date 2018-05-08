@@ -440,6 +440,7 @@ export namespace ourFirebase {
 
   const listeningToMatchIds: string[] = [];
   const receivedMatches: IdIndexer<MatchInfo> = {};
+  const ignoredMatches: BooleanIndexer = {};
 
   function getMatchMemberships(matchMemberships: fbr.MatchMemberships) {
     if (!matchMemberships) {
@@ -501,21 +502,27 @@ export namespace ourFirebase {
 
       const gameInfo = findGameInfo(gameSpecId);
       if (!gameInfo) {
-        return; // I've deleted some crappy games, but there are some existing matches.
-      }
-      fetchGameSpec(gameInfo);
-      const match: MatchInfo = {
-        matchId: matchId,
-        gameSpecId: gameSpecId,
-        game: gameInfo,
-        participantsUserIds: participantsUserIds,
-        lastUpdatedOn: matchFb.lastUpdatedOn,
-        updatedByUserId: matchFb.updatedByUserId || uid,
-        matchState: newMatchStates
-      };
+        // I've deleted some crappy games, but there are some existing matches.
+        ignoredMatches[matchId] = true;
+      } else {
+        fetchGameSpec(gameInfo);
+        const match: MatchInfo = {
+          matchId: matchId,
+          gameSpecId: gameSpecId,
+          game: gameInfo,
+          participantsUserIds: participantsUserIds,
+          lastUpdatedOn: matchFb.lastUpdatedOn,
+          updatedByUserId: matchFb.updatedByUserId || uid,
+          matchState: newMatchStates
+        };
 
-      receivedMatches[matchId] = match;
-      if (Object.keys(receivedMatches).length >= listeningToMatchIds.length) {
+        receivedMatches[matchId] = match;
+      }
+      if (
+        Object.keys(receivedMatches).length +
+          Object.keys(ignoredMatches).length >=
+        listeningToMatchIds.length
+      ) {
         dispatchSetMatchesList();
       }
     });
