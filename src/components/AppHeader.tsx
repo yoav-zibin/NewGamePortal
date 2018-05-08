@@ -17,7 +17,6 @@ import MenuItem from 'material-ui/MenuItem';
 import IconMenu from 'material-ui/IconMenu';
 import { MatchStateHelper } from '../services/matchStateHelper';
 import { ourFirebase } from '../services/firebase';
-import Rules from './Rules';
 
 interface Props {
   matchInfo: MatchInfo;
@@ -123,115 +122,63 @@ class AppHeader extends React.Component<Props, {}> {
 
   render() {
     let volume = this.props.audioMute ? <VolumeMute /> : <VolumeUp />;
+    let rules = this.state.showRules ? (
+      <iframe
+        src={this.props.matchInfo.game.wikipediaUrl}
+        height="490"
+        width="490"
+      />
+    ) : (
+      'Show Game Rules'
+    );
     if (this.onPlayingScreen()) {
       // We're on Playing Screen, which needs 'add' button and mute button
-      if (this.state.showRules) {
-        return (
-          <AppBar
-            iconElementLeft={
-              <IconButton>
-                <NavigationArrowBack onClick={this.handleNavigationClick} />
-              </IconButton>
-            }
-            iconElementRight={
-              <div>
-                <IconMenu
-                  clickCloseDelay={0}
-                  iconButtonElement={
-                    <IconButton>
-                      <MoreVertIcon />
-                    </IconButton>
+      return (
+        <AppBar
+          iconElementLeft={
+            <IconButton>
+              <NavigationArrowBack onClick={this.handleNavigationClick} />
+            </IconButton>
+          }
+          iconElementRight={
+            <div>
+              <IconMenu
+                iconButtonElement={
+                  <IconButton>
+                    <MoreVertIcon />
+                  </IconButton>
+                }
+                iconStyle={{ color: 'white' }}
+                targetOrigin={{ horizontal: 'right', vertical: 'top' }}
+                anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+              >
+                <MenuItem
+                  primaryText="Invite a Friend"
+                  onClick={this.handleAddFriendClick}
+                />
+                <MenuItem
+                  primaryText={
+                    this.props.audioMute
+                      ? 'Play Game Sounds'
+                      : 'Mute Game Sounds'
                   }
-                  iconStyle={{ color: 'white' }}
-                  targetOrigin={{ horizontal: 'right', vertical: 'top' }}
-                  anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-                >
-                  <MenuItem
-                    primaryText="Invite a Friend"
-                    onClick={this.handleAddFriendClick}
-                  />
-                  <MenuItem
-                    primaryText={
-                      this.props.audioMute
-                        ? 'Play Game Sounds'
-                        : 'Mute Game Sounds'
-                    }
-                    onClick={this.handleAudioClick}
-                    rightIcon={volume}
-                  />
-                  <MenuItem
-                    style={{ height: '500px', width: '500px' }}
-                    primaryText={
-                      <Rules
-                        url={this.props.matchInfo.game.wikipediaUrl}
-                        width="490"
-                        height="500"
-                      />
-                    }
-                    onClick={this.handleGameRulesClick.bind(this)}
-                  />
-                  <MenuItem
-                    primaryText="Hide Game Rules"
-                    onClick={this.handleGameRulesClick.bind(this)}
-                  />
-                  <MenuItem
-                    primaryText="Reset Match"
-                    onClick={this.handleResetMatchClick.bind(this)}
-                  />
-                </IconMenu>
-              </div>
-            }
-            title={this.getLocation()}
-          />
-        );
-      } else {
-        return (
-          <AppBar
-            iconElementLeft={
-              <IconButton>
-                <NavigationArrowBack onClick={this.handleNavigationClick} />
-              </IconButton>
-            }
-            iconElementRight={
-              <div>
-                <IconMenu
-                  iconButtonElement={
-                    <IconButton>
-                      <MoreVertIcon />
-                    </IconButton>
-                  }
-                  iconStyle={{ color: 'white' }}
-                  targetOrigin={{ horizontal: 'right', vertical: 'top' }}
-                  anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-                >
-                  <MenuItem
-                    primaryText="Invite a Friend"
-                    onClick={this.handleAddFriendClick}
-                  />
-                  <MenuItem
-                    primaryText={
-                      this.props.audioMute
-                        ? 'Play Game Sounds'
-                        : 'Mute Game Sounds'
-                    }
-                    onClick={this.handleAudioClick}
-                    rightIcon={volume}
-                  />
-                  <MenuItem
-                    primaryText="Show Game Rules"
-                    onClick={this.handleGameRulesClick.bind(this)}
-                  />
-                  <MenuItem
-                    primaryText="Reset Match"
-                    onClick={this.handleResetMatchClick.bind(this)}
-                  />
-                </IconMenu>
-              </div>
-            }
-            title={this.getLocation()}
-          />
-        );
-      }
+                  onClick={this.handleAudioClick}
+                  rightIcon={volume}
+                />
+                <MenuItem
+                  primaryText={rules}
+                  onClick={this.handleGameRulesClick.bind(this)}
+                />
+                <MenuItem
+                  primaryText="Reset Match"
+                  onClick={this.handleResetMatchClick.bind(this)}
+                />
+              </IconMenu>
+            </div>
+          }
+          title={this.getLocation()}
+        />
+      );
     } else if (this.showBackButton()) {
       // We're on a page that needs back button
       return (
