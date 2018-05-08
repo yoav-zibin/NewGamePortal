@@ -35,6 +35,7 @@ function setVideoStream(videoId: string, stream: MediaStream) {
   )!;
   video.srcObject = stream;
   if (isIos) {
+    window.cordova.plugins.iosrtc.refreshVideos();
     window.cordova.plugins.iosrtc.observeVideo(video);
   }
 }

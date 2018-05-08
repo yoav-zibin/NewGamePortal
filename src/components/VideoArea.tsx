@@ -58,7 +58,8 @@ class VideoArea extends React.Component<Props> {
     // participants.unshift({ userId: 'Me', name: 'Me' });
 
     return (
-      <div style={styles.videoChatContainer}>
+      // <div style={styles.videoChatContainer}>
+      <div>
         {/* {participants.map((participant, index) => (
           <div key={participant.userId} style={styles.videoChatItem}>
             <video id={'videoElement' + index} />
