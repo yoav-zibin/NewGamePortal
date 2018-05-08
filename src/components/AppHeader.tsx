@@ -148,7 +148,7 @@ class AppHeader extends React.Component<Props, {}> {
                   onClick={this.handleAddFriendClick}
                 />
                 <MenuItem
-                  primaryText="Toggle Sound"
+                  primaryText={this.props.audioMute?"Play Game Sounds":"Mute Game Sounds"}
                   onClick={this.handleAudioClick}
                   rightIcon={volume}
                 />
