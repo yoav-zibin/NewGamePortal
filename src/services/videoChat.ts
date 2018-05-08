@@ -86,8 +86,11 @@ export namespace videoChat {
       return;
     }
     // When you stop a video track, it can never be reopened.
-    // set localMediaStream to be null
-    localMediaStream.getVideoTracks()[0].stop();
+    // set localMediaStream to be null 
+    // (note that stop is not implemented in the iosrtc plugin)
+    if (!isIos) {
+      localMediaStream.getVideoTracks()[0].stop();
+    }
     localMediaStream = null;
 
     // refresh video elements if using the iOS app
@@ -454,8 +457,8 @@ export namespace videoChat {
   ) {
     console.log(isVideoVisible ? 'Showing video' : 'Showing name');
     const { video, name } = videoName;
-    video.style.display = isVideoVisible ? 'inline' : 'none';
-    name.style.display = isVideoVisible ? 'none' : 'inline';
+    video.style.display = isVideoVisible ? '' : 'none';
+    name.style.display = isVideoVisible ? 'none' : '';
   }
   function setVideoStream(videoName: VideoNameElement, stream: MediaStream) {
     setVideoOrNameVisible(videoName, true);
