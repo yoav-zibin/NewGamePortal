@@ -63,8 +63,7 @@ export function trimState(state: StoreState): StoreState {
     }
     if (gameSpecsToDelete.length > 0) {
       // todo: use the correct loops.
-      for (let i = 0; i < gameSpecsToDelete.length; i++) {
-        let specId = gameSpecsToDelete[i];
+      for (let specId of gameSpecsToDelete) {
         delete state.gameSpecs.gameSpecIdToGameSpec[specId];
       }
       return state;
