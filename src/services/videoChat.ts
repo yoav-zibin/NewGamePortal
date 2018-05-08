@@ -391,11 +391,12 @@ export namespace videoChat {
       const signalType: SignalType = signalMsg.signalType;
       checkCondition('canReceiveMessage', this.canReceiveMessage(signalType));
       const signalData: any = JSON.parse(signalMsg.signalData);
+      console.log(signalData);
       switch (signalType) {
         case SDP2:
         case SDP1:
           this.gotSdp = true;
-          this.pc.setRemoteDescription(signalData).then(
+          this.pc.setRemoteDescription(<any>new RTCSessionDescription(signalData)).then(
             () => {
               console.log('setRemoteDescription success');
             },
