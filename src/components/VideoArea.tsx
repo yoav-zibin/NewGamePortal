@@ -1,32 +1,35 @@
 import * as React from 'react';
-import { CSSPropertiesIndexer, Opponent } from '../types/index';
+import { 
+  // CSSPropertiesIndexer, 
+  Opponent 
+} from '../types/index';
 // import { videoChat } from '../services/videoChat';
 // import { simpleVideo } from '../services/simpleVideo';
 
 // import { checkCondition } from '../globals';
 
-const styles: CSSPropertiesIndexer = {
-  videoChatItem: {
-    width: '150px',
-    height: '150px',
-    minWidth: '150px',
-    maxWidth: '150px',
-    minHeight: '150px',
-    maxHeight: '150px'
-  },
-  videoChatContainer: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-around',
-    flexFlow: 'row wrap'
-  },
-  centerItem: {
-    textAlign: 'center',
-    lineHeight: '150px',
-    width: '150px',
-    height: '150px'
-  }
-};
+// const styles: CSSPropertiesIndexer = {
+//   videoChatItem: {
+//     width: '150px',
+//     height: '150px',
+//     minWidth: '150px',
+//     maxWidth: '150px',
+//     minHeight: '150px',
+//     maxHeight: '150px'
+//   },
+//   videoChatContainer: {
+//     display: 'flex',
+//     alignItems: 'center',
+//     justifyContent: 'space-around',
+//     flexFlow: 'row wrap'
+//   },
+//   centerItem: {
+//     textAlign: 'center',
+//     lineHeight: '150px',
+//     width: '150px',
+//     height: '150px'
+//   }
+// };
 
 interface Props {
   opponents: Opponent[];
