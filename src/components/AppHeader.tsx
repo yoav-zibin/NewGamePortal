@@ -123,7 +123,6 @@ class AppHeader extends React.Component<Props, {}> {
     let volume = this.props.audioMute ? <VolumeMute /> : <VolumeUp />;
     if (this.onPlayingScreen()) {
       // We're on Playing Screen, which needs 'add' button and mute button
-      console.log('ON PLAYING SCREEN');
       return (
         <AppBar
           iconElementLeft={
@@ -148,7 +147,11 @@ class AppHeader extends React.Component<Props, {}> {
                   onClick={this.handleAddFriendClick}
                 />
                 <MenuItem
-                  primaryText={this.props.audioMute?"Play Game Sounds":"Mute Game Sounds"}
+                  primaryText={
+                    this.props.audioMute
+                      ? 'Play Game Sounds'
+                      : 'Mute Game Sounds'
+                  }
                   onClick={this.handleAudioClick}
                   rightIcon={volume}
                 />
@@ -168,7 +171,6 @@ class AppHeader extends React.Component<Props, {}> {
       );
     } else if (this.showBackButton()) {
       // We're on a page that needs back button
-      console.log('SHOWING BACK BUTTON');
       return (
         <AppBar
           iconElementLeft={
@@ -181,7 +183,6 @@ class AppHeader extends React.Component<Props, {}> {
       );
     } else {
       // We're on login or matches page
-      console.log('ON LOGIN/HOME PAGE');
       return (
         <AppBar
           title={this.getLocation()}

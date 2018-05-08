@@ -280,14 +280,12 @@ class Board extends React.Component<BoardProps, BoardState> {
 
     let width = this.props.gameSpec.board.width;
     let height = this.props.gameSpec.board.height;
-
     let endX = position.x / ratio / width * 100;
     let endY = position.y / ratio / height * 100;
     let distance = Math.sqrt(
       (startX - endX) * (startX - endX) + (startY - endY) * (startY - endY)
     );
 
-    console.log('distance' + distance);
     if (distance < 0.00001) {
       // it's a touch instead of drag
       if (kind === 'toggable') {
@@ -400,10 +398,7 @@ class Board extends React.Component<BoardProps, BoardState> {
       let isVisible = piece.cardVisibilityPerIndex[this.selfParticipantIndex()];
       let imageIndex: number =
         kind === 'card' ? (isVisible ? 0 : 1) : piece.currentImageIndex;
-      let zIndex = isVisible ? 50 : 1;
       let imageSrc: string = pieceSpec.element.images[imageIndex].downloadURL;
-      let startX: number, startY: number;
-      console.log('zIndex is: ', zIndex);
       return (
         <CanvasImage
           ref={'canvasImage' + index}
@@ -414,33 +409,18 @@ class Board extends React.Component<BoardProps, BoardState> {
           x={piece.x * width / 100 * ratio}
           y={piece.y * height / 100 * ratio}
           src={imageSrc}
-          z-index={zIndex}
-          onTouchStart={() => {
-            startX = piece.x;
-            startY = piece.y;
-            console.log('onTouchStart');
-          }}
-          onTouchEnd={() => {
-            console.log('onTouchEnd');
-            this.handleTouchEnd(index, kind, startX, startY, ratio);
-            startX = -1;
-            startY = -1;
+          z-index={piece.zDepth}
+          onDragEnd={() => {
+            console.log('onDragEnd');
+            this.audioPlaying(dragEndAudio);
+            this.handleTouchEnd(index, kind, piece.x, piece.y, ratio);
           }}
           onDragStart={() => {
-            this.audioPlaying(dragStartAudio);
             console.log('onDragStart');
-            startX = piece.x;
-            startY = piece.y;
-            this.setState({
-              showCardOptions: false
-            });
-          }}
-          onDragEnd={() => {
-            this.audioPlaying(dragEndAudio);
-            console.log('onDragEnd');
-            this.handleTouchEnd(index, kind, startX, startY, ratio);
-            startX = -1;
-            startY = -1;
+            this.audioPlaying(dragStartAudio);
+            // TODO: Hide the menu using DOM manipulation
+            // or hide it after the drag ends
+            this.helper.setMaxZ(index);
           }}
         />
       );
