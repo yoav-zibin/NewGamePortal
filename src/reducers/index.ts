@@ -69,7 +69,13 @@ export function checkMatchStateInStore(
   const spec = state.gameSpecs.gameSpecIdToGameSpec[gameSpecId];
   checkCondition(
     '#pieces',
-    matchState.length === 0 || !spec || matchState.length === spec.pieces.length
+    matchState.length === 0 ||
+      !spec ||
+      matchState.length === spec.pieces.length ||
+      // I've changed the game specs for some games and added a new element (a deck)
+      // when cards didn't belong to a deck.
+      // But some existing matches still have one piece less.
+      matchState.length === spec.pieces.length - 1
   );
 }
 

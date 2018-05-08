@@ -34,7 +34,8 @@ import {
   AnyIndexer,
   CardVisibility,
   ContactWithUserId,
-  UserIdToInfo
+  UserIdToInfo,
+  NumberIndexer
 } from '../types';
 import { Action, checkMatchStateInStore } from '../reducers';
 
@@ -298,10 +299,33 @@ export namespace ourFirebase {
         throw new Error('no game spec!');
       }
       const action: Action = {
-        updateGameSpecs: convertGameSpecForPortal(gameSpecId, gameSpecF)
+        updateGameSpecs: fixGameSpecs(
+          convertGameSpecForPortal(gameSpecId, gameSpecF)
+        )
       };
       dispatch(action);
     });
+  }
+
+  function fixGameSpecs(gameSpecs: GameSpecs): GameSpecs {
+    const elementIdToResizingFactor: NumberIndexer = {
+      // Aeroplane Chess gameSpecId: "-KzIu__PqVGdQhAlileQ"
+      '-KzItgbiXd89CURCoXe5': 1.5, // increase that element ID by 20%
+      '-KzItocCLqCMbFLpFDzb': 1.5,
+      '-KzItsMbQZMzCjk8rKSP': 1.5,
+      '-KzItkd4gsI3JZlsaZUZ': 1.5
+    };
+
+    for (let [elementId, element] of Object.entries(
+      gameSpecs.elementIdToElement
+    )) {
+      let pieceRatio = elementIdToResizingFactor[elementId];
+      if (pieceRatio) {
+        element.height *= pieceRatio;
+        element.width *= pieceRatio;
+      }
+    }
+    return gameSpecs;
   }
 
   function convertGameSpecForPortal(
