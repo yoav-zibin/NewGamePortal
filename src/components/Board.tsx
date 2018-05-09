@@ -67,14 +67,6 @@ class Board extends React.Component<BoardProps, BoardState> {
     timer: null
   };
 
-  // We need to do that because when we render the component,
-  // we want them to be draw in the order of z-index
-  sortZIndexofPieces() {
-    this.mutableMatch.matchState.sort((a, b) => {
-      return a.zDepth - b.zDepth;
-    });
-  }
-
   audioPlaying(sound: HTMLAudioElement) {
     if (isApp && !this.props.audioMute) {
       let playPromise = sound.play();
@@ -254,6 +246,8 @@ class Board extends React.Component<BoardProps, BoardState> {
     }
   }
 
+  // We need to do that because when we render the component,
+  // we want them to be draw in the order of z-index
   sortMatchStateByZ(): { originalIndex: number; pieceState: PieceState }[] {
     const state: MatchState = this.mutableMatch.matchState;
     return state
@@ -420,8 +414,6 @@ class Board extends React.Component<BoardProps, BoardState> {
       />
     );
 
-    // this.sortZIndexofPieces();
-
     // todo: after sorting, the sequence of piece in gameSpec is not the same as matchState any more
     // so the initial state is not correct anymore
     // and every when we touch a piece, the sequence is changed
@@ -436,7 +428,9 @@ class Board extends React.Component<BoardProps, BoardState> {
       let isVisible = piece.cardVisibilityPerIndex[this.selfParticipantIndex()];
       let imageIndex: number =
         pieceSpec.element.elementKind === 'card'
-          ? isVisible ? 0 : 1
+          ? isVisible
+            ? 0
+            : 1
           : piece.currentImageIndex;
       // let zIndex = piece.zDepth;
       let imageSrc: string = pieceSpec.element.images[imageIndex].downloadURL;
