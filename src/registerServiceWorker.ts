@@ -1,4 +1,4 @@
-/* In production, we register a service worker to serve assets from local cache.
+// In production, we register a service worker to serve assets from local cache.
 
 // This lets the app load faster on subsequent visits in production, and gives
 // it offline capabilities. However, it also means that developers (and users)
@@ -7,9 +7,9 @@
 
 // To learn more about the benefits of this model, read https://goo.gl/KwvDNy.
 // This link also includes instructions on opting out of this behavior.
-// import {messaging, auth, initPushNotification} from './firebase';
-import * as firebase from 'firebase';
-import { initPushNotification } from './services/pushNotification';
+
+// import * as firebase from 'firebase';
+// import { initPushNotification } from './services/pushNotification';
 
 const isLocalhost = Boolean(
   window.location.hostname === 'localhost' ||
@@ -53,12 +53,12 @@ function registerValidSW(swUrl: string) {
   navigator.serviceWorker
     .register(swUrl)
     .then(registration => {
-      firebase.messaging().useServiceWorker(registration);
-      firebase.auth().onAuthStateChanged(user => {
-        if (user) {
-          initPushNotification();
-        }
-      });
+      // firebase.messaging().useServiceWorker(registration);
+      // firebase.auth().onAuthStateChanged(user => {
+      //   if (user) {
+      //     initPushNotification();
+      //   }
+      // });
       registration.onupdatefound = () => {
         const installingWorker = registration.installing;
         if (installingWorker) {
@@ -120,4 +120,3 @@ export function unregister() {
     });
   }
 }
-*/

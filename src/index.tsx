@@ -20,7 +20,12 @@ import { videoChat } from './services/videoChat';
 import { Contact, PhoneNumberToContact } from './types';
 import * as Raven from 'raven-js';
 import * as sentryRelease from './sentry-config.json';
-// import registerServiceWorker from './registerServiceWorker';
+
+// Service worker is useful for caching the static resources, i.e., react generates service-worker.js with:
+// var precacheConfig=[["/NewGamePortal/index.html","43da4505e69af8c53fff6b8c443e1fb6"],["/NewGamePortal/static/css/
+import registerServiceWorker from './registerServiceWorker';
+
+// No need for web push notifications.
 // import { initPushNotification } from './services/pushNotification';
 
 // We delay calling reactRender until we know if we're logged in or not
@@ -39,7 +44,8 @@ function reactRender() {
       <Provider store={store}>
         <BrowserRouter
           basename={
-            location.hostname === 'yoav-zibin.github.io'
+            location.hostname === 'yoav-zibin.github.io' ||
+            location.hostname.endsWith('zibiga.com')
               ? '/NewGamePortal'
               : '/'
           }
@@ -63,7 +69,7 @@ const searchParameters = window.location.search;
 console.log('Page init with parameters:', searchParameters);
 ourFirebase.reactRender = reactRender;
 ourFirebase.init(); // might call reactRender immediately if there is nothing in the local storage.
-// registerServiceWorker();
+registerServiceWorker();
 
 if (searchParameters.match('^[?][0-9]$')) {
   const myUserIndex = Number(searchParameters.substr(1));
