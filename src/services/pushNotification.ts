@@ -1,5 +1,7 @@
 /*
 import { ourFirebase } from './firebase';
+import * as firebase from 'firebase/app';
+import 'firebase/messaging';
 import { isApp } from '../globals';
 
 export const initPushNotification = () => {
@@ -7,7 +9,7 @@ export const initPushNotification = () => {
     console.log('Mobile Device Logged In');
     return;
   }
-  const messaging = ourFirebase.getMessaging();
+  const messaging = firebase.messaging();
   if (messaging === null) {
     return;
   }
