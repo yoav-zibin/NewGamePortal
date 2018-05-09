@@ -7,10 +7,10 @@ import CanvasImage from './CanvasImage';
 import { IconButton, IconMenu, MenuItem } from 'material-ui';
 import MoreVertIcon from 'material-ui/svg-icons/navigation/more-vert';
 import { connect } from 'react-redux';
-import { StoreState, NumberIndexer } from '../types/index';
+import { StoreState } from '../types/index';
 import { ourFirebase } from '../services/firebase';
 import { MatchStateHelper } from '../services/matchStateHelper';
-import { isIos, isAndroid, deepCopy } from '../globals';
+import { deepCopy, isApp } from '../globals';
 
 const saudio = require('../sounds/drag-start.mp3');
 const daudio = require('../sounds/dice.mp3');
@@ -40,13 +40,6 @@ interface BoardState {
 let diceAudio = new Audio(daudio);
 let dragStartAudio = new Audio(saudio);
 let dragEndAudio = new Audio(eaudio);
-// Aeroplane Chess gameSpecId: "-KzIu__PqVGdQhAlileQ"
-const elementIdToResizingFactor: NumberIndexer = {
-  '-KzItgbiXd89CURCoXe5': 1.5, // increase that element ID by 20%
-  '-KzItocCLqCMbFLpFDzb': 1.5,
-  '-KzItsMbQZMzCjk8rKSP': 1.5,
-  '-KzItkd4gsI3JZlsaZUZ': 1.5
-};
 
 // TODO: fix z-index (when you start to drag something, it should have the max z-index).
 // TODO: shuffling doesn't work (e.g. in scrabble).
@@ -83,7 +76,7 @@ class Board extends React.Component<BoardProps, BoardState> {
   }
 
   audioPlaying(sound: HTMLAudioElement) {
-    if ((isAndroid || isIos) && !this.props.audioMute) {
+    if (isApp && !this.props.audioMute) {
       let playPromise = sound.play();
       if (playPromise !== undefined) {
         playPromise
@@ -107,6 +100,7 @@ class Board extends React.Component<BoardProps, BoardState> {
   }
 
   componentWillUpdate(nextProps: BoardProps) {
+    console.log('Board componentWillUpdate');
     const prevMatchState = this.props.matchInfo.matchState;
     if (prevMatchState.length === 0) {
       return;
@@ -124,6 +118,7 @@ class Board extends React.Component<BoardProps, BoardState> {
       ) {
         // the position is changed. Call animation.
         const ratio = this.state.innerWidth / this.props.gameSpec.board.width;
+        // it's a drag, play drag start audio
         this.audioPlaying(dragStartAudio);
         imageNode.to({
           duration: this.state.animatingTime,
@@ -131,6 +126,7 @@ class Board extends React.Component<BoardProps, BoardState> {
           y:
             nextMatchState[i].y / 100 * this.props.gameSpec.board.height * ratio
         });
+        // play audio when drag end audio when it ends
         this.audioPlaying(dragEndAudio);
       } else if (
         kind === 'card' &&
@@ -160,8 +156,8 @@ class Board extends React.Component<BoardProps, BoardState> {
         this.handleAnimation(i, kind);
       }
     }
+
     this.mutableMatch = deepCopy(nextProps.matchInfo);
-    console.log('componentWillUpdate test');
   }
 
   // componentDidUpdate(){
@@ -172,6 +168,7 @@ class Board extends React.Component<BoardProps, BoardState> {
   // }
 
   componentWillMount() {
+    console.log('Board componentWillMount');
     this.mutableMatch = deepCopy(this.props.matchInfo);
     if (this.mutableMatch.matchState.length === 0) {
       this.mutableMatch.matchState = MatchStateHelper.createInitialState(
@@ -422,9 +419,6 @@ class Board extends React.Component<BoardProps, BoardState> {
 
     let piecesLayer = this.mutableMatch.matchState.map((piece, index) => {
       const pieceSpec = this.props.gameSpec.pieces[index];
-      let pieceRatio = elementIdToResizingFactor[pieceSpec.element.elementId]
-        ? elementIdToResizingFactor[pieceSpec.element.elementId]
-        : 1;
       let kind = pieceSpec.element.elementKind;
       if (kind.endsWith('Deck')) {
         return null;
@@ -440,9 +434,9 @@ class Board extends React.Component<BoardProps, BoardState> {
         <CanvasImage
           ref={'canvasImage' + index}
           key={index}
-          draggable={pieceSpec.element.isDraggable || kind === 'standard'}
-          height={pieceSpec.element.height * ratio * pieceRatio}
-          width={pieceSpec.element.width * ratio * pieceRatio}
+          draggable={pieceSpec.element.isDraggable}
+          height={pieceSpec.element.height * ratio}
+          width={pieceSpec.element.width * ratio}
           x={piece.x * width / 100 * ratio}
           y={piece.y * height / 100 * ratio}
           src={imageSrc}

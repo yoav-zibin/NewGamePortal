@@ -11,10 +11,8 @@ const styles: CSSPropertiesIndexer = {
     justifyContent: 'space-around'
   },
   gridList: {
-    // position: 'absolute',
     left: 0,
     right: 0
-    // overflowY: 'auto'
   },
   gridTile: {
     height: '100%',

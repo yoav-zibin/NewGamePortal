@@ -15,6 +15,7 @@ import { getOpponents, findMatch } from '../globals';
 import { videoChat } from '../services/videoChat';
 import RaisedButton from 'material-ui/RaisedButton';
 import Chip from 'material-ui/Chip';
+import PersonAdd from 'material-ui/svg-icons/social/person-add';
 
 interface PlayingScreenProps {
   myUserId: string;
@@ -27,7 +28,10 @@ interface PlayingScreenProps {
 
 const styles: CSSPropertiesIndexer = {
   playingScreenContainer: {
-    overflowY: 'scroll'
+    overflow: 'auto'
+  },
+  inviteFriendBtn: {
+    margin: 10
   },
   chip: {
     margin: 4
@@ -104,13 +108,17 @@ class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
             );
           }}
           label="Invite a friend to play"
+          style={styles.inviteFriendBtn}
+          icon={<PersonAdd />}
           primary={true}
         />
       );
     const opponentsArea = this.state.videoChatButton ? null : (
       <div style={styles.wrapper}>
         {opponents.map(opponent => (
-          <Chip style={styles.chip}>{opponent.name}</Chip>
+          <Chip key={opponent.userId} style={styles.chip}>
+            {opponent.name}
+          </Chip>
         ))}
       </div>
     );

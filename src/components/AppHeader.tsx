@@ -1,6 +1,7 @@
 import * as React from 'react';
 import AppBar from 'material-ui/AppBar';
 import IconButton from 'material-ui/IconButton';
+import { red500 } from 'material-ui/styles/colors';
 import NavigationArrowBack from 'material-ui/svg-icons/navigation/arrow-back';
 import { StringIndexer } from '../types';
 import { MatchInfo, StoreState, UserIdToInfo, MyUser } from '../types';
@@ -11,12 +12,17 @@ import { getOpponents, findMatch, deepCopy } from '../globals';
 import MoreVertIcon from 'material-ui/svg-icons/navigation/more-vert';
 import VolumeUp from 'material-ui/svg-icons/av/volume-up';
 import VolumeMute from 'material-ui/svg-icons/av/volume-mute';
+import Replay from 'material-ui/svg-icons/av/replay';
+import PersonAdd from 'material-ui/svg-icons/social/person-add';
+import School from 'material-ui/svg-icons/social/school';
+import Delete from 'material-ui/svg-icons/action/delete';
 import { Action } from '../reducers';
 import { dispatch } from '../stores';
 import MenuItem from 'material-ui/MenuItem';
 import IconMenu from 'material-ui/IconMenu';
 import { MatchStateHelper } from '../services/matchStateHelper';
 import { ourFirebase } from '../services/firebase';
+import { Divider } from 'material-ui';
 
 interface Props {
   matchInfo: MatchInfo;
@@ -35,6 +41,9 @@ class AppHeader extends React.Component<Props, {}> {
     '/addMatch': 'Create a new game',
     '/': 'My games'
   };
+  state = {
+    showRules: false
+  };
 
   onPlayingScreen() {
     let pathname: string = this.props.location.pathname;
@@ -43,7 +52,6 @@ class AppHeader extends React.Component<Props, {}> {
     }
     return false;
   }
-
   showBackButton() {
     let pathname: string = this.props.location.pathname;
     if (pathname === '/login' || pathname === '/') {
@@ -106,10 +114,9 @@ class AppHeader extends React.Component<Props, {}> {
   };
 
   handleGameRulesClick = () => {
-    // TODO: don't use window.open (look in material-ui)
-    if (this.props.matchInfo.game.wikipediaUrl) {
-      window.open(this.props.matchInfo.game.wikipediaUrl);
-    }
+    console.log('Show rules before:', this.state.showRules);
+    this.setState({ showRules: !this.state.showRules });
+    console.log('Show rules is now: ', this.state.showRules);
   };
 
   handleResetMatchClick = () => {
@@ -119,11 +126,32 @@ class AppHeader extends React.Component<Props, {}> {
     console.log('reset match');
   };
 
+  handleLeaveMatchClick = () => {
+    console.log('leave match');
+    ourFirebase.leaveMatch(this.props.matchInfo);
+    this.props.history.replace('/');
+  };
+
   render() {
     let volume = this.props.audioMute ? <VolumeMute /> : <VolumeUp />;
-    if (this.onPlayingScreen()) {
+    // TODO: this looks horrible!
+    let rules = this.state.showRules ? (
+      <iframe
+        src={this.props.matchInfo.game.wikipediaUrl}
+        height="490"
+        width="490"
+      />
+    ) : (
+      'Show Game Rules'
+    );
+    if (this.onPlayingScreen() && this.props.matchInfo) {
       // We're on Playing Screen, which needs 'add' button and mute button
       console.log('ON PLAYING SCREEN');
+      const isInviteFriendDisabled =
+        this.props.matchInfo.participantsUserIds.length >=
+        ourFirebase.MAX_USERS_IN_MATCH - 1;
+      const isGameRulesDisabled = !this.props.matchInfo.game.wikipediaUrl;
+      // We're on Playing Screen, which needs 'add' button and mute button
       return (
         <AppBar
           iconElementLeft={
@@ -144,21 +172,39 @@ class AppHeader extends React.Component<Props, {}> {
                 anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
               >
                 <MenuItem
-                  primaryText="Invite a Friend"
+                  primaryText="Invite a friend"
                   onClick={this.handleAddFriendClick}
+                  rightIcon={<PersonAdd />}
+                  disabled={isInviteFriendDisabled}
                 />
                 <MenuItem
-                  primaryText={this.props.audioMute?"Play Game Sounds":"Mute Game Sounds"}
+                  primaryText={
+                    this.props.audioMute
+                      ? 'Play game sounds'
+                      : 'Mute game sounds'
+                  }
                   onClick={this.handleAudioClick}
                   rightIcon={volume}
                 />
                 <MenuItem
-                  primaryText="Show Game Rules"
-                  onClick={this.handleGameRulesClick.bind(this)}
+                  primaryText={rules}
+                  onClick={this.handleGameRulesClick}
+                  rightIcon={<School />}
+                  disabled={isGameRulesDisabled}
                 />
+                <Divider />
                 <MenuItem
-                  primaryText="Reset Match"
-                  onClick={this.handleResetMatchClick.bind(this)}
+                  style={{ color: red500 }}
+                  primaryText="Reset game"
+                  onClick={this.handleResetMatchClick}
+                  rightIcon={<Replay color={red500} />}
+                />
+                <Divider />
+                <MenuItem
+                  style={{ color: red500 }}
+                  primaryText="Leave game"
+                  onClick={this.handleLeaveMatchClick}
+                  rightIcon={<Delete color={red500} />}
                 />
               </IconMenu>
             </div>
@@ -168,7 +214,6 @@ class AppHeader extends React.Component<Props, {}> {
       );
     } else if (this.showBackButton()) {
       // We're on a page that needs back button
-      console.log('SHOWING BACK BUTTON');
       return (
         <AppBar
           iconElementLeft={
@@ -181,7 +226,6 @@ class AppHeader extends React.Component<Props, {}> {
       );
     } else {
       // We're on login or matches page
-      console.log('ON LOGIN/HOME PAGE');
       return (
         <AppBar
           title={this.getLocation()}

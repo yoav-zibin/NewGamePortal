@@ -22,7 +22,7 @@ export class MatchStateHelper {
   dragTo(pieceIndex: number, x: number, y: number) {
     checkCondition('dragToXY', -100 <= x && x <= 100 && -100 <= y && y <= 100);
     const pieceSpec = this.getPieceSpec(pieceIndex);
-    checkCondition('dragTo', pieceSpec.isDraggable || pieceSpec.elementKind === 'standard');
+    checkCondition('dragTo', pieceSpec.isDraggable);
     const pieceState = this.getPieceState(pieceIndex);
     pieceState.x = x;
     pieceState.y = y;
@@ -40,6 +40,7 @@ export class MatchStateHelper {
   }
 
   rollDice(diceIndex: number) {
+    console.log('roll dice in helper');
     const pieceSpec = this.getPieceSpec(diceIndex);
     checkCondition('rollDice', pieceSpec.elementKind === 'dice');
     const imagesNum = pieceSpec.images.length;
@@ -111,7 +112,9 @@ export class MatchStateHelper {
   }
 
   resetMatch() {
-    this.match.matchState = this.spec.pieces.map(piece => deepCopy(piece.initialState));
+    this.match.matchState = this.spec.pieces.map(piece =>
+      deepCopy(piece.initialState)
+    );
     const decksShuffled: BooleanIndexer = {};
     this.spec.pieces.forEach((p, index) => {
       if (p.element.elementKind === 'dice') {

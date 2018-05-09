@@ -12,7 +12,9 @@ import {
   getPhoneNumberToUserInfo,
   shallowCopy,
   deepFreeze,
-  deepCopy
+  deepCopy,
+  checkPhoneNumber,
+  isApp
 } from '../globals';
 import {
   BooleanIndexer,
@@ -34,7 +36,9 @@ import {
   AnyIndexer,
   CardVisibility,
   ContactWithUserId,
-  UserIdToInfo
+  UserIdToInfo,
+  NumberIndexer,
+  Contact
 } from '../types';
 import { Action, checkMatchStateInStore } from '../reducers';
 
@@ -173,6 +177,10 @@ export namespace ourFirebase {
       if (!displayNameForSignIn) {
         displayNameForSignIn = persistedOldStore.myUser.myName;
       }
+      if (Object.keys(persistedOldStore.phoneNumberToContact).length > 0) {
+        // Refresh contacts (but with a bit of delay because it's computationally heavy)
+        setTimeout(fetchContacts, 1000);
+      }
     }
     if (!displayNameForSignIn) {
       displayNameForSignIn = '';
@@ -233,7 +241,7 @@ export namespace ourFirebase {
       timestamp: getTimestamp()
     };
     if (phoneNumber) {
-      checkPhoneNum(phoneNumber);
+      checkPhoneNumIsValid(phoneNumber);
       refSet(
         getRef(`/gamePortal/phoneNumberToUserId/${phoneNumber}`),
         phoneNumberFbr
@@ -241,7 +249,7 @@ export namespace ourFirebase {
     }
   }
 
-  export function checkPhoneNum(phoneNum: string) {
+  function checkPhoneNumIsValid(phoneNum: string) {
     const isValidNum = /^[+][0-9]{5,20}$/.test(phoneNum);
     checkCondition('phone num', isValidNum);
   }
@@ -298,10 +306,37 @@ export namespace ourFirebase {
         throw new Error('no game spec!');
       }
       const action: Action = {
-        updateGameSpecs: convertGameSpecForPortal(gameSpecId, gameSpecF)
+        updateGameSpecs: fixGameSpecs(
+          convertGameSpecForPortal(gameSpecId, gameSpecF)
+        )
       };
       dispatch(action);
     });
+  }
+
+  function fixGameSpecs(gameSpecs: GameSpecs): GameSpecs {
+    const elementIdToResizingFactor: NumberIndexer = {
+      // Aeroplane Chess gameSpecId: "-KzIu__PqVGdQhAlileQ"
+      '-KzItgbiXd89CURCoXe5': 1.5, // increase that element ID by 20%
+      '-KzItocCLqCMbFLpFDzb': 1.5,
+      '-KzItsMbQZMzCjk8rKSP': 1.5,
+      '-KzItkd4gsI3JZlsaZUZ': 1.5
+    };
+
+    for (let [elementId, element] of Object.entries(
+      gameSpecs.elementIdToElement
+    )) {
+      let resizingFactor = elementIdToResizingFactor[elementId];
+      if (resizingFactor) {
+        element.height *= resizingFactor;
+        element.width *= resizingFactor;
+      }
+      // All standard elements should be draggable.
+      if (element.elementKind === 'standard') {
+        element.isDraggable = true;
+      }
+    }
+    return gameSpecs;
   }
 
   function convertGameSpecForPortal(
@@ -416,9 +451,11 @@ export namespace ourFirebase {
 
   const listeningToMatchIds: string[] = [];
   const receivedMatches: IdIndexer<MatchInfo> = {};
+  const ignoredMatches: BooleanIndexer = {};
 
   function getMatchMemberships(matchMemberships: fbr.MatchMemberships) {
     if (!matchMemberships) {
+      dispatchSetMatchesList(); // In case I have deleted all my matches in another device.
       return;
     }
     const matchIds = Object.keys(matchMemberships);
@@ -450,6 +487,9 @@ export namespace ourFirebase {
       if (!snap) {
         return;
       }
+      if (ignoredMatches[matchId]) {
+        return;
+      }
       const matchFb: fbr.Match = snap.val();
       if (!matchFb) {
         return;
@@ -477,21 +517,27 @@ export namespace ourFirebase {
 
       const gameInfo = findGameInfo(gameSpecId);
       if (!gameInfo) {
-        return; // I've deleted some crappy games, but there are some existing matches.
-      }
-      fetchGameSpec(gameInfo);
-      const match: MatchInfo = {
-        matchId: matchId,
-        gameSpecId: gameSpecId,
-        game: gameInfo,
-        participantsUserIds: participantsUserIds,
-        lastUpdatedOn: matchFb.lastUpdatedOn,
-        updatedByUserId: matchFb.updatedByUserId || uid,
-        matchState: newMatchStates
-      };
+        // I've deleted some crappy games, but there are some existing matches.
+        ignoredMatches[matchId] = true;
+      } else {
+        fetchGameSpec(gameInfo);
+        const match: MatchInfo = {
+          matchId: matchId,
+          gameSpecId: gameSpecId,
+          game: gameInfo,
+          participantsUserIds: participantsUserIds,
+          lastUpdatedOn: matchFb.lastUpdatedOn,
+          updatedByUserId: matchFb.updatedByUserId || uid,
+          matchState: newMatchStates
+        };
 
-      receivedMatches[matchId] = match;
-      if (Object.keys(receivedMatches).length >= listeningToMatchIds.length) {
+        receivedMatches[matchId] = match;
+      }
+      if (
+        Object.keys(receivedMatches).length +
+          Object.keys(ignoredMatches).length >=
+        listeningToMatchIds.length
+      ) {
         dispatchSetMatchesList();
       }
     });
@@ -578,8 +624,11 @@ export namespace ourFirebase {
     };
     refUpdate(getMatchMembershipsRef(toUserId), matchMemberships);
   }
+  export function deleteMatchMembership(toUserId: string, matchId: string) {
+    refUpdate(getMatchMembershipsRef(toUserId), { [matchId]: null });
+  }
 
-  const MAX_USERS_IN_MATCH = 8;
+  export const MAX_USERS_IN_MATCH = 8;
   export function addParticipant(match: MatchInfo, userId: string) {
     checkCondition(
       'addParticipant',
@@ -603,8 +652,29 @@ export namespace ourFirebase {
     addMatchMembership(userId, matchId);
   }
 
+  export function leaveMatch(match: MatchInfo) {
+    const uid = getUserId();
+    const matchId = match.matchId;
+    const myIndex = match.participantsUserIds.indexOf(uid);
+    checkCondition('leaveMatch', myIndex >= 0);
+    const deleteMatch = match.participantsUserIds.length === 1;
+    deleteMatchMembership(uid, matchId);
+    ignoredMatches[matchId] = true;
+    delete receivedMatches[matchId];
+    if (deleteMatch) {
+      refSet(getRef(`/gamePortal/matches/${match.matchId}`), null);
+    } else {
+      refSet(
+        getRef(`/gamePortal/matches/${match.matchId}/participants/${uid}`),
+        null
+      );
+    }
+    dispatchSetMatchesList();
+  }
+
   // Call this after resetting a match or shuffling a deck.
   export function updateMatchState(match: MatchInfo) {
+    console.log('updateMatchState: match=', match.matchId);
     const matchState: MatchState = match.matchState;
     checkCondition('updateMatchState', matchState.length > 0);
     const updates: AnyIndexer = {};
@@ -617,7 +687,7 @@ export namespace ourFirebase {
 
   // Call this after updating a single piece.
   export function updatePieceState(match: MatchInfo, pieceIndex: number) {
-    console.log('updatePieceState');
+    console.log('updatePieceState: pieceIndex=', pieceIndex);
     const pieceState: PieceState = match.matchState[pieceIndex];
     const updates: AnyIndexer = {};
     updates[`pieces/${pieceIndex}`] = convertPieceState(pieceState);
@@ -739,7 +809,9 @@ export namespace ourFirebase {
     const uid = getUserId();
     const currentContacts = checkNotNull(contactsToBeStored!);
     const currentPhoneNumbers = Object.keys(currentContacts);
-    currentPhoneNumbers.forEach(phoneNumber => checkPhoneNum(phoneNumber));
+    currentPhoneNumbers.forEach(phoneNumber =>
+      checkPhoneNumIsValid(phoneNumber)
+    );
     // Max contactName is 20 chars
     currentPhoneNumbers.forEach(phoneNumber => {
       const contact = currentContacts[phoneNumber];
@@ -847,7 +919,7 @@ export namespace ourFirebase {
   function getUserIdFromPhoneNumber(
     phoneNumber: string
   ): Promise<string | null> {
-    checkPhoneNum(phoneNumber);
+    checkPhoneNumIsValid(phoneNumber);
     return getOnce(`/gamePortal/phoneNumberToUserId/` + phoneNumber).then(
       (phoneNumberFbrObj: fbr.PhoneNumber) => {
         if (!phoneNumberFbrObj) {
@@ -916,6 +988,75 @@ export namespace ourFirebase {
     refSet(signalFbrRef, signalFbr);
     // If we disconnect, cleanup the signal.
     signalFbrRef.onDisconnect().remove();
+  }
+
+  declare let ContactFindOptions: any;
+  export function fetchContacts() {
+    if (!isApp) {
+      return;
+    }
+    if (!navigator.contacts) {
+      Raven.captureMessage('No navigator.contacts!');
+      return;
+    }
+    console.log('Fetching contacts');
+
+    var options = new ContactFindOptions();
+    options.filter = '';
+    options.multiple = true;
+    options.desiredFields = [
+      navigator.contacts.fieldType.displayName,
+      navigator.contacts.fieldType.phoneNumbers
+    ];
+    options.hasPhoneNumber = true;
+    const onSuccess = (contacts: any[]) => {
+      console.log('Successfully got contacts: ', contacts);
+      let myCountryCode = store.getState().myUser.myCountryCode;
+      if (!myCountryCode) {
+        console.error('Missing country code');
+        return;
+      }
+      if (!contacts) {
+        console.error('Missing contacts');
+        return;
+      }
+      let currentContacts: PhoneNumberToContact = {};
+      for (let contact of contacts) {
+        if (!contact.phoneNumbers) {
+          continue;
+        }
+        for (let phoneNumber of contact.phoneNumbers) {
+          const localNumber = phoneNumber['value'].replace(/[^0-9]/g, '');
+          const phoneInfo = checkPhoneNumber(localNumber, myCountryCode);
+          if (
+            phoneInfo &&
+            phoneInfo.isPossibleNumber &&
+            phoneInfo.isValidNumber &&
+            phoneInfo.maybeMobileNumber
+          ) {
+            const internationalNumber = phoneInfo.e164Format;
+            if (checkPhoneNumIsValid(internationalNumber)) {
+              console.error(
+                'e164Format returned illegal phone number:',
+                internationalNumber
+              );
+              continue;
+            }
+            const newContact: Contact = {
+              name: contact.displayName,
+              phoneNumber: internationalNumber
+            };
+            currentContacts[internationalNumber] = newContact;
+          }
+        }
+      }
+      storeContacts(currentContacts);
+    };
+
+    const onError = () => {
+      console.error('Error fetching contacts');
+    };
+    navigator.contacts.find(['*'], onSuccess, onError, options);
   }
 
   function storeFcmTokensAfterLogin() {

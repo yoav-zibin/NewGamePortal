@@ -4,29 +4,26 @@ import { MatchInfo } from '../types';
 import { List, ListItem } from 'material-ui/List';
 import Divider from 'material-ui/Divider';
 import Subheader from 'material-ui/Subheader';
-import FloatingActionButton from 'material-ui/FloatingActionButton';
 import RaisedButton from 'material-ui/RaisedButton';
-import ContentAdd from 'material-ui/svg-icons/content/add';
 import AutoComplete from 'material-ui/AutoComplete';
 import MenuItem from 'material-ui/MenuItem';
+import PersonAdd from 'material-ui/svg-icons/social/person-add';
+import CommunicationTextsms from 'material-ui/svg-icons/communication/textsms';
+import ImportContacts from 'material-ui/svg-icons/communication/import-contacts';
 import { ourFirebase } from '../services/firebase';
 import { connect } from 'react-redux';
-import { StoreState, PhoneNumberToContact } from '../types/index';
-import { store } from '../stores/index';
+import { StoreState } from '../types/index';
 import { History } from 'history';
 import {
   checkNotNull,
   isAndroid,
-  isIos,
   findMatch,
   getPhoneNumberToUserInfo,
   checkPhoneNumber,
-  UNKNOWN_NAME
+  UNKNOWN_NAME,
+  isApp
 } from '../globals';
-
-const style: React.CSSProperties = {
-  marginRight: 20
-};
+import { storeStateDefault } from '../stores/defaults';
 
 const searchStyle: React.CSSProperties = {
   marginLeft: 17,
@@ -35,7 +32,7 @@ const searchStyle: React.CSSProperties = {
 
 interface UserName {
   name: string;
-  userType: 'Invite with SMS' | 'Existing user';
+  isUser: boolean;
 }
 
 interface DataSourceConfig {
@@ -49,15 +46,12 @@ interface DataSourceConfig {
 }
 
 interface Props {
-  matchesList: MatchInfo[];
   users: UserInfo[];
   notUsers: Contact[];
   allUserNames: UserName[];
-  match: RouterMatchParams;
   currentMatch: MatchInfo;
   myUserId: string;
   myCountryCode: string;
-  history: History;
   // if Object.keys(state.phoneNumberToContact)=[] (i.e., the user didn't give
   // the permission to fetch contacts), then let's ALSO ask the user to enter his
   // friends phone number (in addition to showing the regular UI because there user
@@ -67,111 +61,41 @@ interface Props {
   // If so, call ourFirebase.searchPhoneNumber to see if that phone number is a user or not,
   // and then either add that user as a participant or send invite SMS.
   searchByNumber: boolean;
+
+  history: History;
+  match: RouterMatchParams;
+}
+interface State {
+  // phone numbers we didn't find when searching a number.
+  phoneNumbersNotFound: string[];
+  didFetchContacts: boolean;
 }
 
-declare let ContactFindOptions: any;
-
-class ContactsList extends React.Component<Props, {}> {
+class ContactsList extends React.Component<Props, State> {
   state = {
-    filterValue: '',
-    message: 'Message sent',
-    notUsers: this.props.notUsers,
+    phoneNumbersNotFound: [] as string[],
     didFetchContacts: false
   };
 
-  fetchContacts = () => {
-    if (!navigator.contacts) {
-      console.error('No navigator.contacts!');
-      return;
-    }
-    console.log('Fetching contacts');
-
-    var options = new ContactFindOptions();
-    options.filter = '';
-    options.multiple = true;
-    options.desiredFields = [
-      navigator.contacts.fieldType.displayName,
-      navigator.contacts.fieldType.phoneNumbers
-    ];
-    options.hasPhoneNumber = true;
-    navigator.contacts.find(['*'], this.onSuccess, this.onError, options);
-  };
-
-  onSuccess = (contacts: any[]) => {
-    console.log('Successfully got contacts: ', contacts);
-    let myCountryCode = store.getState().myUser.myCountryCode;
-    if (!myCountryCode) {
-      console.error('Missing country code');
-      return;
-    }
-    if (!contacts) {
-      console.error('Missing contacts');
-      return;
-    }
-    let currentContacts: PhoneNumberToContact = {};
-    for (let contact of contacts) {
-      if (!contact.phoneNumbers) {
-        continue;
-      }
-      for (let phoneNumber of contact.phoneNumbers) {
-        const localNumber = phoneNumber['value'].replace(/[^0-9]/g, '');
-        const phoneInfo: PhoneNumInfo | null = checkPhoneNumber(
-          localNumber,
-          myCountryCode
-        );
-        if (
-          phoneInfo &&
-          phoneInfo.isPossibleNumber &&
-          phoneInfo.isValidNumber &&
-          phoneInfo.maybeMobileNumber
-        ) {
-          const internationalNumber = phoneInfo.e164Format;
-          if (ourFirebase.checkPhoneNum(internationalNumber)) {
-            console.error(
-              'e164Format returned illegal phone number:',
-              internationalNumber
-            );
-            continue;
-          }
-          const newContact: Contact = {
-            name: contact.displayName,
-            phoneNumber: internationalNumber
-          };
-          currentContacts[internationalNumber] = newContact;
-        }
-      }
-    }
-    ourFirebase.storeContacts(currentContacts);
-  };
-
-  onError = () => {
-    console.error('Error fetching contacts');
-  };
-
   handleRequest = (chosenRequest: DataSourceConfig, index: number) => {
-    if (chosenRequest.text.length > 0) {
-      this.setState({ filterValue: chosenRequest.text });
-    }
     console.log(chosenRequest);
-
-    if (chosenRequest.value.props.secondaryText === 'Existing user') {
-      let chosenUser = this.props.users.find(
-        user => user.displayName === chosenRequest.text
-      );
-      this.handleAddUser(chosenUser!.userId);
+    const chosenText = chosenRequest.text;
+    let chosenUser = this.props.users.find(
+      user => user.displayName === chosenText
+    );
+    if (chosenUser) {
+      this.handleAddUser(chosenUser.userId);
     } else {
-      let chosenUser = this.props.notUsers.find(
-        user => user.name === chosenRequest.text
+      let chosenNotUser = this.props.notUsers.find(
+        user => user.name === chosenText
       );
-      this.handleAddNotUser(chosenUser!);
+      if (chosenNotUser) {
+        this.handleAddNotUser(chosenNotUser.phoneNumber);
+      } else {
+        console.warn("Didn't find ", chosenText);
+      }
     }
     return index;
-  };
-
-  handleUpdate = (searchText: string) => {
-    if (searchText.length === 0) {
-      this.setState({ filterValue: '' });
-    }
   };
 
   getMatch = () => {
@@ -185,32 +109,53 @@ class ContactsList extends React.Component<Props, {}> {
     this.props.history.push('/matches/' + currentMatch.matchId);
   };
 
-  handleRequestNumber = (chosenRequest: String, index: number) => {
-    console.log('request number is ' + chosenRequest + '  ' + event + index);
+  addContactNotFound = (phoneNumber: string) => {
+    if (this.state.phoneNumbersNotFound.indexOf(phoneNumber) !== -1) {
+      // phoneNumber is already in our list.
+      return;
+    }
+    const phoneNumbersNotFound = [phoneNumber].concat(
+      this.state.phoneNumbersNotFound
+    );
+    this.setState({ phoneNumbersNotFound });
+  };
+
+  handleRequestNumber = (chosenRequest: string) => {
+    const myCountryCode = this.props.myCountryCode;
     let phoneInfo: PhoneNumInfo | null = checkPhoneNumber(
       chosenRequest,
-      this.props.myCountryCode
+      myCountryCode
     );
-    console.log(phoneInfo);
-    if (phoneInfo && phoneInfo.isValidNumber) {
-      ourFirebase.searchPhoneNumber(phoneInfo.e164Format).then(user => {
+    console.log(
+      'request number is ',
+      chosenRequest,
+      ' myCountryCode=',
+      myCountryCode,
+      ' phoneInfo=',
+      phoneInfo
+    );
+    if (!phoneInfo || !phoneInfo.isValidNumber) {
+      this.addContactNotFound(chosenRequest);
+    } else {
+      const phoneNumber = phoneInfo.e164Format;
+      ourFirebase.searchPhoneNumber(phoneNumber).then(user => {
+        console.log('searchPhoneNumber returned ', user);
         if (user == null) {
-          let userInfo: Contact = {
-            phoneNumber: phoneInfo!.e164Format,
-            name: ' '
-          };
-          this.setState({ notUsers: [userInfo] });
+          this.addContactNotFound(phoneNumber);
         }
       });
     }
   };
 
-  handleAddNotUser = (contact: Contact) => {
-    if (isAndroid || isIos) {
-      console.log('Sending SMS to ', contact.name);
+  handleAddNotUser = (phoneNumber: string) => {
+    if (isApp) {
+      console.log('Sending SMS to ', phoneNumber);
       this.sendSms(
-        contact,
-        'Your friend would like to invite you to a game in GamePortal!'
+        phoneNumber,
+        // Play games and videochat with your friends!
+        "Let's videochat and play " +
+          this.props.currentMatch.game.gameName +
+          ' together! Download the app on https://zibiga.com'
       );
     }
   };
@@ -223,7 +168,7 @@ class ContactsList extends React.Component<Props, {}> {
             console.log('[OK] Permission accepted');
           },
           () => {
-            console.log('[WARN] Permission not accepted');
+            console.warn('[WARN] Permission not accepted');
           }
         );
       }
@@ -234,8 +179,7 @@ class ContactsList extends React.Component<Props, {}> {
     window.sms.hasPermission(success, error);
   };
 
-  sendSms = (contact: Contact, message: String) => {
-    const phoneNum = contact.phoneNumber;
+  sendSms = (phoneNum: string, message: string) => {
     console.log('number=' + phoneNum + ', message= ' + message);
 
     const options = {
@@ -266,32 +210,18 @@ class ContactsList extends React.Component<Props, {}> {
     );
   }
 
-  filterContacts(contacts: Contact[]): Contact[] {
-    return contacts.filter(
-      contact => contact.name.indexOf(this.state.filterValue) !== -1
-    );
-  }
-
-  filterUsers(contacts: UserInfo[]): UserInfo[] {
-    return contacts.filter(
-      contact => contact.displayName.indexOf(this.state.filterValue) !== -1
-    );
-  }
-
   render() {
+    console.log(
+      'ContactsList render: #users=',
+      this.props.users.length,
+      ' #contacts=',
+      this.props.notUsers.length
+    );
     let searchField = this.props.searchByNumber ? (
       <AutoComplete
         floatingLabelText="Search By PhoneNumber"
         filter={AutoComplete.fuzzyFilter}
-        dataSource={this.props.allUserNames.map((username: UserName) => ({
-          text: username.name,
-          value: (
-            <MenuItem
-              primaryText={username.name}
-              secondaryText={username.userType}
-            />
-          )
-        }))}
+        dataSource={[]}
         maxSearchResults={5}
         fullWidth={true}
         onNewRequest={this.handleRequestNumber}
@@ -305,87 +235,106 @@ class ContactsList extends React.Component<Props, {}> {
           value: (
             <MenuItem
               primaryText={username.name}
-              secondaryText={username.userType}
+              rightIcon={
+                username.isUser ? <PersonAdd /> : <CommunicationTextsms />
+              }
             />
           )
         }))}
         maxSearchResults={5}
         fullWidth={true}
         onNewRequest={this.handleRequest}
-        onUpdateInput={this.handleUpdate}
       />
     );
 
     return (
       <div>
-        <div style={searchStyle}>{searchField}</div>
-        {this.state.didFetchContacts ? null : (
+        <div key="search" style={searchStyle}>
+          {searchField}
+        </div>
+        {this.state.didFetchContacts || !this.props.searchByNumber ? null : (
           <RaisedButton
             onClick={() => {
-              this.fetchContacts();
+              ourFirebase.fetchContacts();
               this.setState({
                 didFetchContacts: true
               });
             }}
             label={'Import My Contacts'}
             style={searchStyle}
+            icon={<ImportContacts />}
           />
         )}
-        <List>
-          <Subheader>Game User</Subheader>
-          {this.filterParticipants(this.filterUsers(this.props.users)).map(
-            (user: UserInfo) => (
-              <ListItem
-                key={user.userId}
-                primaryText={user.displayName}
-                rightIconButton={
-                  <FloatingActionButton
-                    mini={true}
-                    style={style}
-                    onClick={() => this.handleAddUser(user.userId)}
-                  >
-                    <ContentAdd />
-                  </FloatingActionButton>
-                }
-              />
-            )
-          )}
+
+        {this.state.phoneNumbersNotFound.length === 0 ? null : (
+          <List key="contacts_not_found">
+            <Subheader>Invite to Zibiga</Subheader>
+            {this.state.phoneNumbersNotFound.map(phoneNumber => {
+              return (
+                <ListItem
+                  key={phoneNumber}
+                  primaryText={formatPhoneNumber(
+                    this.props.myCountryCode,
+                    phoneNumber
+                  )}
+                  onClick={() => this.handleAddNotUser(phoneNumber)}
+                  rightIcon={<CommunicationTextsms />}
+                />
+              );
+            })}
+          </List>
+        )}
+
+        <List key="add_opponent">
+          <Subheader>Add opponent</Subheader>
+          {this.filterParticipants(this.props.users).map((user: UserInfo) => (
+            <ListItem
+              key={user.userId}
+              primaryText={user.displayName}
+              onClick={() => this.handleAddUser(user.userId)}
+              rightIcon={<PersonAdd />}
+            />
+          ))}
         </List>
-        <Divider />
-        <List>
-          <Subheader>Not Game User</Subheader>
-          {this.filterContacts(this.state.notUsers).map((contact: Contact) => {
-            const parsed: PhoneNumInfo | null = checkPhoneNumber(
-              contact.phoneNumber,
-              this.props.myCountryCode
-            );
-            return (
-              <ListItem
-                key={contact.phoneNumber}
-                primaryText={
-                  (contact.name === UNKNOWN_NAME ? '' : contact.name + ' ') +
-                  (parsed && parsed.isValidNumber
-                    ? `(${parsed.internationalFormat})`
-                    : '')
-                }
-                rightIconButton={
-                  <RaisedButton
-                    label="invite"
-                    primary={true}
-                    style={style}
-                    onClick={() => this.handleAddNotUser(contact)}
+
+        {this.props.notUsers.length === 0 ? null : (
+          <>
+            <Divider />
+            <List key="invite_contacts">
+              <Subheader>Invite to Zibiga</Subheader>
+              {this.props.notUsers.map((contact: Contact) => {
+                return (
+                  <ListItem
+                    key={contact.phoneNumber}
+                    primaryText={
+                      contact.name === UNKNOWN_NAME ? '' : contact.name
+                    }
+                    secondaryText={formatPhoneNumber(
+                      this.props.myCountryCode,
+                      contact.phoneNumber
+                    )}
+                    onClick={() => this.handleAddNotUser(contact.phoneNumber)}
+                    rightIcon={<CommunicationTextsms />}
                   />
-                }
-              />
-            );
-          })}
-        </List>
+                );
+              })}
+            </List>
+          </>
+        )}
       </div>
     );
   }
 }
 
+function formatPhoneNumber(myCountryCode: string, phoneNumber: string) {
+  const parsed = checkPhoneNumber(phoneNumber, myCountryCode);
+  return parsed && parsed.isValidNumber
+    ? parsed.internationalFormat
+    : phoneNumber;
+}
+
 const mapStateToProps = (state: StoreState, ownProps: Props) => {
+  const myCountryCode = state.myUser.myCountryCode;
   const users: UserInfo[] = [];
   const notUsers: Contact[] = [];
   const allUserNames: UserName[] = [];
@@ -396,8 +345,11 @@ const mapStateToProps = (state: StoreState, ownProps: Props) => {
     if (!phoneNumberToInfo[phoneNumber]) {
       notUsers.push(contact);
       let userName: UserName = {
-        name: contact.name,
-        userType: 'Invite with SMS'
+        name:
+          contact.name +
+          ' ' +
+          formatPhoneNumber(myCountryCode, contact.phoneNumber),
+        isUser: false
       };
       allUserNames.push(userName);
     }
@@ -409,14 +361,22 @@ const mapStateToProps = (state: StoreState, ownProps: Props) => {
       users.push(userInfo);
       let userName: UserName = {
         name: userInfo.displayName,
-        userType: 'Existing user'
+        isUser: true
       };
       allUserNames.push(userName);
     }
   }
 
-  users.sort((c1, c2) => c1.displayName.localeCompare(c2.displayName));
   notUsers.sort((c1, c2) => c1.name.localeCompare(c2.name));
+  // Mentors should come last (because if you search by phoneNumber, then it adds the results to the list of users)
+  const userIdToMentor = storeStateDefault.userIdToInfo;
+  users.sort(
+    (c1, c2) =>
+      (userIdToMentor[c1.userId] ? 10 : 0) -
+      (userIdToMentor[c2.userId] ? 10 : 0) +
+      // localeCompare returns -1,0,1
+      c1.displayName.localeCompare(c2.displayName)
+  );
 
   let currentMatchId: string = ownProps.match.params.matchIdInRoute;
   let currentMatch = findMatch(state.matchesList, currentMatchId);
@@ -426,7 +386,7 @@ const mapStateToProps = (state: StoreState, ownProps: Props) => {
     allUserNames,
     currentMatch,
     myUserId: state.myUser.myUserId,
-    myCountryCode: state.myUser.myCountryCode,
+    myCountryCode,
     searchByNumber: Object.keys(state.phoneNumberToContact).length === 0
   };
 };

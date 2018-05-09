@@ -3,7 +3,7 @@ import { StoreState } from '../types';
 import { reducer, Action } from '../reducers';
 import { createLogger } from 'redux-logger';
 import { storeStateDefault } from './defaults';
-import { deepCopy } from '../globals';
+import { deepCopy, checkCondition } from '../globals';
 
 const isInUnitTests = typeof window === 'undefined';
 const enhancer: StoreEnhancer<StoreState> | undefined =
@@ -72,9 +72,8 @@ export function trimState(state: StoreState): StoreState {
   // If there are matches, delete the match that has the oldest lastUpdatedOn and return.
   if (state.matchesList.length > 0) {
     let oldestMatch = state.matchesList.reduce(
-      (accum, curr) => {
-      return accum.lastUpdatedOn > curr.lastUpdatedOn ? curr : accum;
-    },
+      (accum, curr) =>
+        accum.lastUpdatedOn > curr.lastUpdatedOn ? curr : accum,
       state.matchesList[0]
     );
 
@@ -119,6 +118,8 @@ persistNewState();
 
 export function dispatch(action: Action) {
   let actionWithType: any = action;
-  actionWithType.type = 'whatever';
+  let actionType = Object.keys(action);
+  checkCondition('actionType', actionType.length === 1);
+  actionWithType.type = actionType[0];
   store.dispatch(actionWithType);
 }

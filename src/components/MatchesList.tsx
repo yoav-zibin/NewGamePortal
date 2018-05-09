@@ -1,9 +1,6 @@
 import * as React from 'react';
 import { connect } from 'react-redux';
-import {
-  StoreState,
-  CSSPropertiesIndexer
-} from '../types/index';
+import { StoreState, CSSPropertiesIndexer } from '../types/index';
 import { MatchInfo, UserIdToInfo } from '../types';
 import FloatingActionButton from 'material-ui/FloatingActionButton';
 import ContentAdd from 'material-ui/svg-icons/content/add';
@@ -30,8 +27,8 @@ const styles: CSSPropertiesIndexer = {
   button: {
     flex: 1,
     position: 'fixed',
-    bottom: 10,
-    right: 0,
+    bottom: 15,
+    right: 15,
     alignSelf: 'flex-end'
     // float: 'right'
   }

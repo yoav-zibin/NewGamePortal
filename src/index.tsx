@@ -5,7 +5,13 @@ import * as ReactDOM from 'react-dom';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import { Provider } from 'react-redux';
 import { Route, BrowserRouter } from 'react-router-dom';
-import { isIos, isAndroid, checkCondition, studentsUsers } from './globals';
+import {
+  isIos,
+  isAndroid,
+  checkCondition,
+  studentsUsers,
+  isApp
+} from './globals';
 import { store } from './stores/index';
 import App from './App';
 import registerServiceWorker from './registerServiceWorker';
@@ -101,7 +107,7 @@ function createScript(id: string, src: string) {
 }
 
 // check for mobile and load cordova
-if (isIos || isAndroid) {
+if (isApp) {
   document.addEventListener(
     'deviceready',
     () => {
