@@ -165,8 +165,9 @@ class Board extends React.Component<BoardProps, BoardState> {
   }
 
   // componentDidUpdate(){
-  //   for (let i = 0; i < this.mutableMatch.matchState.length; i++) {
-  //     this.updateZIndex(i, this.mutableMatch.matchState[i].zDepth);
+  //   let thiz = this;
+  //   for (let i = 0; i < thiz.mutableMatch.matchState.length; i++) {
+  //     this.updateZIndex(i, thiz.mutableMatch.matchState[i].zDepth);
   //   }
   // }
 
@@ -332,6 +333,9 @@ class Board extends React.Component<BoardProps, BoardState> {
       this.helper.dragTo(index, endX, endY);
       const match: MatchInfo = this.mutableMatch;
       ourFirebase.updatePieceState(match, index);
+      this.setState({
+        showCardOptions: false
+      });
     }
   };
 
@@ -461,13 +465,13 @@ class Board extends React.Component<BoardProps, BoardState> {
             //   showCardOptions: false
             // });
           }}
-          onDragEnd={() => {
-            // this.audioPlaying(dragEndAudio);
-            console.log('onDragEnd');
-            this.setState({
-              showCardOptions: false
-            });
-          }}
+          // onDragEnd={() => {
+          //   this.audioPlaying(dragEndAudio);
+          //   console.log('onDragEnd');
+          //   this.setState({
+          //     showCardOptions: false
+          //   });
+          // }}
         />
       );
     });
