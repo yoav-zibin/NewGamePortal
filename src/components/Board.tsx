@@ -76,9 +76,11 @@ class Board extends React.Component<BoardProps, BoardState> {
 
   // We need to do that because when we render the component,
   // we want them to be draw in the order of z-index
-  // sortZIndexofPieces() {
-  //   this.mutableMatch.matchState.sort((a, b) => { return a.zDepth - b.zDepth});
-  // }
+  sortZIndexofPieces() {
+    this.mutableMatch.matchState.sort((a, b) => {
+      return a.zDepth - b.zDepth;
+    });
+  }
 
   audioPlaying(sound: HTMLAudioElement) {
     if ((isAndroid || isIos) && !this.props.audioMute) {
@@ -294,21 +296,6 @@ class Board extends React.Component<BoardProps, BoardState> {
     let imageNode = (this.refs['canvasImage' + index] as CanvasImage).imageNode;
     imageNode.setZIndex(zIndex);
   };
-
-  // handleDragStart = (
-  //   index: number,
-  // ) => {
-  //   let imageNode = (this.refs[
-  //     'canvasImage' + index
-  //   ] as CanvasImage).imageNode;
-  //   console.log(imageNode.getZIndex() + "touchStart imageNode");
-  //   let maxZ = this.helper.getMaxZ();
-  //   imageNode.setZIndex(maxZ);
-  //   // this.helper.setMaxZ(index);
-  //   // console.log(this.mutableMatch.matchState[index].zDepth + "touchStart piece");
-  //   // const match: MatchInfo = this.mutableMatch;
-  //   // ourFirebase.updatePieceState(match, index);
-  // }
 
   handleTouchEnd = (
     index: number,
