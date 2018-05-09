@@ -1,13 +1,13 @@
 import { ourFirebase } from './firebase';
 import * as firebase from 'firebase';
-import { isIos, isAndroid } from '../globals';
+import { isApp } from '../globals';
 
 export const initPushNotification = () => {
   const messaging = ourFirebase.getMessaging();
   if (messaging === null) {
     return;
   }
-  if (isIos || isAndroid) {
+  if (isApp) {
     console.log('Mobile Device Logged In');
   } else {
     // @ts-ignore

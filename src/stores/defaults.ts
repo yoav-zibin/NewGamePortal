@@ -1,5 +1,5 @@
 import { StoreState, UserIdToInfo } from '../types';
-import { studentsUsers } from '../globals';
+import { studentsUsers, deepFreeze } from '../globals';
 
 const userIdToInfo: UserIdToInfo = {};
 for (let student of studentsUsers) {
@@ -29,3 +29,4 @@ export const storeStateDefault: StoreState = {
   signals: [],
   audioMute: false
 };
+deepFreeze(storeStateDefault);

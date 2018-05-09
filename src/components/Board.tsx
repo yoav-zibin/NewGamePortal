@@ -10,9 +10,9 @@ import { connect } from 'react-redux';
 import { StoreState } from '../types/index';
 import { ourFirebase } from '../services/firebase';
 import { MatchStateHelper } from '../services/matchStateHelper';
-import { isIos, isAndroid, deepCopy } from '../globals';
+import { deepCopy, isApp } from '../globals';
 
-const saudio = require('../sounds/drag-start.mp3');
+// const saudio = require('../sounds/drag-start.mp3');
 const daudio = require('../sounds/dice.mp3');
 const eaudio = require('../sounds/click.mp3');
 // const trashCanImage = require('../images/trashCan.jpg');
@@ -39,7 +39,7 @@ interface BoardState {
 }
 
 let diceAudio = new Audio(daudio);
-let dragStartAudio = new Audio(saudio);
+// let dragStartAudio = new Audio(saudio);
 let dragEndAudio = new Audio(eaudio);
 
 // TODO: fix z-index (when you start to drag something, it should have the max z-index).
@@ -69,7 +69,7 @@ class Board extends React.Component<BoardProps, BoardState> {
   };
 
   audioPlaying(sound: HTMLAudioElement) {
-    if ((isAndroid || isIos) && !this.props.audioMute) {
+    if (isApp && !this.props.audioMute) {
       let playPromise = sound.play();
       if (playPromise !== undefined) {
         playPromise
@@ -93,11 +93,13 @@ class Board extends React.Component<BoardProps, BoardState> {
   }
 
   componentWillUpdate(nextProps: BoardProps) {
+    console.log('Board componentWillUpdate');
     const prevMatchState = this.props.matchInfo.matchState;
     if (prevMatchState.length === 0) {
       return;
     }
     const nextMatchState = nextProps.matchInfo.matchState;
+    let wasDrag = false;
     for (let i = 0; i < nextMatchState.length; i++) {
       const kind = this.props.gameSpec.pieces[i].element.elementKind;
       if (kind.endsWith('Deck')) {
@@ -116,6 +118,7 @@ class Board extends React.Component<BoardProps, BoardState> {
           y:
             nextMatchState[i].y / 100 * this.props.gameSpec.board.height * ratio
         });
+        wasDrag = true;
       } else if (
         kind === 'card' &&
         prevMatchState[i].cardVisibilityPerIndex[
@@ -144,11 +147,16 @@ class Board extends React.Component<BoardProps, BoardState> {
         this.handleAnimation(i, kind);
       }
     }
+
+    if (wasDrag) {
+      this.audioPlaying(dragEndAudio);
+    }
+
     this.mutableMatch = deepCopy(nextProps.matchInfo);
-    console.log('componentWillUpdate test');
   }
 
   componentWillMount() {
+    console.log('Board componentWillMount');
     this.mutableMatch = deepCopy(this.props.matchInfo);
     if (this.mutableMatch.matchState.length === 0) {
       this.mutableMatch.matchState = MatchStateHelper.createInitialState(
@@ -267,13 +275,7 @@ class Board extends React.Component<BoardProps, BoardState> {
     console.log('Shufle Deck for index:');
   }
 
-  handleTouchEnd = (
-    index: number,
-    kind: string,
-    startX: number,
-    startY: number,
-    ratio: number
-  ) => {
+  handleTouchEnd = (index: number, kind: string, ratio: number) => {
     let position = (this.refs[
       'canvasImage' + index
     ] as CanvasImage).imageNode.getAbsolutePosition();
@@ -281,6 +283,9 @@ class Board extends React.Component<BoardProps, BoardState> {
     let width = this.props.gameSpec.board.width;
     let height = this.props.gameSpec.board.height;
 
+    const initialPieceState = this.props.matchInfo.matchState[index];
+    const startX: number = initialPieceState.x;
+    const startY: number = initialPieceState.x;
     let endX = position.x / ratio / width * 100;
     let endY = position.y / ratio / height * 100;
     let distance = Math.sqrt(
@@ -402,8 +407,6 @@ class Board extends React.Component<BoardProps, BoardState> {
         kind === 'card' ? (isVisible ? 0 : 1) : piece.currentImageIndex;
       let zIndex = isVisible ? 50 : 1;
       let imageSrc: string = pieceSpec.element.images[imageIndex].downloadURL;
-      let startX: number, startY: number;
-      console.log('zIndex is: ', zIndex);
       return (
         <CanvasImage
           ref={'canvasImage' + index}
@@ -415,33 +418,16 @@ class Board extends React.Component<BoardProps, BoardState> {
           y={piece.y * height / 100 * ratio}
           src={imageSrc}
           z-index={zIndex}
-          onTouchStart={() => {
-            startX = piece.x;
-            startY = piece.y;
-            console.log('onTouchStart');
-          }}
           onTouchEnd={() => {
             console.log('onTouchEnd');
-            this.handleTouchEnd(index, kind, startX, startY, ratio);
-            startX = -1;
-            startY = -1;
+            this.handleTouchEnd(index, kind, ratio);
           }}
+          /*
+          // TODO: set z index when drag starts.
           onDragStart={() => {
-            this.audioPlaying(dragStartAudio);
             console.log('onDragStart');
-            startX = piece.x;
-            startY = piece.y;
-            this.setState({
-              showCardOptions: false
-            });
           }}
-          onDragEnd={() => {
-            this.audioPlaying(dragEndAudio);
-            console.log('onDragEnd');
-            this.handleTouchEnd(index, kind, startX, startY, ratio);
-            startX = -1;
-            startY = -1;
-          }}
+          */
         />
       );
     });

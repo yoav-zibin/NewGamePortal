@@ -20,7 +20,6 @@ interface VideoNameElement {
 }
 
 export namespace videoChat {
-
   interface UserIdToSignals {
     [userId: string]: SignalMsg[];
   }
@@ -86,7 +85,7 @@ export namespace videoChat {
       return;
     }
     // When you stop a video track, it can never be reopened.
-    // set localMediaStream to be null 
+    // set localMediaStream to be null
     // (note that stop is not implemented in the iosrtc plugin)
     if (!isIos) {
       localMediaStream.getVideoTracks()[0].stop();
@@ -131,7 +130,7 @@ export namespace videoChat {
   export function updateOpponents(_opponentIds: string[]) {
     console.log('updateOpponents:', _opponentIds);
     const oldOpponentIds = opponentUserIds;
-    opponentUserIds = _opponentIds.slice();
+    opponentUserIds = _opponentIds.concat();
     let index = 0;
     localVideoElement = getVideoElement(index++);
     setVideoStream(localVideoElement, checkNotNull(localMediaStream!));
@@ -330,14 +329,16 @@ export namespace videoChat {
         case SDP2:
         case SDP1:
           this.gotSdp = true;
-          this.pc.setRemoteDescription(<any>new RTCSessionDescription(signalData)).then(
-            () => {
-              console.log('setRemoteDescription success');
-            },
-            err => {
-              console.error('Error in setRemoteDescription: ', err);
-            }
-          );
+          this.pc
+            .setRemoteDescription(<any>new RTCSessionDescription(signalData))
+            .then(
+              () => {
+                console.log('setRemoteDescription success');
+              },
+              err => {
+                console.error('Error in setRemoteDescription: ', err);
+              }
+            );
           break;
         case CANDIDATE:
           this.pc.addIceCandidate(new RTCIceCandidate(signalData)).then(

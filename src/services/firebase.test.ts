@@ -249,10 +249,13 @@ it('addFcmTokens', () => {
 it('addParticipants', () => {
   const match: MatchInfo = createMatch();
   ourFirebase.addParticipant(match, existingUserId);
-
-  const state = store.getState();
-  const matchesList = state.matchesList;
-  expectEqual(findMatch(matchesList, match.matchId)!.participantsUserIds.indexOf(existingUserId) !== -1, true);
+  expectEqual(
+    findMatch(
+      store.getState().matchesList,
+      match.matchId
+    )!.participantsUserIds.indexOf(existingUserId) !== -1,
+    true
+  );
 });
 
 it('fetch match list from firebase', () => {
@@ -287,10 +290,10 @@ it('Should update the phone numbers', done => {
     const userIdToInfo = store.getState().userIdToInfo;
     const uid = ourFirebase.getUserId();
     const expectedUserInfo: UserInfo = {
-        userId: uid,
-        phoneNumber: magicPhoneNumberForTest,
-        displayName: displayName
-      };
+      userId: uid,
+      phoneNumber: magicPhoneNumberForTest,
+      displayName: displayName
+    };
     if (userIdToInfo[uid]) {
       expectEqual(userIdToInfo[uid], expectedUserInfo);
       done();
@@ -301,6 +304,25 @@ it('Should update the phone numbers', done => {
 it('pingOpponentsInMatch', () => {
   const match: MatchInfo = createMatch();
   ourFirebase.pingOpponentsInMatch(match);
+});
+
+it('leaveSinglePlayerMatch', () => {
+  const match: MatchInfo = createMatch();
+  ourFirebase.leaveMatch(match);
+  expectEqual(
+    findMatch(store.getState().matchesList, match.matchId) === undefined,
+    true
+  );
+});
+
+it('leaveMultiPlayerMatch', () => {
+  const match: MatchInfo = createMatch();
+  ourFirebase.addParticipant(match, existingUserId);
+  ourFirebase.leaveMatch(match);
+  expectEqual(
+    findMatch(store.getState().matchesList, match.matchId) === undefined,
+    true
+  );
 });
 
 it('fetch signal list from firebase', done => {

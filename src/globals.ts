@@ -10,8 +10,8 @@ import {
 
 require('./js/trans-compiled');
 declare function parsePhoneNumber(
-  phoneNumber: String,
-  regionCode: String
+  phoneNumber: string,
+  regionCode: string
 ): PhoneNumInfo;
 
 // global Window class doesn't come with Image()
@@ -35,8 +35,8 @@ declare global {
 }
 
 export function checkPhoneNumber(
-  phoneNumber: String,
-  regionCode: String
+  phoneNumber: string,
+  regionCode: string
 ): PhoneNumInfo | null {
   try {
     return parsePhoneNumber(phoneNumber, regionCode);
@@ -54,6 +54,7 @@ export const platform: PlatformType =
 export const isTests = platform === 'tests';
 export const isIos = platform === 'ios';
 export const isAndroid = platform === 'android';
+export const isApp = isIos || isAndroid;
 export const isWeb = platform === 'web';
 
 export function checkCondition(desc: any, cond: boolean) {
@@ -183,7 +184,7 @@ export function deepFreezeHelper<T>(obj: T, cycleDetector: Set<any>): T {
 
 export function shallowCopy<T>(obj: T): T {
   if (Array.isArray(obj)) {
-    return <any> obj.slice(0);
+    return <any>obj.concat();
   }
   return Object.assign({}, obj);
 }
@@ -192,8 +193,12 @@ export function deepCopy<T>(obj: T): T {
 }
 function checkForCycle(obj: any, cycleDetector: Set<any>) {
   if (cycleDetector.has(obj)) {
-    throw new Error("Found cycle containing obj=" + prettyJson(obj)
-      + " objects-traversed=" + prettyJson(cycleDetector) );
+    throw new Error(
+      'Found cycle containing obj=' +
+        prettyJson(obj) +
+        ' objects-traversed=' +
+        prettyJson(cycleDetector)
+    );
   }
   cycleDetector.add(obj);
 }
@@ -210,12 +215,12 @@ function deepCopyHelper<T>(obj: T, cycleDetector: Set<any>): T {
 
 export const studentsUsers: ContactWithUserId[] = [
   {
-    userId: "HIfpdxPucXXUEffw8V4yezzUtKv1",
+    userId: 'HIfpdxPucXXUEffw8V4yezzUtKv1',
     phoneNumber: '+19175730795',
     name: 'Yoav Zibin'
   },
   {
-    userId: "Kw9aO9pQSQYMKuTXcBGe3bT1qoh1",
+    userId: 'Kw9aO9pQSQYMKuTXcBGe3bT1qoh1',
     phoneNumber: '+17326476905',
     name: 'Herbert Li'
   },
