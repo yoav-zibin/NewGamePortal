@@ -425,6 +425,7 @@ class Board extends React.Component<BoardProps, BoardState> {
             this.audioPlaying(dragStartAudio);
             // TODO: Hide the menu using DOM manipulation
             // or hide it after the drag ends
+
             this.helper.setMaxZ(index);
           }}
         />
