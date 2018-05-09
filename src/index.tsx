@@ -14,13 +14,13 @@ import {
 } from './globals';
 import { store } from './stores/index';
 import App from './App';
-import registerServiceWorker from './registerServiceWorker';
 import './index.css';
 import { ourFirebase } from './services/firebase';
 import { videoChat } from './services/videoChat';
 import { Contact, PhoneNumberToContact } from './types';
 import * as Raven from 'raven-js';
 import * as sentryRelease from './sentry-config.json';
+// import registerServiceWorker from './registerServiceWorker';
 // import { initPushNotification } from './services/pushNotification';
 
 // We delay calling reactRender until we know if we're logged in or not
@@ -63,7 +63,7 @@ const searchParameters = window.location.search;
 console.log('Page init with parameters:', searchParameters);
 ourFirebase.reactRender = reactRender;
 ourFirebase.init(); // might call reactRender immediately if there is nothing in the local storage.
-registerServiceWorker();
+// registerServiceWorker();
 
 if (searchParameters.match('^[?][0-9]$')) {
   const myUserIndex = Number(searchParameters.substr(1));

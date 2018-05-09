@@ -1,3 +1,4 @@
+/*
 import { ourFirebase } from './firebase';
 import { isApp } from '../globals';
 
@@ -40,3 +41,4 @@ export const initPushNotification = () => {
     });
   }
 };
+*/
