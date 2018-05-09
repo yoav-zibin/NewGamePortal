@@ -1,6 +1,5 @@
 import * as React from 'react';
 
-import * as firebase from 'firebase';
 import { ourFirebase } from '../services/firebase';
 import TextField from 'material-ui/TextField';
 import RaisedButton from 'material-ui/RaisedButton';
@@ -158,14 +157,7 @@ class Login extends React.Component<Props, {}> {
       let phoneNumber = result.internationalFormat;
       if (!this.state.loginOnce) {
         ourFirebase
-          .signInWithPhoneNumber(
-            phoneNumber,
-            this.state.code,
-            this.state.displayName,
-            new firebase.auth.RecaptchaVerifier('recaptcha-container', {
-              size: 'invisible'
-            })
-          )
+          .signInWithPhoneNumber(phoneNumber, this.state.code, this.state.displayName)
           .then((_confirmationResult: any) => {
             this.confirmationResult = _confirmationResult;
           });
@@ -219,18 +211,10 @@ class Login extends React.Component<Props, {}> {
               onUpdateInput={this.handleUpdateInput}
               onNewRequest={this.handleNewRequest}
               dataSource={this.props.countries.map((country: Country) => ({
-                text:
-                  country.code +
-                  '-' +
-                  country.name +
-                  '(+' +
-                  country.callingCode +
-                  ')',
+                text: country.code + '-' + country.name + '(+' + country.callingCode + ')',
                 value: (
                   <MenuItem
-                    primaryText={
-                      country.name + ' (+' + country.callingCode + ')'
-                    }
+                    primaryText={country.name + ' (+' + country.callingCode + ')'}
                     secondaryText={country.emojiCode}
                   />
                 )
@@ -252,11 +236,7 @@ class Login extends React.Component<Props, {}> {
             />
             <br />
             <br />
-            <RaisedButton
-              label="get verification code"
-              primary={true}
-              onClick={this.onLogin}
-            />
+            <RaisedButton label="get verification code" primary={true} onClick={this.onLogin} />
             <br />
             <br />
             <TextField
@@ -289,8 +269,7 @@ const mapStateToProps = (state: StoreState) => {
   for (let country of data) {
     const l = country.code.codePointAt(0);
     const r = country.code.codePointAt(1);
-    const emoji =
-      String.fromCodePoint(l + 127397) + String.fromCodePoint(r + 127397);
+    const emoji = String.fromCodePoint(l + 127397) + String.fromCodePoint(r + 127397);
     countries.push({
       code: country.code,
       name: country.name,

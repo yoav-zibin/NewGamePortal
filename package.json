@@ -5,6 +5,7 @@
   "private": true,
   "dependencies": {
     "@types/prop-types": "^15.5.2",
+    "firebase": "^4.13.0",
     "konva": "^2.0.0",
     "npm": "^6.0.0",
     "raven-js": "^3.24.0",
