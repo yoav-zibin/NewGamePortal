@@ -10,19 +10,21 @@ export const initPushNotification = () => {
     console.log('Mobile Device Logged In');
   } else {
     const perm = messaging.requestPermission();
-    perm
-      .then(() => {
-        return messaging.getToken();
-      })
-      .then(token => {
-        console.log('Notification permission granted :)' + token);
-        if (token) {
-          ourFirebase.addFcmToken(token, 'web');
-        }
-      })
-      .catch(error => {
-        console.log('Notification permission denied :/' + error);
-      });
+    if (perm) {
+      perm
+        .then(() => {
+          return messaging.getToken();
+        })
+        .then(token => {
+          console.log('Notification permission granted :)' + token);
+          if (token) {
+            ourFirebase.addFcmToken(token, 'web');
+          }
+        })
+        .catch(error => {
+          console.log('Notification permission denied :/' + error);
+        });
+    }
     messaging.onTokenRefresh(function() {
       messaging
         .getToken()

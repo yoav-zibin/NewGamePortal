@@ -1,7 +1,7 @@
 import * as React from 'react';
 import * as Konva from 'konva';
 import { Layer, Stage } from 'react-konva';
-import { MatchInfo, GameSpec } from '../types';
+import { MatchInfo, GameSpec, PieceState, MatchState } from '../types';
 import CanvasImage from './CanvasImage';
 
 import { IconButton, IconMenu, MenuItem } from 'material-ui';
@@ -240,6 +240,16 @@ class Board extends React.Component<BoardProps, BoardState> {
     } else {
       return true;
     }
+  }
+
+  sortMatchStateByZ(): { originalIndex: number; pieceState: PieceState }[] {
+    const state: MatchState = this.mutableMatch.matchState;
+    return state
+      .map((pieceState, originalIndex) => ({
+        originalIndex,
+        pieceState
+      }))
+      .sort((a, b) => a.pieceState.zDepth - b.pieceState.zDepth);
   }
 
   // cycles through the images of each piece
