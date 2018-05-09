@@ -28,7 +28,7 @@ interface PlayingScreenProps {
 
 const styles: CSSPropertiesIndexer = {
   playingScreenContainer: {
-    overflowY: 'scroll'
+    overflow: 'auto'
   },
   inviteFriendBtn: {
     margin: 10

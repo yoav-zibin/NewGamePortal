@@ -326,10 +326,14 @@ export namespace ourFirebase {
     for (let [elementId, element] of Object.entries(
       gameSpecs.elementIdToElement
     )) {
-      let pieceRatio = elementIdToResizingFactor[elementId];
-      if (pieceRatio) {
-        element.height *= pieceRatio;
-        element.width *= pieceRatio;
+      let resizingFactor = elementIdToResizingFactor[elementId];
+      if (resizingFactor) {
+        element.height *= resizingFactor;
+        element.width *= resizingFactor;
+      }
+      // All standard elements should be draggable.
+      if (element.elementKind === 'standard') {
+        element.isDraggable = true;
       }
     }
     return gameSpecs;

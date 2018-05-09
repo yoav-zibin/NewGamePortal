@@ -12,7 +12,7 @@ import { ourFirebase } from '../services/firebase';
 import { MatchStateHelper } from '../services/matchStateHelper';
 import { deepCopy, isApp } from '../globals';
 
-// const saudio = require('../sounds/drag-start.mp3');
+const saudio = require('../sounds/drag-start.mp3');
 const daudio = require('../sounds/dice.mp3');
 const eaudio = require('../sounds/click.mp3');
 // const trashCanImage = require('../images/trashCan.jpg');
@@ -39,7 +39,7 @@ interface BoardState {
 }
 
 let diceAudio = new Audio(daudio);
-// let dragStartAudio = new Audio(saudio);
+let dragStartAudio = new Audio(saudio);
 let dragEndAudio = new Audio(eaudio);
 
 // TODO: fix z-index (when you start to drag something, it should have the max z-index).
@@ -292,7 +292,6 @@ class Board extends React.Component<BoardProps, BoardState> {
       (startX - endX) * (startX - endX) + (startY - endY) * (startY - endY)
     );
 
-    console.log('distance' + distance);
     if (distance < 0.00001) {
       // it's a touch instead of drag
       if (kind === 'toggable') {
@@ -405,29 +404,29 @@ class Board extends React.Component<BoardProps, BoardState> {
       let isVisible = piece.cardVisibilityPerIndex[this.selfParticipantIndex()];
       let imageIndex: number =
         kind === 'card' ? (isVisible ? 0 : 1) : piece.currentImageIndex;
-      let zIndex = isVisible ? 50 : 1;
       let imageSrc: string = pieceSpec.element.images[imageIndex].downloadURL;
       return (
         <CanvasImage
           ref={'canvasImage' + index}
           key={index}
-          draggable={pieceSpec.element.isDraggable || kind === 'standard'}
+          draggable={pieceSpec.element.isDraggable}
           height={pieceSpec.element.height * ratio}
           width={pieceSpec.element.width * ratio}
           x={piece.x * width / 100 * ratio}
           y={piece.y * height / 100 * ratio}
           src={imageSrc}
-          z-index={zIndex}
+          z-index={piece.zDepth}
           onTouchEnd={() => {
             console.log('onTouchEnd');
             this.handleTouchEnd(index, kind, ratio);
           }}
-          /*
-          // TODO: set z index when drag starts.
           onDragStart={() => {
             console.log('onDragStart');
+            this.audioPlaying(dragStartAudio);
+            // TODO: Hide the menu using DOM manipulation
+            // or hide it after the drag ends
+            this.helper.setMaxZ(index);
           }}
-          */
         />
       );
     });

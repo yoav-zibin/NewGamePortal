@@ -41,6 +41,9 @@ class AppHeader extends React.Component<Props, {}> {
     '/addMatch': 'Create a new game',
     '/': 'My games'
   };
+  state = {
+    showRules: false
+  };
 
   onPlayingScreen() {
     let pathname: string = this.props.location.pathname;
@@ -49,7 +52,6 @@ class AppHeader extends React.Component<Props, {}> {
     }
     return false;
   }
-
   showBackButton() {
     let pathname: string = this.props.location.pathname;
     if (pathname === '/login' || pathname === '/') {
@@ -112,10 +114,9 @@ class AppHeader extends React.Component<Props, {}> {
   };
 
   handleGameRulesClick = () => {
-    // TODO: don't use window.open (look in material-ui)
-    if (this.props.matchInfo.game.wikipediaUrl) {
-      window.open(this.props.matchInfo.game.wikipediaUrl);
-    }
+    console.log('Show rules before:', this.state.showRules);
+    this.setState({ showRules: !this.state.showRules });
+    console.log('Show rules is now: ', this.state.showRules);
   };
 
   handleResetMatchClick = () => {
@@ -133,6 +134,16 @@ class AppHeader extends React.Component<Props, {}> {
 
   render() {
     let volume = this.props.audioMute ? <VolumeMute /> : <VolumeUp />;
+    // TODO: this looks horrible!
+    let rules = this.state.showRules ? (
+      <iframe
+        src={this.props.matchInfo.game.wikipediaUrl}
+        height="490"
+        width="490"
+      />
+    ) : (
+      'Show Game Rules'
+    );
     if (this.onPlayingScreen() && this.props.matchInfo) {
       // We're on Playing Screen, which needs 'add' button and mute button
       console.log('ON PLAYING SCREEN');
@@ -140,7 +151,7 @@ class AppHeader extends React.Component<Props, {}> {
         this.props.matchInfo.participantsUserIds.length >=
         ourFirebase.MAX_USERS_IN_MATCH - 1;
       const isGameRulesDisabled = !this.props.matchInfo.game.wikipediaUrl;
-
+      // We're on Playing Screen, which needs 'add' button and mute button
       return (
         <AppBar
           iconElementLeft={
@@ -176,7 +187,7 @@ class AppHeader extends React.Component<Props, {}> {
                   rightIcon={volume}
                 />
                 <MenuItem
-                  primaryText="Show game rules"
+                  primaryText={rules}
                   onClick={this.handleGameRulesClick}
                   rightIcon={<School />}
                   disabled={isGameRulesDisabled}
@@ -203,7 +214,6 @@ class AppHeader extends React.Component<Props, {}> {
       );
     } else if (this.showBackButton()) {
       // We're on a page that needs back button
-      console.log('SHOWING BACK BUTTON');
       return (
         <AppBar
           iconElementLeft={
@@ -216,7 +226,6 @@ class AppHeader extends React.Component<Props, {}> {
       );
     } else {
       // We're on login or matches page
-      console.log('ON LOGIN/HOME PAGE');
       return (
         <AppBar
           title={this.getLocation()}
