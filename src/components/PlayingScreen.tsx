@@ -59,7 +59,6 @@ class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
       return (
         <>
           <div style={styles.playingScreenContainer}>
-            <div>The Gamespec has not been loaded.</div>
             <img
               height={screenShotHeight * ratio}
               width={screenShotWidth * ratio}
