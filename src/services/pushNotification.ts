@@ -1,5 +1,4 @@
 import { ourFirebase } from './firebase';
-import * as firebase from 'firebase';
 import { isApp } from '../globals';
 
 export const initPushNotification = () => {
@@ -10,25 +9,26 @@ export const initPushNotification = () => {
   if (isApp) {
     console.log('Mobile Device Logged In');
   } else {
-    // @ts-ignore
-    messaging
-      .requestPermission()
+    const perm = messaging.requestPermission();
+    perm
       .then(() => {
         return messaging.getToken();
       })
       .then(token => {
         console.log('Notification permission granted :)' + token);
-        ourFirebase.addFcmToken(token, 'web');
+        if (token) {
+          ourFirebase.addFcmToken(token, 'web');
+        }
       })
       .catch(error => {
         console.log('Notification permission denied :/' + error);
       });
     messaging.onTokenRefresh(function() {
-      // @ts-ignore
       messaging
         .getToken()
         .then(refreshedToken => {
-          if (firebase.auth().currentUser) {
+          console.log('refreshedToken=' + refreshedToken);
+          if (refreshedToken) {
             ourFirebase.addFcmToken(refreshedToken, 'web');
           }
         })

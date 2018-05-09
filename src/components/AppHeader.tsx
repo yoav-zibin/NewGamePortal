@@ -3,7 +3,7 @@ import AppBar from 'material-ui/AppBar';
 import IconButton from 'material-ui/IconButton';
 import { red500 } from 'material-ui/styles/colors';
 import NavigationArrowBack from 'material-ui/svg-icons/navigation/arrow-back';
-import { StringIndexer } from '../types';
+import { StringIndexer, RouterMatchParams } from '../types';
 import { MatchInfo, StoreState, UserIdToInfo, MyUser } from '../types';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
@@ -24,15 +24,16 @@ import { MatchStateHelper } from '../services/matchStateHelper';
 import { ourFirebase } from '../services/firebase';
 import { Divider } from 'material-ui';
 
-interface Props {
-  matchInfo: MatchInfo;
+interface PropsWithoutRouter {
+  matchInfo: MatchInfo | undefined;
   userIdToInfo: UserIdToInfo;
   myUser: MyUser;
-  // react-router-dom says match<P> is the type, not sure what P should be
-  match: any;
+  audioMute: boolean;
+}
+interface Props extends PropsWithoutRouter {
   location: H.Location;
   history: H.History;
-  audioMute: boolean;
+  match: RouterMatchParams;
 }
 
 class AppHeader extends React.Component<Props, {}> {
@@ -68,16 +69,17 @@ class AppHeader extends React.Component<Props, {}> {
     } else if (pathname.startsWith('/contactsList/')) {
       return 'Contacts List';
     } else if (pathname.startsWith('/matches/')) {
-      let gameInfo = this.props.matchInfo;
+      let matchInfo = this.props.matchInfo;
       let title = '';
 
-      if (gameInfo) {
-        title = this.props.matchInfo.game.gameName; // String to build
-        if (this.props.matchInfo.participantsUserIds.length > 1) {
+      if (matchInfo) {
+        title = matchInfo.game.gameName; // String to build
+        const participantsUserIds = matchInfo.participantsUserIds;
+        if (participantsUserIds.length > 1) {
           title += ' with ';
 
           title += getOpponents(
-            this.props.matchInfo.participantsUserIds,
+            participantsUserIds,
             this.props.myUser.myUserId,
             this.props.userIdToInfo
           )
@@ -120,7 +122,7 @@ class AppHeader extends React.Component<Props, {}> {
   };
 
   handleResetMatchClick = () => {
-    let match: MatchInfo = deepCopy(this.props.matchInfo);
+    let match: MatchInfo = deepCopy(this.props.matchInfo!);
     new MatchStateHelper(match).resetMatch();
     ourFirebase.updateMatchState(match);
     console.log('reset match');
@@ -128,7 +130,7 @@ class AppHeader extends React.Component<Props, {}> {
 
   handleLeaveMatchClick = () => {
     console.log('leave match');
-    ourFirebase.leaveMatch(this.props.matchInfo);
+    ourFirebase.leaveMatch(this.props.matchInfo!);
     this.props.history.replace('/');
   };
 
@@ -137,7 +139,7 @@ class AppHeader extends React.Component<Props, {}> {
     // TODO: this looks horrible!
     let rules = this.state.showRules ? (
       <iframe
-        src={this.props.matchInfo.game.wikipediaUrl}
+        src={this.props.matchInfo!.game.wikipediaUrl}
         height="490"
         width="490"
       />
@@ -237,31 +239,23 @@ class AppHeader extends React.Component<Props, {}> {
   }
 }
 
-const mapStateToProps = (state: StoreState, ownProps: Props) => {
-  let matchInfo;
+const mapStateToProps = (
+  state: StoreState,
+  ownProps: Props
+): PropsWithoutRouter => {
+  let matchInfo: MatchInfo | undefined;
   let pathname = ownProps.location.pathname;
   // We need match info for title
   if (pathname.startsWith('/matches/')) {
     let matchId = pathname.split('/')[2];
-
     matchInfo = findMatch(state.matchesList, matchId);
-
-    if (matchInfo) {
-      return {
-        matchInfo: matchInfo,
-        userIdToInfo: state.userIdToInfo,
-        myUser: state.myUser,
-        audioMute: state.audioMute
-      };
-    }
   }
-  // We're not on a match or matchInfo is not found
   return {
+    matchInfo: matchInfo,
     userIdToInfo: state.userIdToInfo,
     myUser: state.myUser,
     audioMute: state.audioMute
   };
 };
 
-// export default connect(mapStateToProps)(withRouter(AppHeader));
-export default withRouter(connect(mapStateToProps)(AppHeader));
+export default withRouter((connect(mapStateToProps) as any)(AppHeader));

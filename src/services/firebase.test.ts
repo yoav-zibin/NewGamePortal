@@ -1,6 +1,9 @@
 /**
  * @jest-environment node
  */
+
+(global as any).XMLHttpRequest = require('xmlhttprequest').XMLHttpRequest;
+
 import { ourFirebase } from './firebase';
 import {
   MatchInfo,
