@@ -22,7 +22,7 @@ import MenuItem from 'material-ui/MenuItem';
 import IconMenu from 'material-ui/IconMenu';
 import { MatchStateHelper } from '../services/matchStateHelper';
 import { ourFirebase } from '../services/firebase';
-import { Divider } from 'material-ui';
+import { Divider, Dialog, FlatButton } from 'material-ui';
 
 interface PropsWithoutRouter {
   matchInfo: MatchInfo | undefined;
@@ -116,11 +116,11 @@ class AppHeader extends React.Component<Props, {}> {
   };
 
   handleGameRulesClick = () => {
-    console.log('Show rules before:', this.state.showRules);
-    this.setState({ showRules: !this.state.showRules });
-    console.log('Show rules is now: ', this.state.showRules);
+    this.setState({ showRules: true });
   };
-
+  handleDialogClose = () => {
+    this.setState({ showRules: false });
+  };
   handleResetMatchClick = () => {
     let match: MatchInfo = deepCopy(this.props.matchInfo!);
     new MatchStateHelper(match).resetMatch();
@@ -136,23 +136,15 @@ class AppHeader extends React.Component<Props, {}> {
 
   render() {
     let volume = this.props.audioMute ? <VolumeMute /> : <VolumeUp />;
-    // TODO: this looks horrible!
-    let rules = this.state.showRules ? (
-      <iframe
-        src={this.props.matchInfo!.game.wikipediaUrl}
-        height="490"
-        width="490"
-      />
-    ) : (
-      'Show Game Rules'
-    );
     if (this.onPlayingScreen() && this.props.matchInfo) {
       // We're on Playing Screen, which needs 'add' button and mute button
       console.log('ON PLAYING SCREEN');
       const isInviteFriendDisabled =
-        this.props.matchInfo.participantsUserIds.length >=
-        ourFirebase.MAX_USERS_IN_MATCH - 1;
+        this.props.matchInfo.participantsUserIds.length >= ourFirebase.MAX_USERS_IN_MATCH - 1;
       const isGameRulesDisabled = !this.props.matchInfo.game.wikipediaUrl;
+      const actions = [
+        <FlatButton key="OK" label="OK" primary={true} onClick={this.handleDialogClose} />
+      ];
       // We're on Playing Screen, which needs 'add' button and mute button
       return (
         <AppBar
@@ -180,16 +172,12 @@ class AppHeader extends React.Component<Props, {}> {
                   disabled={isInviteFriendDisabled}
                 />
                 <MenuItem
-                  primaryText={
-                    this.props.audioMute
-                      ? 'Play game sounds'
-                      : 'Mute game sounds'
-                  }
+                  primaryText={this.props.audioMute ? 'Play game sounds' : 'Mute game sounds'}
                   onClick={this.handleAudioClick}
                   rightIcon={volume}
                 />
                 <MenuItem
-                  primaryText={rules}
+                  primaryText="Show Game Rules"
                   onClick={this.handleGameRulesClick}
                   rightIcon={<School />}
                   disabled={isGameRulesDisabled}
@@ -209,6 +197,19 @@ class AppHeader extends React.Component<Props, {}> {
                   rightIcon={<Delete color={red500} />}
                 />
               </IconMenu>
+              <Dialog
+                title={'Rules for ' + this.props.matchInfo.game.gameName}
+                actions={actions}
+                contentStyle={{ width: '90%', maxWidth: 'none' }}
+                autoDetectWindowHeight={false}
+                autoScrollBodyContent={false}
+                modal={false}
+                open={this.state.showRules}
+                onRequestClose={this.handleDialogClose}
+              >
+                {/* 99% to prevent dialog from having width scrollbar */}
+                <iframe src={this.props.matchInfo.game.wikipediaUrl} width="99%" height="99%" />
+              </Dialog>
             </div>
           }
           title={this.getLocation()}
@@ -239,10 +240,7 @@ class AppHeader extends React.Component<Props, {}> {
   }
 }
 
-const mapStateToProps = (
-  state: StoreState,
-  ownProps: Props
-): PropsWithoutRouter => {
+const mapStateToProps = (state: StoreState, ownProps: Props): PropsWithoutRouter => {
   let matchInfo: MatchInfo | undefined;
   let pathname = ownProps.location.pathname;
   // We need match info for title
