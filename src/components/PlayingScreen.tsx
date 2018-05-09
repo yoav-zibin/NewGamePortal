@@ -30,12 +30,12 @@ const styles: CSSPropertiesIndexer = {
     overflowY: 'scroll'
   },
   chip: {
-    margin: 4,
+    margin: 4
   },
   wrapper: {
     display: 'flex',
-    flexWrap: 'wrap',
-  },
+    flexWrap: 'wrap'
+  }
 };
 
 class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
@@ -55,7 +55,6 @@ class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
       return (
         <>
           <div style={styles.playingScreenContainer}>
-            <div>The Gamespec has not been loaded.</div>
             <img
               height={screenShotHeight * ratio}
               width={screenShotWidth * ratio}
@@ -82,40 +81,37 @@ class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
     const videoArea = !showVideoArea ? null : (
       <VideoArea opponents={opponents} />
     );
-    const inviteFriend = this.props.matchInfo!.participantsUserIds.length > 1 ? (
-      <RaisedButton
-        onClick={() => {
-          this.setState({
-            videoChatButton: !this.state.videoChatButton
-          });
-        }}
-        label={
-          this.state.videoChatButton
-            ? 'Stop VideoChatting'
-            : 'Start VideoChatting'
-        }
-        primary={true}
-      />
-    ) : (
-      <RaisedButton
-            onClick={() => {
-              this.props.history.push('/contactsList/' + this.props.matchInfo!.matchId);
-            }}
-            label="Invite a friend to play"
-            primary={true}
-      />
-    );
+    const inviteFriend =
+      this.props.matchInfo!.participantsUserIds.length > 1 ? (
+        <RaisedButton
+          onClick={() => {
+            this.setState({
+              videoChatButton: !this.state.videoChatButton
+            });
+          }}
+          label={
+            this.state.videoChatButton
+              ? 'Stop VideoChatting'
+              : 'Start VideoChatting'
+          }
+          primary={true}
+        />
+      ) : (
+        <RaisedButton
+          onClick={() => {
+            this.props.history.push(
+              '/contactsList/' + this.props.matchInfo!.matchId
+            );
+          }}
+          label="Invite a friend to play"
+          primary={true}
+        />
+      );
     const opponentsArea = this.state.videoChatButton ? null : (
       <div style={styles.wrapper}>
-      {opponents.map(
-        (opponent) => (
-        <Chip
-          style={styles.chip}
-        >
-         {opponent.name}
-        </Chip>
-        )
-      )}
+        {opponents.map(opponent => (
+          <Chip style={styles.chip}>{opponent.name}</Chip>
+        ))}
       </div>
     );
     return (
