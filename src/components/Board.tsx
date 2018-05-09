@@ -86,9 +86,7 @@ class Board extends React.Component<BoardProps, BoardState> {
   }
 
   selfParticipantIndex() {
-    return this.props.matchInfo.participantsUserIds.indexOf(
-      this.props.myUserId
-    );
+    return this.props.matchInfo.participantsUserIds.indexOf(this.props.myUserId);
   }
 
   componentWillUpdate(nextProps: BoardProps) {
@@ -115,31 +113,24 @@ class Board extends React.Component<BoardProps, BoardState> {
         imageNode.to({
           duration: this.state.animatingTime,
           x: nextMatchState[i].x / 100 * this.state.innerWidth,
-          y:
-            nextMatchState[i].y / 100 * this.props.gameSpec.board.height * ratio
+          y: nextMatchState[i].y / 100 * this.props.gameSpec.board.height * ratio
         });
         // play audio when drag end audio when it ends
         this.audioPlaying(dragEndAudio);
       } else if (
         kind === 'card' &&
-        prevMatchState[i].cardVisibilityPerIndex[
-          this.selfParticipantIndex()
-        ] !==
+        prevMatchState[i].cardVisibilityPerIndex[this.selfParticipantIndex()] !==
           nextMatchState[i].cardVisibilityPerIndex[this.selfParticipantIndex()]
       ) {
         // the card is flipped. Call animation.
         this.handleAnimation(i, kind);
       } else if (
         kind === 'toggable' &&
-        prevMatchState[i].currentImageIndex !==
-          nextMatchState[i].currentImageIndex
+        prevMatchState[i].currentImageIndex !== nextMatchState[i].currentImageIndex
       ) {
         // the piece is toggled. Call animation.
         this.handleAnimation(i, kind);
-      } else if (
-        kind === 'dice' &&
-        prevMatchState[i].zDepth !== nextMatchState[i].zDepth
-      ) {
+      } else if (kind === 'dice' && prevMatchState[i].zDepth !== nextMatchState[i].zDepth) {
         // To notify the firebase that someone has rolled a dice
         // (so that other users can see a rolling dice animation)
         // we add the z-depth of dice
@@ -163,9 +154,7 @@ class Board extends React.Component<BoardProps, BoardState> {
     console.log('Board componentWillMount');
     this.mutableMatch = deepCopy(this.props.matchInfo);
     if (this.mutableMatch.matchState.length === 0) {
-      this.mutableMatch.matchState = MatchStateHelper.createInitialState(
-        this.props.gameSpec
-      );
+      this.mutableMatch.matchState = MatchStateHelper.createInitialState(this.props.gameSpec);
       ourFirebase.updateMatchState(this.mutableMatch);
     }
   }
@@ -184,8 +173,7 @@ class Board extends React.Component<BoardProps, BoardState> {
   }
 
   handleAnimation(index: number, kind: string) {
-    const imageNode = (this.refs['canvasImage' + index] as CanvasImage)
-      .imageNode;
+    const imageNode = (this.refs['canvasImage' + index] as CanvasImage).imageNode;
     if (kind === 'card') {
       let tween = new Konva.Tween({
         node: imageNode,
@@ -216,10 +204,7 @@ class Board extends React.Component<BoardProps, BoardState> {
   handleResize = () => {
     if (!this.state.throttled) {
       this.setDimensions();
-      let timer = setTimeout(
-        () => this.setState({ timer: null, throttled: false }),
-        250
-      );
+      let timer = setTimeout(() => this.setState({ timer: null, throttled: false }), 250);
       this.setState({
         throttled: true,
         timer: timer
@@ -291,21 +276,14 @@ class Board extends React.Component<BoardProps, BoardState> {
     console.log('Shufle Deck for index:');
   }
 
-  updateZIndex = (index: number, z: number | undefined) => {
+  updateZIndex = (index: number) => {
     let maxZ = this.helper.getMaxZ();
-    let zIndex = z ? z : maxZ;
-    console.log('shuffle' + zIndex);
     let imageNode = (this.refs['canvasImage' + index] as CanvasImage).imageNode;
-    imageNode.setZIndex(zIndex);
+    imageNode.setZIndex(maxZ);
+    this.helper.setMaxZ(index);
   };
 
-  handleTouchEnd = (
-    index: number,
-    kind: string,
-    startX: number,
-    startY: number,
-    ratio: number
-  ) => {
+  handleTouchEnd = (index: number, kind: string, startX: number, startY: number, ratio: number) => {
     let position = (this.refs[
       'canvasImage' + index
     ] as CanvasImage).imageNode.getAbsolutePosition();
@@ -315,9 +293,7 @@ class Board extends React.Component<BoardProps, BoardState> {
 
     let endX = position.x / ratio / width * 100;
     let endY = position.y / ratio / height * 100;
-    let distance = Math.sqrt(
-      (startX - endX) * (startX - endX) + (startY - endY) * (startY - endY)
-    );
+    let distance = Math.sqrt((startX - endX) * (startX - endX) + (startY - endY) * (startY - endY));
 
     console.log('distance' + distance);
     if (distance < 0.00001) {
@@ -342,11 +318,7 @@ class Board extends React.Component<BoardProps, BoardState> {
 
   makeCardVisibleToSelf(index: number) {
     const match: MatchInfo = this.mutableMatch;
-    if (
-      !match.matchState[index].cardVisibilityPerIndex[
-        this.selfParticipantIndex()
-      ]
-    ) {
+    if (!match.matchState[index].cardVisibilityPerIndex[this.selfParticipantIndex()]) {
       this.helper.showMe(index);
       ourFirebase.updatePieceState(match, index);
       console.log('card show to me:', index);
@@ -368,10 +340,7 @@ class Board extends React.Component<BoardProps, BoardState> {
   }
 
   toggleCardOptions(refString: string, cardIndex: number) {
-    if (
-      this.state.showCardOptions &&
-      this.state.selectedPieceIndex === cardIndex
-    ) {
+    if (this.state.showCardOptions && this.state.selectedPieceIndex === cardIndex) {
       // if we click on an already selected piece,
       // and the tooltip is not hided due to drag, then hide it
       this.hideCardOptions();
@@ -414,12 +383,17 @@ class Board extends React.Component<BoardProps, BoardState> {
       />
     );
 
-    // todo: after sorting, the sequence of piece in gameSpec is not the same as matchState any more
-    // so the initial state is not correct anymore
-    // and every when we touch a piece, the sequence is changed
-    // and all the position of piece should be changed
+    let sortedMatchState: {
+      originalIndex: number;
+      pieceState: PieceState;
+    }[] = this.sortMatchStateByZ();
 
-    let piecesLayer = this.mutableMatch.matchState.map((piece, index) => {
+    // sortedMatchStateIndex is the index of pieceState in sortedMatchState
+    // after we sort matchState according to z-index
+    let piecesLayer = sortedMatchState.map(compoundMatchState => {
+      // index is the index of piece in gameSpec according to sortedMatchState[sortedMatchStateIndex]
+      let piece = compoundMatchState.pieceState;
+      let index = compoundMatchState.originalIndex;
       const pieceSpec = this.props.gameSpec.pieces[index];
       let kind = pieceSpec.element.elementKind;
       if (kind.endsWith('Deck')) {
@@ -427,11 +401,7 @@ class Board extends React.Component<BoardProps, BoardState> {
       }
       let isVisible = piece.cardVisibilityPerIndex[this.selfParticipantIndex()];
       let imageIndex: number =
-        pieceSpec.element.elementKind === 'card'
-          ? isVisible
-            ? 0
-            : 1
-          : piece.currentImageIndex;
+        pieceSpec.element.elementKind === 'card' ? (isVisible ? 0 : 1) : piece.currentImageIndex;
       // let zIndex = piece.zDepth;
       let imageSrc: string = pieceSpec.element.images[imageIndex].downloadURL;
       return (
@@ -457,7 +427,7 @@ class Board extends React.Component<BoardProps, BoardState> {
           }}
           onDragStart={() => {
             // this.audioPlaying(dragStartAudio);
-            this.updateZIndex(index, undefined);
+            this.updateZIndex(index);
             console.log('onDragStart');
             // this.setState({
             //   showCardOptions: false
@@ -521,15 +491,13 @@ class Board extends React.Component<BoardProps, BoardState> {
             this.makeCardHiddenToAll(this.state.selectedPieceIndex);
           }}
         />
-        {this.state.selectedPieceIndex !== -1 &&
-        this.isDeck(this.state.selectedPieceIndex) ? (
+        {this.state.selectedPieceIndex !== -1 && this.isDeck(this.state.selectedPieceIndex) ? (
           <MenuItem
             style={{ padding: '0', listStyle: 'none', margin: '0' }}
             primaryText={'Shuffle Deck'}
             onClick={() => {
               this.shuffleDeck(
-                this.props.gameSpec.pieces[this.state.selectedPieceIndex]
-                  .deckPieceIndex
+                this.props.gameSpec.pieces[this.state.selectedPieceIndex].deckPieceIndex
               );
             }}
           />
