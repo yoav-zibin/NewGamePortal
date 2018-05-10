@@ -135,7 +135,7 @@ class AppHeader extends React.Component<Props, {}> {
   };
 
   render() {
-    let volume = this.props.audioMute ? <VolumeMute /> : <VolumeUp />;
+    let volume = this.props.audioMute ? <VolumeUp /> : <VolumeMute />;
     if (this.onPlayingScreen() && this.props.matchInfo) {
       // We're on Playing Screen, which needs 'add' button and mute button
       console.log('ON PLAYING SCREEN');

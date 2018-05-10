@@ -14,9 +14,7 @@ export class MatchStateHelper {
 
   // All functions will modify match.matchState.
   constructor(private match: MatchInfo) {
-    this.spec = checkNotNull(
-      store.getState().gameSpecs.gameSpecIdToGameSpec[match.gameSpecId]
-    );
+    this.spec = checkNotNull(store.getState().gameSpecs.gameSpecIdToGameSpec[match.gameSpecId]);
   }
 
   dragTo(pieceIndex: number, x: number, y: number) {
@@ -34,8 +32,7 @@ export class MatchStateHelper {
     checkCondition('toggleImage', pieceSpec.elementKind === 'toggable');
     const pieceState = this.getPieceState(pieceIndex);
     const currIndex = pieceState.currentImageIndex;
-    pieceState.currentImageIndex =
-      currIndex === pieceSpec.images.length - 1 ? 0 : currIndex + 1;
+    pieceState.currentImageIndex = currIndex === pieceSpec.images.length - 1 ? 0 : currIndex + 1;
     this.setMaxZ(pieceIndex);
   }
 
@@ -44,9 +41,7 @@ export class MatchStateHelper {
     const pieceSpec = this.getPieceSpec(diceIndex);
     checkCondition('rollDice', pieceSpec.elementKind === 'dice');
     const imagesNum = pieceSpec.images.length;
-    this.getPieceState(diceIndex).currentImageIndex = Math.floor(
-      imagesNum * Math.random()
-    );
+    this.getPieceState(diceIndex).currentImageIndex = Math.floor(imagesNum * Math.random());
     // To notify the firebase that someone has rolled a dice
     // (so that other users can see a rolling dice animation)
     // we add the z-depth of dice
@@ -112,17 +107,12 @@ export class MatchStateHelper {
   }
 
   resetMatch() {
-    this.match.matchState = this.spec.pieces.map(piece =>
-      deepCopy(piece.initialState)
-    );
+    this.match.matchState = this.spec.pieces.map(piece => deepCopy(piece.initialState));
     const decksShuffled: BooleanIndexer = {};
     this.spec.pieces.forEach((p, index) => {
       if (p.element.elementKind === 'dice') {
         this.rollDice(index);
-      } else if (
-        p.deckPieceIndex !== -1 &&
-        !(p.deckPieceIndex in decksShuffled)
-      ) {
+      } else if (p.deckPieceIndex !== -1 && !(p.deckPieceIndex in decksShuffled)) {
         decksShuffled[p.deckPieceIndex] = true;
         this.shuffleDeck(p.deckPieceIndex);
       }
@@ -130,12 +120,10 @@ export class MatchStateHelper {
   }
 
   getMaxZ() {
-    return Math.max(
-      ...this.match.matchState.map(pieceState => pieceState.zDepth)
-    );
+    return Math.max(...this.match.matchState.map(pieceState => pieceState.zDepth));
   }
 
-  setMaxZ(pieceIndex: number) {
+  private setMaxZ(pieceIndex: number) {
     this.getPieceState(pieceIndex).zDepth = this.getMaxZ() + 1;
   }
 

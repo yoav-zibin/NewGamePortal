@@ -317,6 +317,14 @@ export namespace ourFirebase {
         element.isDraggable = true;
       }
     }
+    // Verify all cards have a deck.
+    for (let [_gameSpecId, gameSpec] of Object.entries(gameSpecs.gameSpecIdToGameSpec)) {
+      for (let piece of gameSpec.pieces) {
+        const isCard = gameSpecs.elementIdToElement[piece.element.elementId].elementKind === 'card';
+        checkCondition('cards', (piece.deckPieceIndex !== -1) === isCard);
+      }
+    }
+
     return gameSpecs;
   }
 

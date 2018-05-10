@@ -3,6 +3,11 @@ import * as Konva from 'konva';
 import { Layer, Stage } from 'react-konva';
 import { MatchInfo, GameSpec, PieceState, MatchState } from '../types';
 import CanvasImage from './CanvasImage';
+import { red500 } from 'material-ui/styles/colors';
+import Shuffle from 'material-ui/svg-icons/av/shuffle';
+import Person from 'material-ui/svg-icons/social/person';
+import People from 'material-ui/svg-icons/social/people';
+import PeopleOutline from 'material-ui/svg-icons/social/people-outline';
 
 import { IconButton, IconMenu, MenuItem } from 'material-ui';
 import MoreVertIcon from 'material-ui/svg-icons/navigation/more-vert';
@@ -10,11 +15,11 @@ import { connect } from 'react-redux';
 import { StoreState } from '../types/index';
 import { ourFirebase } from '../services/firebase';
 import { MatchStateHelper } from '../services/matchStateHelper';
-import { deepCopy, isApp } from '../globals';
+import { deepCopy, isApp, checkCondition } from '../globals';
 
-const saudio = require('../sounds/drag-start.mp3');
-const daudio = require('../sounds/dice.mp3');
-const eaudio = require('../sounds/click.mp3');
+const dragStartMp3 = require('../sounds/drag-start.mp3');
+const diceMp3 = require('../sounds/dice.mp3');
+const clickMp3 = require('../sounds/click.mp3');
 
 interface BoardProps {
   myUserId: string;
@@ -24,7 +29,6 @@ interface BoardProps {
 }
 
 interface BoardState {
-  showCardOptions: boolean;
   innerWidth: number;
   innerHeight: number;
   selectedPieceIndex: number;
@@ -37,9 +41,9 @@ interface BoardState {
   timer: any;
 }
 
-let diceAudio = new Audio(daudio);
-let dragStartAudio = new Audio(saudio);
-let dragEndAudio = new Audio(eaudio);
+let diceAudio = new Audio(diceMp3);
+let dragStartAudio = new Audio(dragStartMp3);
+let clickAudio = new Audio(clickMp3);
 
 // TODO: fix z-index (when you start to drag something, it should have the max z-index).
 // TODO: shuffling doesn't work (e.g. in scrabble).
@@ -53,10 +57,9 @@ class Board extends React.Component<BoardProps, BoardState> {
   helper: MatchStateHelper = null as any;
 
   state: BoardState = {
-    showCardOptions: false,
+    selectedPieceIndex: -1, // If it's not -1, then we show cards options.
     innerHeight: window.innerHeight,
     innerWidth: window.innerWidth,
-    selectedPieceIndex: -1,
     tooltipPosition: {
       x: 0,
       y: 0
@@ -78,8 +81,7 @@ class Board extends React.Component<BoardProps, BoardState> {
           .catch(function(error: any) {
             // Automatic playback failed.
             // Show a UI element to let the user manually start playback.
-            console.log(error);
-            console.log('fail to open the soundtrack');
+            console.log('fail to play sound', error);
           });
       }
     }
@@ -96,6 +98,7 @@ class Board extends React.Component<BoardProps, BoardState> {
       return;
     }
     const nextMatchState = nextProps.matchInfo.matchState;
+    let audioToPlay: HTMLAudioElement | null = null;
     for (let i = 0; i < nextMatchState.length; i++) {
       const kind = this.props.gameSpec.pieces[i].element.elementKind;
       if (kind.endsWith('Deck')) {
@@ -107,16 +110,13 @@ class Board extends React.Component<BoardProps, BoardState> {
         prevMatchState[i].y !== nextMatchState[i].y
       ) {
         // the position is changed. Call animation.
-        const ratio = this.state.innerWidth / this.props.gameSpec.board.width;
-        // it's a drag, play drag start audio
-        this.audioPlaying(dragStartAudio);
+        const ratio = this.getRatio();
         imageNode.to({
           duration: this.state.animatingTime,
-          x: nextMatchState[i].x / 100 * this.state.innerWidth,
+          x: nextMatchState[i].x / 100 * this.props.gameSpec.board.width * ratio,
           y: nextMatchState[i].y / 100 * this.props.gameSpec.board.height * ratio
         });
-        // play audio when drag end audio when it ends
-        this.audioPlaying(dragEndAudio);
+        audioToPlay = clickAudio;
       } else if (
         kind === 'card' &&
         prevMatchState[i].cardVisibilityPerIndex[this.selfParticipantIndex()] !==
@@ -124,20 +124,26 @@ class Board extends React.Component<BoardProps, BoardState> {
       ) {
         // the card is flipped. Call animation.
         this.handleAnimation(i, kind);
+        audioToPlay = clickAudio;
       } else if (
         kind === 'toggable' &&
         prevMatchState[i].currentImageIndex !== nextMatchState[i].currentImageIndex
       ) {
         // the piece is toggled. Call animation.
         this.handleAnimation(i, kind);
+        audioToPlay = clickAudio;
       } else if (kind === 'dice' && prevMatchState[i].zDepth !== nextMatchState[i].zDepth) {
         // To notify the firebase that someone has rolled a dice
         // (so that other users can see a rolling dice animation)
         // we add the z-depth of dice
         // So if z-depth is changed, that means the dice is rolled. Call animation.
-        this.audioPlaying(diceAudio);
+        audioToPlay = diceAudio;
         this.handleAnimation(i, kind);
       }
+    }
+
+    if (audioToPlay) {
+      this.audioPlaying(audioToPlay);
     }
 
     this.mutableMatch = deepCopy(nextProps.matchInfo);
@@ -162,13 +168,15 @@ class Board extends React.Component<BoardProps, BoardState> {
   // resize the board (also for correctly displaying on mobile)
   componentDidMount() {
     window.addEventListener('resize', this.handleResize);
+    window.addEventListener('orientationchange', this.handleResize);
   }
 
   componentWillUnmount() {
     window.removeEventListener('resize', this.handleResize);
+    window.removeEventListener('orientationchange', this.handleResize);
     // make sure to clear the timer before unmounting
     if (this.state.timer) {
-      clearTimeout(this.state.timer!);
+      clearTimeout(this.state.timer);
     }
   }
 
@@ -213,22 +221,15 @@ class Board extends React.Component<BoardProps, BoardState> {
   };
 
   setDimensions() {
+    const innerWidth = window.innerWidth;
+    const innerHeight = window.innerHeight;
+    if (this.state.innerWidth === innerWidth && this.state.innerHeight === innerHeight) {
+      return;
+    }
     this.setState({
-      innerWidth: window.innerWidth,
-      innerHeight: window.innerHeight
+      innerWidth,
+      innerHeight
     });
-  }
-
-  // check if a card belongs to a deck
-  isDeck(index: number | undefined) {
-    if (index === undefined) {
-      return false;
-    }
-    if (this.props.gameSpec.pieces[index].deckPieceIndex === -1) {
-      return false;
-    } else {
-      return true;
-    }
   }
 
   // We need to do that because when we render the component,
@@ -251,13 +252,6 @@ class Board extends React.Component<BoardProps, BoardState> {
     console.log('toggle Piece index:', index);
   }
 
-  // TODO: add animations for:
-  // - dice roll, toggable piece, cards shuffles, card flips, drag-and-drop.
-  // (note that the drag-and-drop animation should only happen for opponents, and not
-  // for the person that did the dragging.)
-  // TODO: add appropriate sounds for all the above, and add button in the AppHeader
-  // to turn sound on/off.
-
   rollDice(index: number) {
     console.log('Roll Dice for index:', index);
     const match: MatchInfo = this.mutableMatch;
@@ -266,12 +260,10 @@ class Board extends React.Component<BoardProps, BoardState> {
   }
 
   shuffleDeck(deckIndex: number) {
+    checkCondition('shuffleDeck', deckIndex >= 0);
     const match: MatchInfo = this.mutableMatch;
     this.helper.shuffleDeck(deckIndex);
-    this.setState({
-      selectedPieceIndex: -1,
-      showCardOptions: false
-    });
+    this.hideCardOptions();
     ourFirebase.updateMatchState(match);
     console.log('Shufle Deck for index:');
   }
@@ -280,7 +272,6 @@ class Board extends React.Component<BoardProps, BoardState> {
     let maxZ = this.helper.getMaxZ();
     let imageNode = (this.refs['canvasImage' + index] as CanvasImage).imageNode;
     imageNode.setZIndex(maxZ);
-    this.helper.setMaxZ(index);
   };
 
   handleTouchEnd = (index: number, kind: string, startX: number, startY: number, ratio: number) => {
@@ -310,19 +301,16 @@ class Board extends React.Component<BoardProps, BoardState> {
       this.helper.dragTo(index, endX, endY);
       const match: MatchInfo = this.mutableMatch;
       ourFirebase.updatePieceState(match, index);
-      this.setState({
-        showCardOptions: false
-      });
+      this.hideCardOptions();
     }
   };
 
   makeCardVisibleToSelf(index: number) {
     const match: MatchInfo = this.mutableMatch;
-    if (!match.matchState[index].cardVisibilityPerIndex[this.selfParticipantIndex()]) {
-      this.helper.showMe(index);
-      ourFirebase.updatePieceState(match, index);
-      console.log('card show to me:', index);
-    }
+    this.helper.showMe(index);
+    ourFirebase.updatePieceState(match, index);
+    console.log('card show to me:', index);
+    this.hideCardOptions();
   }
 
   makeCardVisibleToAll(index: number) {
@@ -330,6 +318,7 @@ class Board extends React.Component<BoardProps, BoardState> {
     this.helper.showEveryone(index);
     ourFirebase.updatePieceState(match, index);
     console.log('card show to everyone:', index);
+    this.hideCardOptions();
   }
 
   makeCardHiddenToAll(index: number) {
@@ -337,10 +326,11 @@ class Board extends React.Component<BoardProps, BoardState> {
     this.helper.hideFromEveryone(index);
     ourFirebase.updatePieceState(match, index);
     console.log('card hide to everyone:', index);
+    this.hideCardOptions();
   }
 
   toggleCardOptions(refString: string, cardIndex: number) {
-    if (this.state.showCardOptions && this.state.selectedPieceIndex === cardIndex) {
+    if (this.state.selectedPieceIndex === cardIndex) {
       // if we click on an already selected piece,
       // and the tooltip is not hided due to drag, then hide it
       this.hideCardOptions();
@@ -352,7 +342,6 @@ class Board extends React.Component<BoardProps, BoardState> {
           x: position.x,
           y: position.y
         },
-        showCardOptions: true,
         selectedPieceIndex: cardIndex
       });
     }
@@ -361,9 +350,15 @@ class Board extends React.Component<BoardProps, BoardState> {
   hideCardOptions() {
     console.log('hideCardOptions');
     this.setState({
-      selectedPieceIndex: -1,
-      showCardOptions: false
+      selectedPieceIndex: -1
     });
+  }
+
+  getRatio() {
+    return Math.min(
+      this.state.innerWidth / this.props.gameSpec.board.width,
+      this.state.innerHeight / this.props.gameSpec.board.height
+    );
   }
 
   render() {
@@ -371,8 +366,9 @@ class Board extends React.Component<BoardProps, BoardState> {
     let boardImage = this.props.gameSpec.board.downloadURL;
     const width = this.props.gameSpec.board.width;
     const height = this.props.gameSpec.board.height;
-    const ratio = this.state.innerWidth / width;
-    this.helper = new MatchStateHelper(this.mutableMatch);
+    const ratio = this.getRatio();
+    const match = this.mutableMatch;
+    this.helper = new MatchStateHelper(match);
 
     let boardLayer = (
       <CanvasImage
@@ -383,10 +379,7 @@ class Board extends React.Component<BoardProps, BoardState> {
       />
     );
 
-    let sortedMatchState: {
-      originalIndex: number;
-      pieceState: PieceState;
-    }[] = this.sortMatchStateByZ();
+    let sortedMatchState = this.sortMatchStateByZ();
 
     // sortedMatchStateIndex is the index of pieceState in sortedMatchState
     // after we sort matchState according to z-index
@@ -414,11 +407,6 @@ class Board extends React.Component<BoardProps, BoardState> {
           x={piece.x * width / 100 * ratio}
           y={piece.y * height / 100 * ratio}
           src={imageSrc}
-          // zIndex={zIndex}
-          // zIndex attribute is not a property for konva node
-          // onTouchStart={() => {
-          //   console.log('onTouchStart');
-          // }}
           onTouchEnd={() => {
             console.log('onTouchEnd');
             let startX = piece.x;
@@ -426,84 +414,76 @@ class Board extends React.Component<BoardProps, BoardState> {
             this.handleTouchEnd(index, kind, startX, startY, ratio);
           }}
           onDragStart={() => {
-            // this.audioPlaying(dragStartAudio);
+            this.audioPlaying(dragStartAudio);
             this.updateZIndex(index);
             console.log('onDragStart');
-            // this.setState({
-            //   showCardOptions: false
-            // });
           }}
-          // onDragEnd={() => {
-          //   this.audioPlaying(dragEndAudio);
-          //   console.log('onDragEnd');
-          //   this.setState({
-          //     showCardOptions: false
-          //   });
-          // }}
         />
       );
     });
 
-    let toolTipLayer = this.state.showCardOptions ? (
-      <IconMenu
-        iconButtonElement={
-          <IconButton>
-            <MoreVertIcon />
-          </IconButton>
-        }
-        anchorOrigin={{ horizontal: 'left', vertical: 'top' }}
-        targetOrigin={{ horizontal: 'left', vertical: 'top' }}
-        className="my-tooltip"
-        style={{
-          left: this.state.tooltipPosition.x,
-          top: this.state.tooltipPosition.y,
-          position: 'absolute',
-          display: 'initial',
-          zIndex: 100,
-          background: 'white',
-          width: '40px',
-          height: '40px'
-        }}
-      >
-        <MenuItem
-          style={{ padding: '0', listStyle: 'none', margin: '0' }}
-          primaryText={'Options:'}
-          disabled={true}
-        />
-        <MenuItem
-          style={{ padding: '0', listStyle: 'none', margin: '0' }}
-          primaryText={'Make Visible To Me'}
-          onClick={() => {
-            this.makeCardVisibleToSelf(this.state.selectedPieceIndex);
+    const selectedPieceIndex = this.state.selectedPieceIndex;
+    let toolTipLayer: JSX.Element | null = null;
+    if (selectedPieceIndex !== -1) {
+      const cardVisibilityPerIndex = match.matchState[selectedPieceIndex].cardVisibilityPerIndex;
+      toolTipLayer = (
+        <IconMenu
+          iconButtonElement={
+            <IconButton>
+              <MoreVertIcon />
+            </IconButton>
+          }
+          anchorOrigin={{ horizontal: 'left', vertical: 'top' }}
+          targetOrigin={{ horizontal: 'left', vertical: 'top' }}
+          className="my-tooltip"
+          style={{
+            left: this.state.tooltipPosition.x,
+            top: this.state.tooltipPosition.y,
+            position: 'absolute',
+            display: 'initial',
+            zIndex: 100,
+            background: 'white',
+            width: '40px',
+            height: '40px'
           }}
-        />
-        <MenuItem
-          style={{ padding: '0', listStyle: 'none', margin: '0' }}
-          primaryText={'Make Visible To Everyone'}
-          onClick={() => {
-            this.makeCardVisibleToAll(this.state.selectedPieceIndex);
-          }}
-        />
-        <MenuItem
-          style={{ padding: '0', listStyle: 'none', margin: '0' }}
-          primaryText={'Hide From Everyone'}
-          onClick={() => {
-            this.makeCardHiddenToAll(this.state.selectedPieceIndex);
-          }}
-        />
-        {this.state.selectedPieceIndex !== -1 && this.isDeck(this.state.selectedPieceIndex) ? (
+        >
           <MenuItem
-            style={{ padding: '0', listStyle: 'none', margin: '0' }}
-            primaryText={'Shuffle Deck'}
+            rightIcon={<Person />}
+            primaryText={'Show me'}
+            disabled={cardVisibilityPerIndex[this.selfParticipantIndex()]}
             onClick={() => {
-              this.shuffleDeck(
-                this.props.gameSpec.pieces[this.state.selectedPieceIndex].deckPieceIndex
-              );
+              this.makeCardVisibleToSelf(selectedPieceIndex);
             }}
           />
-        ) : null}
-      </IconMenu>
-    ) : null;
+          <MenuItem
+            rightIcon={<People />}
+            primaryText={'Show everyone'}
+            disabled={
+              Object.keys(cardVisibilityPerIndex).length === match.participantsUserIds.length
+            }
+            onClick={() => {
+              this.makeCardVisibleToAll(selectedPieceIndex);
+            }}
+          />
+          <MenuItem
+            rightIcon={<PeopleOutline />}
+            primaryText={'Hide'}
+            disabled={Object.keys(cardVisibilityPerIndex).length === 0}
+            onClick={() => {
+              this.makeCardHiddenToAll(selectedPieceIndex);
+            }}
+          />
+          <MenuItem
+            style={{ color: red500 }}
+            rightIcon={<Shuffle color={red500} />}
+            primaryText={'Shuffle deck'}
+            onClick={() => {
+              this.shuffleDeck(this.props.gameSpec.pieces[selectedPieceIndex].deckPieceIndex);
+            }}
+          />
+        </IconMenu>
+      );
+    }
 
     return (
       <div style={{ position: 'relative' }}>
