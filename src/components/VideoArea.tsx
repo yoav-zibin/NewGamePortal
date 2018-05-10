@@ -8,20 +8,20 @@ import { videoChat } from '../services/videoChat';
 import { checkCondition } from '../globals';
 
 const styles: CSSPropertiesIndexer = {
-  videoChatItem: {
-    width: '150px',
-    height: '150px',
-    minWidth: '150px',
-    maxWidth: '150px',
-    minHeight: '150px',
-    maxHeight: '150px'
-  },
-  videoChatContainer: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-around',
-    flexFlow: 'row wrap'
-  },
+//   videoChatItem: {
+//     width: '150px',
+//     height: '150px',
+//     minWidth: '150px',
+//     maxWidth: '150px',
+//     minHeight: '150px',
+//     maxHeight: '150px'
+//   },
+//   videoChatContainer: {
+//     display: 'flex',
+//     alignItems: 'center',
+//     justifyContent: 'space-around',
+//     flexFlow: 'row wrap'
+//   },
   centerItem: {
     textAlign: 'center',
     lineHeight: '150px',
@@ -59,9 +59,11 @@ class VideoArea extends React.Component<Props> {
     participants.unshift({ userId: 'Me', name: 'Me' });
 
     return (
-      <div style={styles.videoChatContainer}>
+      // <div style={styles.videoChatContainer}>
+      <div>
         {participants.map((participant, index) => (
-          <div key={participant.userId} style={styles.videoChatItem}>
+          // <div key={participant.userId} style={styles.videoChatItem}>
+          <div key={participant.userId}>
             <video id={'videoElement' + index} />
             <div id={'videoParticipantName' + index} style={styles.centerItem}>
               {participant.name}
