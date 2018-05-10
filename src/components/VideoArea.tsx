@@ -5,23 +5,23 @@ import {
 } from '../types/index';
 import { videoChat } from '../services/videoChat';
 
-import { checkCondition } from '../globals';
+import { checkCondition, isIos } from '../globals';
 
 const styles: CSSPropertiesIndexer = {
-//   videoChatItem: {
-//     width: '150px',
-//     height: '150px',
-//     minWidth: '150px',
-//     maxWidth: '150px',
-//     minHeight: '150px',
-//     maxHeight: '150px'
-//   },
-//   videoChatContainer: {
-//     display: 'flex',
-//     alignItems: 'center',
-//     justifyContent: 'space-around',
-//     flexFlow: 'row wrap'
-//   },
+  videoChatItem: {
+    width: '150px',
+    height: '150px',
+    minWidth: '150px',
+    maxWidth: '150px',
+    minHeight: '150px',
+    maxHeight: '150px'
+  },
+  videoChatContainer: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+    flexFlow: 'row wrap'
+  },
   centerItem: {
     textAlign: 'center',
     lineHeight: '150px',
@@ -35,18 +35,31 @@ interface Props {
 }
 
 class VideoArea extends React.Component<Props> {
+
+  container: HTMLDivElement | null = null
+
   componentDidMount() {
     videoChat.getUserMedia().then(() => {
       if (videoChat.isSupported()) {
         videoChat.updateOpponents(
           this.props.opponents.map(opponent => opponent.userId)
         );
+        this.updateVideoElements();
       }
     });
+    this.container!.addEventListener('scroll', this.updateVideoElements);
   }
 
   componentWillUnmount() {
     videoChat.stopUserMedia();
+    this.updateVideoElements();
+    this.container!.removeEventListener('scroll', this.updateVideoElements);
+  }
+
+  updateVideoElements() {
+    if (isIos) {
+      window.cordova.plugins.iosrtc.refreshVideos();
+    }
   }
 
   render() {
@@ -59,11 +72,9 @@ class VideoArea extends React.Component<Props> {
     participants.unshift({ userId: 'Me', name: 'Me' });
 
     return (
-      // <div style={styles.videoChatContainer}>
-      <div>
+      <div style={styles.videoChatContainer} ref={(ele) => this.container = ele} >
         {participants.map((participant, index) => (
-          // <div key={participant.userId} style={styles.videoChatItem}>
-          <div key={participant.userId}>
+          <div key={participant.userId} style={styles.videoChatItem}>
             <video id={'videoElement' + index} />
             <div id={'videoParticipantName' + index} style={styles.centerItem}>
               {participant.name}
