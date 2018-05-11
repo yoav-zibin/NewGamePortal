@@ -8,6 +8,7 @@ import { List, ListItem } from 'material-ui/List';
 import Avatar from 'material-ui/Avatar';
 import { Link } from 'react-router-dom';
 import { getOpponents } from '../globals';
+import { darkBlack } from 'material-ui/styles/colors';
 
 const styles: CSSPropertiesIndexer = {
   root: {
@@ -51,11 +52,7 @@ class MatchesList extends React.Component<Props, {}> {
     }
     return (
       ' with ' +
-      getOpponents(
-        participantsUserIds,
-        this.props.myUserId,
-        this.props.userIdToInfo
-      )
+      getOpponents(participantsUserIds, this.props.myUserId, this.props.userIdToInfo)
         .map(opponent => opponent.name)
         .join(', ')
     );
@@ -79,16 +76,14 @@ class MatchesList extends React.Component<Props, {}> {
                   // will cause warning with just tile.matchId
                   primaryText={tile.game.gameName}
                   secondaryText={
-                    'Last played ' +
-                    timeSince(tile.lastUpdatedOn) +
-                    ' ago' +
-                    this.getOpponentNames(tile.participantsUserIds)
+                    <p>
+                      <span style={{ color: darkBlack }}>{timeSince(tile.lastUpdatedOn)} ago</span>
+                      {this.getOpponentNames(tile.participantsUserIds)}
+                    </p>
                   }
+                  secondaryTextLines={2}
                   rightAvatar={
-                    <Avatar
-                      src={tile.game.screenShot.downloadURL}
-                      style={styles.icon}
-                    />
+                    <Avatar src={tile.game.screenShot.downloadURL} style={styles.icon} />
                   }
                 />
               </Link>
