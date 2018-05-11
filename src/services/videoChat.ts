@@ -249,6 +249,13 @@ export namespace videoChat {
           stateChangeHandler(anyPc.connectionState);
         };
       }
+      if ('onsignalingstatechange' in pc) {
+        const anyPc = <any>pc;
+        anyPc.onsignalingstatechange = (evt: any) => {
+          console.log('onsignalingstatechange: ', anyPc.signalingState, evt);
+          stateChangeHandler(anyPc.signalingState);
+        };
+      }
 
       const isCaller = !initialSignals || initialSignals.length === 0;
       this.isCaller = isCaller;
