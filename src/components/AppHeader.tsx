@@ -3,12 +3,12 @@ import AppBar from 'material-ui/AppBar';
 import IconButton from 'material-ui/IconButton';
 import { red500 } from 'material-ui/styles/colors';
 import NavigationArrowBack from 'material-ui/svg-icons/navigation/arrow-back';
-import { StringIndexer, RouterMatchParams } from '../types';
+import { StringIndexer, RouterMatchParams, WindowDimensions } from '../types';
 import { MatchInfo, StoreState, UserIdToInfo, MyUser } from '../types';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
 import * as H from 'history';
-import { findMatch, deepCopy } from '../globals';
+import { findMatch, deepCopy, shouldHideAppHeader } from '../globals';
 import MoreVertIcon from 'material-ui/svg-icons/navigation/more-vert';
 import VolumeUp from 'material-ui/svg-icons/av/volume-up';
 import VolumeMute from 'material-ui/svg-icons/av/volume-mute';
@@ -29,6 +29,9 @@ interface PropsWithoutRouter {
   userIdToInfo: UserIdToInfo;
   myUser: MyUser;
   audioMute: boolean;
+
+  // To ensure the component rerenders when dimensions change.
+  windowDimensions: WindowDimensions | undefined;
 }
 interface Props extends PropsWithoutRouter {
   location: H.Location;
@@ -122,6 +125,9 @@ class AppHeader extends React.Component<Props, {}> {
   };
 
   render() {
+    if (shouldHideAppHeader()) {
+      return null;
+    }
     let volume = this.props.audioMute ? <VolumeUp /> : <VolumeMute />;
     if (this.onPlayingScreen() && this.props.matchInfo) {
       // We're on Playing Screen, which needs 'add' button and mute button
@@ -239,7 +245,8 @@ const mapStateToProps = (state: StoreState, ownProps: Props): PropsWithoutRouter
     matchInfo: matchInfo,
     userIdToInfo: state.userIdToInfo,
     myUser: state.myUser,
-    audioMute: state.audioMute
+    audioMute: state.audioMute,
+    windowDimensions: state.windowDimensions
   };
 };
 

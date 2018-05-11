@@ -45,9 +45,7 @@ export const platform: PlatformType =
     ? 'tests'
     : window.location.search === '?platform=ios'
       ? 'ios'
-      : window.location.search === '?platform=android'
-        ? 'android'
-        : 'web';
+      : window.location.search === '?platform=android' ? 'android' : 'web';
 export const isTests = platform === 'tests';
 export const isIos = platform === 'ios';
 export const isAndroid = platform === 'android';
@@ -234,10 +232,15 @@ export const studentsUsers: ContactWithUserId[] = [
   }
 ];
 
+// I want to hide the app header in portrait mode in phones
+export function shouldHideAppHeader() {
+  return window.innerHeight < window.innerWidth && window.innerHeight < 500;
+}
+
 function getInnerHeight() {
   // There are also 64px for the AppHeader.
   // TODO: hide AppHeader when width > height , and just show the back and menu buttons.
-  return window.innerHeight - 64;
+  return window.innerHeight - (shouldHideAppHeader() ? 0 : 64);
 }
 function getInnerWidth() {
   return window.innerWidth;
@@ -253,7 +256,11 @@ export function getBoardRatio(boardImage: Image) {
   const boardHeight = boardImage.height;
   const widthRatio = innerWidth / boardWidth;
   const heightRatio = innerHeight / boardHeight;
-  return Math.min(widthRatio, heightRatio);
+  const ratio = Math.min(widthRatio, heightRatio);
+  // console.log(
+  //   "BoardRatio=", ratio, "widthRatio=", widthRatio, "heightRatio=",
+  //   heightRatio, "innerWidth=", innerWidth, "innerHeight=", innerHeight);
+  return ratio;
 }
 
 // The board will either be full width or full height
@@ -266,4 +273,26 @@ export function isBoardFullWidth(boardImage: Image) {
   const widthRatio = innerWidth / boardWidth;
   const heightRatio = innerHeight / boardHeight;
   return widthRatio < heightRatio;
+}
+
+// Our video chat is always rectangular (width === height).
+export function getVideoChatWidthHeight(boardImage: Image, participantsNum: number) {
+  const innerWidth = getInnerWidth();
+  const innerHeight = getInnerHeight();
+  const ratio = getBoardRatio(boardImage);
+
+  const isFullWidth = isBoardFullWidth(boardImage);
+  const remainingWidth = isFullWidth ? innerWidth : innerWidth - ratio * boardImage.width;
+  const remainingHeight = !isFullWidth ? innerHeight : innerHeight - ratio * boardImage.height;
+  // We iterate over all possible number of rows (1..participantsNum),
+  // and find the max widthHeight;
+  console.log('remainingWidth=', remainingWidth, ' remainingHeight=', remainingHeight);
+  let widthHeight = 0;
+  for (let rowsNum = 1; rowsNum <= participantsNum; rowsNum++) {
+    const height = remainingHeight / rowsNum;
+    const width = remainingWidth / Math.ceil(participantsNum / rowsNum);
+    console.log('rowsNum=', rowsNum, ' height=', height, ' width=', width);
+    widthHeight = Math.max(widthHeight, Math.min(height, width));
+  }
+  return widthHeight - 8; // To get 4px margins.
 }

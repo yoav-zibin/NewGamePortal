@@ -1,50 +1,55 @@
 import * as React from 'react';
-import { 
-  CSSPropertiesIndexer, 
-  Opponent 
-} from '../types/index';
+import { CSSPropertiesIndexer, Opponent, WindowDimensions, GameSpec } from '../types/index';
 import { videoChat } from '../services/videoChat';
 
-import { checkCondition, isIos } from '../globals';
+import { checkCondition, isIos, getVideoChatWidthHeight } from '../globals';
 
-const styles: CSSPropertiesIndexer = {
-  videoChatItem: {
-    width: '150px',
-    height: '150px',
-    minWidth: '150px',
-    maxWidth: '150px',
-    minHeight: '150px',
-    maxHeight: '150px'
-  },
-  videoChatContainer: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-around',
-    flexFlow: 'row wrap',
-    overflowY: 'scroll'
-  },
-  centerItem: {
-    textAlign: 'center',
-    lineHeight: '150px',
-    width: '150px',
-    height: '150px'
-  }
-};
+function getStyles(videoChatWidthHeight: number): CSSPropertiesIndexer {
+  const widthHeight = videoChatWidthHeight + 'px';
+  return {
+    videoChatItem: {
+      width: widthHeight,
+      height: widthHeight,
+      minWidth: widthHeight,
+      maxWidth: widthHeight,
+      minHeight: widthHeight,
+      maxHeight: widthHeight
+    },
+    videoChatContainer: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-around',
+      flexFlow: 'row wrap',
+      overflowY: 'scroll'
+    },
+    centerItem: {
+      textAlign: 'center',
+      lineHeight: widthHeight,
+      overflow: 'hidden',
+      whiteSpace: 'nowrap',
+      width: widthHeight,
+      height: widthHeight
+    }
+  };
+}
 
 interface Props {
   opponents: Opponent[];
+
+  // Passed from PlayingScreen
+  gameSpec: GameSpec;
+
+  // To ensure the component rerenders when dimensions change.
+  windowDimensions: WindowDimensions | undefined;
 }
 
 class VideoArea extends React.Component<Props> {
-
-  container: HTMLDivElement | null = null
+  container: HTMLDivElement | null = null;
 
   componentDidMount() {
     videoChat.getUserMedia().then(() => {
       if (videoChat.isSupported()) {
-        videoChat.updateOpponents(
-          this.props.opponents.map(opponent => opponent.userId)
-        );
+        videoChat.updateOpponents(this.props.opponents.map(opponent => opponent.userId));
         this.updateVideoElements();
       }
     });
@@ -64,6 +69,9 @@ class VideoArea extends React.Component<Props> {
 
   render() {
     const opponents = this.props.opponents;
+    const styles: CSSPropertiesIndexer = getStyles(
+      getVideoChatWidthHeight(this.props.gameSpec.board, opponents.length + 1)
+    );
     checkCondition('VideoArea', opponents.length >= 1);
     if (!videoChat.isSupported()) {
       return null;
@@ -72,10 +80,10 @@ class VideoArea extends React.Component<Props> {
     participants.unshift({ userId: 'Me', name: 'Me' });
 
     return (
-      <div style={styles.videoChatContainer} ref={(ele) => this.container = ele} >
+      <div style={styles.videoChatContainer} ref={ele => (this.container = ele)}>
         {participants.map((participant, index) => (
           <div key={participant.userId} style={styles.videoChatItem}>
-            <video id={'videoElement' + index} />
+            <video id={'videoElement' + index} style={styles.videoChatItem} />
             <div id={'videoParticipantName' + index} style={styles.centerItem}>
               {participant.name}
             </div>

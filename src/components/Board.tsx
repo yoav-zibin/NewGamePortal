@@ -25,6 +25,8 @@ interface BoardPropsFromState {
   // Passed from store state.
   myUserId: string;
   audioMute: boolean;
+
+  // To ensure the component rerenders when dimensions change.
   windowDimensions: WindowDimensions | undefined;
 }
 interface BoardProps extends BoardPropsFromState {

@@ -49,8 +49,7 @@ export namespace videoChat {
       method: 'PUT',
       body: '',
       headers: new Headers({
-        Authorization:
-          'Basic ' + btoa('yoavzibin:ffca05a6-372c-11e8-b68d-bdfb507d2f2f')
+        Authorization: 'Basic ' + btoa('yoavzibin:ffca05a6-372c-11e8-b68d-bdfb507d2f2f')
       })
     })
       .then(res => res.json())
@@ -111,6 +110,8 @@ export namespace videoChat {
         audio: true,
         video: {
           facingMode: 'user',
+          // I know the video element size might be smaller/bigger,
+          // but this is just a recommendation anyway.
           width: 150,
           height: 150
         }
@@ -129,6 +130,10 @@ export namespace videoChat {
 
   export function updateOpponents(_opponentIds: string[]) {
     console.log('updateOpponents:', _opponentIds);
+    if (!localMediaStream) {
+      console.error('No localMediaStream');
+      return;
+    }
     const oldOpponentIds = opponentUserIds;
     opponentUserIds = _opponentIds.concat();
     let index = 0;
@@ -276,11 +281,7 @@ export namespace videoChat {
     }
 
     sendSignal(signalType: SignalType, signal: any) {
-      ourFirebase.sendSignal(
-        this.targetUserId,
-        signalType,
-        JSON.stringify(signal)
-      );
+      ourFirebase.sendSignal(this.targetUserId, signalType, JSON.stringify(signal));
     }
 
     didGetSdp() {
@@ -336,16 +337,14 @@ export namespace videoChat {
         case SDP2:
         case SDP1:
           this.gotSdp = true;
-          this.pc
-            .setRemoteDescription(<any>new RTCSessionDescription(signalData))
-            .then(
-              () => {
-                console.log('setRemoteDescription success');
-              },
-              err => {
-                console.error('Error in setRemoteDescription: ', err);
-              }
-            );
+          this.pc.setRemoteDescription(<any>new RTCSessionDescription(signalData)).then(
+            () => {
+              console.log('setRemoteDescription success');
+            },
+            err => {
+              console.error('Error in setRemoteDescription: ', err);
+            }
+          );
           break;
         case CANDIDATE:
           this.pc.addIceCandidate(new RTCIceCandidate(signalData)).then(
@@ -365,22 +364,17 @@ export namespace videoChat {
 
   function createMyPeerConnection(userId: string, signals: SignalMsg[]) {
     if (opponentUserIds.indexOf(userId) === -1) {
-      console.warn(
-        'createMyPeerConnection for non-opponent',
-        opponentUserIds,
-        userId
-      );
+      console.warn('createMyPeerConnection for non-opponent', opponentUserIds, userId);
       return;
     }
     showUserName(userId);
-    console.log(
-      'createMyPeerConnection targetUserId=',
-      userId,
-      ' signals=',
-      signals
-    );
+    console.log('createMyPeerConnection targetUserId=', userId, ' signals=', signals);
     closeMyPeerConnection(userId);
-    peerConnections[userId] = new MyPeerConnection(userId, signals);
+    if (!localMediaStream) {
+      console.error("No localMediaStream, can't recreate MyPeerConnection");
+    } else {
+      peerConnections[userId] = new MyPeerConnection(userId, signals);
+    }
   }
 
   function receivedVideoStream(userId: string, stream: MediaStream) {
@@ -459,10 +453,7 @@ export namespace videoChat {
   function showUserName(userId: string) {
     setVideoOrNameVisible(getRemoteVideoElement(userId), false);
   }
-  function setVideoOrNameVisible(
-    videoName: VideoNameElement,
-    isVideoVisible: boolean
-  ) {
+  function setVideoOrNameVisible(videoName: VideoNameElement, isVideoVisible: boolean) {
     console.log(isVideoVisible ? 'Showing video' : 'Showing name');
     const { video, name } = videoName;
     video.style.display = isVideoVisible ? '' : 'none';
@@ -470,31 +461,17 @@ export namespace videoChat {
   }
   function setVideoStream(videoName: VideoNameElement, stream: MediaStream) {
     setVideoOrNameVisible(videoName, true);
-    const { video, name } = videoName;
+    const { video } = videoName;
     if ('srcObject' in video) {
       video.srcObject = stream;
     } else {
-      (<any>video).src = window.URL
-        ? window.URL.createObjectURL(stream)
-        : stream;
+      (<any>video).src = window.URL ? window.URL.createObjectURL(stream) : stream;
     }
 
-    setWidthHeight(video, '150px', '150px');
-    setWidthHeight(name, '150px', '150px');
     // for iOS: tell the plugin to handle your video tag manually
     if (isIos) {
       window.cordova.plugins.iosrtc.observeVideo(video);
       window.cordova.plugins.iosrtc.refreshVideos();
     }
-  }
-
-  function setWidthHeight(elem: HTMLElement, width: string, height: string) {
-    const style = elem.style;
-    style.width = width;
-    style.height = height;
-    style.minWidth = '150px';
-    style.minHeight = '150px';
-    style.maxWidth = '150px';
-    style.maxHeight = '150px';
   }
 }

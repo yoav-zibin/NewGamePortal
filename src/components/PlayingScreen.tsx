@@ -22,11 +22,13 @@ import StartCall from 'material-ui/svg-icons/communication/call';
 import { green500 } from 'material-ui/styles/colors';
 
 interface PlayingScreenPropsFromState {
-  windowDimensions: WindowDimensions | undefined;
   myUserId: string;
   userIdToInfo: UserIdToInfo;
   matchInfo: MatchInfo | undefined;
   gameSpec: GameSpec | undefined;
+
+  // To ensure the component rerenders when dimensions change.
+  windowDimensions: WindowDimensions | undefined;
 }
 interface PlayingScreenProps extends PlayingScreenPropsFromState {
   match: RouterMatchParams;
@@ -103,7 +105,13 @@ class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
     const showVideoArea =
       opponents.length >= 1 && videoChat.isSupported() && this.state.isCallOngoing;
     console.log('showVideoArea=', showVideoArea, 'opponents=', opponents);
-    const videoArea = !showVideoArea ? null : <VideoArea opponents={opponents} />;
+    const videoArea = !showVideoArea ? null : (
+      <VideoArea
+        opponents={opponents}
+        gameSpec={this.props.gameSpec}
+        windowDimensions={this.props.windowDimensions}
+      />
+    );
     // I removed the leave option (you can click on back arrow to leave)
     const inviteFriend =
       this.props.matchInfo!.participantsUserIds.length > 1 ? (
