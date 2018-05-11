@@ -239,13 +239,13 @@ export namespace videoChat {
         }
       };
       pc.oniceconnectionstatechange = evt => {
-        console.log('oniceconnectionstatechange: ', evt);
+        console.log('oniceconnectionstatechange: ', pc.iceConnectionState, evt);
         stateChangeHandler(pc.iceConnectionState);
       };
       if ('onconnectionstatechange' in pc) {
         const anyPc = <any>pc;
         anyPc.onconnectionstatechange = (evt: any) => {
-          console.log('onconnectionstatechange: ', evt);
+          console.log('onconnectionstatechange: ', anyPc.iceConnectionState, evt);
           stateChangeHandler(anyPc.connectionState);
         };
       }
