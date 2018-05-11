@@ -53,7 +53,6 @@ class VideoArea extends React.Component<Props> {
 
   componentWillUnmount() {
     videoChat.stopUserMedia();
-    this.updateVideoElements();
     this.container!.removeEventListener('scroll', this.updateVideoElements);
   }
 

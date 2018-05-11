@@ -291,7 +291,7 @@ export namespace videoChat {
       this.pc.close();
       // refresh video elements if using the iOS app
       if (isIos) {
-        window.cordova.iosrtc.refreshVideos();
+        window.cordova.plugins.iosrtc.refreshVideos();
       }
     }
 
