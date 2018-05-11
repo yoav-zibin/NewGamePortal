@@ -85,10 +85,15 @@ export namespace videoChat {
     }
     // When you stop a video track, it can never be reopened.
     // set localMediaStream to be null
+    console.log('stopping localMediaStreams');
     if (!isIos) {
-      localMediaStream.getVideoTracks()[0].stop();
+      for (let videoStream of localMediaStream.getVideoTracks()) {
+        videoStream.stop();
+      }
     }
-    localMediaStream.getAudioTracks()[0].stop();
+    for (let audioStream of localMediaStream.getAudioTracks()) {
+      audioStream.stop();
+    }
     localMediaStream = null;
 
     // refresh video elements if using the iOS app
@@ -247,18 +252,15 @@ export namespace videoChat {
         console.log('oniceconnectionstatechange: ', pc.iceConnectionState, evt);
         stateChangeHandler(pc.iceConnectionState);
       };
+      pc.onsignalingstatechange = (evt: any) => {
+        console.log('onsignalingstatechange: ', pc.signalingState, evt);
+        stateChangeHandler(pc.signalingState);
+      };
       if ('onconnectionstatechange' in pc) {
         const anyPc = <any>pc;
         anyPc.onconnectionstatechange = (evt: any) => {
           console.log('onconnectionstatechange: ', anyPc.iceConnectionState, evt);
           stateChangeHandler(anyPc.connectionState);
-        };
-      }
-      if ('onsignalingstatechange' in pc) {
-        const anyPc = <any>pc;
-        anyPc.onsignalingstatechange = (evt: any) => {
-          console.log('onsignalingstatechange: ', anyPc.signalingState, evt);
-          stateChangeHandler(anyPc.signalingState);
         };
       }
 
