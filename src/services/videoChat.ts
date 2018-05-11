@@ -90,9 +90,11 @@ export namespace videoChat {
       for (let videoStream of localMediaStream.getVideoTracks()) {
         videoStream.stop();
       }
-    }
-    for (let audioStream of localMediaStream.getAudioTracks()) {
-      audioStream.stop();
+      for (let audioStream of localMediaStream.getAudioTracks()) {
+        audioStream.stop();
+      }
+    } else {
+      localMediaStream.stop();
     }
     localMediaStream = null;
 
