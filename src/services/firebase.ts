@@ -303,7 +303,12 @@ export namespace ourFirebase {
       '-KzItgbiXd89CURCoXe5': 1.5, // increase that element ID by 20%
       '-KzItocCLqCMbFLpFDzb': 1.5,
       '-KzItsMbQZMzCjk8rKSP': 1.5,
-      '-KzItkd4gsI3JZlsaZUZ': 1.5
+      '-KzItkd4gsI3JZlsaZUZ': 1.5,
+      // Snakes and Ladders gameSpecId: "-KzKeLTztuc88-oLtUjZ"
+      '-KxLHdaHqRj2RTr-f_9z': 1.5,
+      '-KxLHdaHqRj2RTr-f_9y': 1.5,
+      '-KxLHdaHqRj2RTr-f_9w': 1.5,
+      '-KxLHdaHqRj2RTr-f_9x': 1.5
     };
 
     for (let [elementId, element] of Object.entries(gameSpecs.elementIdToElement)) {
