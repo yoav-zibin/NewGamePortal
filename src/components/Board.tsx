@@ -143,13 +143,6 @@ class Board extends React.Component<BoardProps, BoardState> {
     this.mutableMatch = deepCopy(nextProps.matchInfo);
   }
 
-  // componentDidUpdate(){
-  //   let thiz = this;
-  //   for (let i = 0; i < thiz.mutableMatch.matchState.length; i++) {
-  //     this.updateZIndex(i, thiz.mutableMatch.matchState[i].zDepth);
-  //   }
-  // }
-
   componentWillMount() {
     console.log('Board componentWillMount');
     this.mutableMatch = deepCopy(this.props.matchInfo);
@@ -231,6 +224,7 @@ class Board extends React.Component<BoardProps, BoardState> {
   };
 
   handleTouchEnd = (index: number, kind: string, startX: number, startY: number, ratio: number) => {
+    console.log('handleTouchEnd' + index);
     let position = (this.refs[
       'canvasImage' + index
     ] as CanvasImage).imageNode.getAbsolutePosition();
@@ -335,10 +329,7 @@ class Board extends React.Component<BoardProps, BoardState> {
 
     let sortedMatchState = this.sortMatchStateByZ();
 
-    // sortedMatchStateIndex is the index of pieceState in sortedMatchState
-    // after we sort matchState according to z-index
     let piecesLayer = sortedMatchState.map(compoundMatchState => {
-      // index is the index of piece in gameSpec according to sortedMatchState[sortedMatchStateIndex]
       let piece = compoundMatchState.pieceState;
       let index = compoundMatchState.originalIndex;
       const pieceSpec = this.props.gameSpec.pieces[index];
@@ -444,7 +435,6 @@ class Board extends React.Component<BoardProps, BoardState> {
         {toolTipLayer}
         <Stage width={width * ratio} height={height * ratio}>
           <Layer ref={() => 'boardLayer'}>{boardLayer}</Layer>
-          {/* <Layer ref={() => 'trashLayer'}>{trashLayer}</Layer> */}
           <Layer ref={() => 'piecesLayer'}>{piecesLayer}</Layer>
         </Stage>
       </div>

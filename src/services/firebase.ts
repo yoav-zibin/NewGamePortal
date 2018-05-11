@@ -319,12 +319,28 @@ export namespace ourFirebase {
     }
     // Verify all cards have a deck.
     for (let [_gameSpecId, gameSpec] of Object.entries(gameSpecs.gameSpecIdToGameSpec)) {
+      let newPiece: Piece;
       for (let piece of gameSpec.pieces) {
         const isCard = gameSpecs.elementIdToElement[piece.element.elementId].elementKind === 'card';
         checkCondition('cards', (piece.deckPieceIndex !== -1) === isCard);
+        // for -KxLz3CaPRPIBc-0mRP7, Chess, make elementKind to be "standard for all of them"
+        if (_gameSpecId === '-KxLz3CaPRPIBc-0mRP7') {
+          if (piece.element.elementId === '-KxLHdYYTHiX9HtmGdhj') {
+            newPiece = deepCopy(piece);
+            newPiece.initialState.x = 28;
+            newPiece.initialState.y = 7.3;
+          }
+          if (piece.element.elementKind.endsWith('Deck')) {
+            // ignore piece;
+          } else if (piece.element.elementKind !== 'standard') {
+            piece.element.elementKind = 'standard';
+          }
+        }
+      }
+      if (newPiece!) {
+        gameSpec.pieces.push(newPiece!);
       }
     }
-
     return gameSpecs;
   }
 
