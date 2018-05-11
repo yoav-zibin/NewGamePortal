@@ -120,7 +120,6 @@ function onDeviceReady() {
   console.log('Cordova deviceready called');
   if (isIos) {
     console.log('Loading WebRTC for iOS');
-    window.cordova.plugins.iosrtc.debug.enable('iosrtc*');
     window.cordova.plugins.iosrtc.registerGlobals();
     videoChat.updateIsSupported();
   }
