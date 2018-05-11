@@ -36,7 +36,18 @@ export interface StoreState {
 
   signals: SignalEntry[];
 
+  // Whether to play game sounds (it doesn't mute the video chat)
   audioMute: boolean;
+
+  // Components that need to redraw based on window.innerWidth/innerHeight
+  // I've renamed "innerWidth" to "windowWidth" to avoid shadowing the variables
+  // (and make windowWidth easy to find).
+  windowDimensions?: WindowDimensions;
+}
+
+export interface WindowDimensions {
+  windowWidth: number;
+  windowHeight: number;
 }
 
 export interface UserInfo {
@@ -165,13 +176,7 @@ export interface Element {
   height: number;
   images: Image[];
   isDraggable: boolean;
-  elementKind:
-    | 'standard'
-    | 'toggable'
-    | 'dice'
-    | 'card'
-    | 'cardsDeck'
-    | 'piecesDeck';
+  elementKind: 'standard' | 'toggable' | 'dice' | 'card' | 'cardsDeck' | 'piecesDeck';
   // Not needed in GamePortal:  deckElements: Element[];
   // We'll add in the future:
   // rotatableDegrees: number;

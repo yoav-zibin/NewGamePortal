@@ -8,7 +8,7 @@ import { MatchInfo, StoreState, UserIdToInfo, MyUser } from '../types';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
 import * as H from 'history';
-import { getOpponents, findMatch, deepCopy } from '../globals';
+import { findMatch, deepCopy } from '../globals';
 import MoreVertIcon from 'material-ui/svg-icons/navigation/more-vert';
 import VolumeUp from 'material-ui/svg-icons/av/volume-up';
 import VolumeMute from 'material-ui/svg-icons/av/volume-mute';
@@ -71,21 +71,8 @@ class AppHeader extends React.Component<Props, {}> {
     } else if (pathname.startsWith('/matches/')) {
       let matchInfo = this.props.matchInfo;
       let title = '';
-
       if (matchInfo) {
-        title = matchInfo.game.gameName; // String to build
-        const participantsUserIds = matchInfo.participantsUserIds;
-        if (participantsUserIds.length > 1) {
-          title += ' with ';
-
-          title += getOpponents(
-            participantsUserIds,
-            this.props.myUser.myUserId,
-            this.props.userIdToInfo
-          )
-            .map(opponent => opponent.name)
-            .join(', ');
-        }
+        title = matchInfo.game.gameName;
       }
       return title;
     } else {

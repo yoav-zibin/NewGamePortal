@@ -5,14 +5,12 @@ import {
   MatchInfo,
   PhoneNumInfo,
   UserIdToInfo,
-  ContactWithUserId
+  ContactWithUserId,
+  Image
 } from './types';
 
 require('./js/trans-compiled');
-declare function parsePhoneNumber(
-  phoneNumber: string,
-  regionCode: string
-): PhoneNumInfo;
+declare function parsePhoneNumber(phoneNumber: string, regionCode: string): PhoneNumInfo;
 
 // global Window class doesn't come with Image()
 // so we have to add it ourselves
@@ -34,10 +32,7 @@ declare global {
   }
 }
 
-export function checkPhoneNumber(
-  phoneNumber: string,
-  regionCode: string
-): PhoneNumInfo | null {
+export function checkPhoneNumber(phoneNumber: string, regionCode: string): PhoneNumInfo | null {
   try {
     return parsePhoneNumber(phoneNumber, regionCode);
   } catch (e) {
@@ -50,7 +45,9 @@ export const platform: PlatformType =
     ? 'tests'
     : window.location.search === '?platform=ios'
       ? 'ios'
-      : window.location.search === '?platform=android' ? 'android' : 'web';
+      : window.location.search === '?platform=android'
+        ? 'android'
+        : 'web';
 export const isTests = platform === 'tests';
 export const isIos = platform === 'ios';
 export const isAndroid = platform === 'android';
@@ -77,10 +74,7 @@ export function getValues<T>(obj: IdIndexer<T>): T[] {
   return vals;
 }
 
-export function objectMap<T, U>(
-  o: IdIndexer<T>,
-  f: (t: T, id: string) => U
-): IdIndexer<U> {
+export function objectMap<T, U>(o: IdIndexer<T>, f: (t: T, id: string) => U): IdIndexer<U> {
   const res: IdIndexer<U> = {};
   Object.keys(o).forEach(k => (res[k] = f(o[k], k)));
   return res;
@@ -102,10 +96,7 @@ export function getOpponents(
   }));
 }
 
-export function getOpponentIds(
-  participantsUserIds: string[],
-  myUserId: string
-): string[] {
+export function getOpponentIds(participantsUserIds: string[], myUserId: string): string[] {
   const opponentIds = participantsUserIds.concat();
   const myIndex = participantsUserIds.indexOf(myUserId);
   opponentIds.splice(myIndex, 1);
@@ -113,10 +104,7 @@ export function getOpponentIds(
 }
 
 export const UNKNOWN_NAME = 'Unknown name';
-export function mapUserIdToName(
-  userId: string,
-  userIdToInfo: UserIdToInfo
-): string {
+export function mapUserIdToName(userId: string, userIdToInfo: UserIdToInfo): string {
   const info = userIdToInfo[userId];
   if (info) {
     return info.displayName;
@@ -124,16 +112,11 @@ export function mapUserIdToName(
   return UNKNOWN_NAME;
 }
 
-export function findMatch(
-  matchesList: MatchInfo[],
-  matchId: string
-): MatchInfo | undefined {
+export function findMatch(matchesList: MatchInfo[], matchId: string): MatchInfo | undefined {
   return matchesList.find(match => match.matchId === matchId);
 }
 
-export function getPhoneNumberToUserInfo(
-  userIdToInfo: UserIdToInfo
-): UserIdToInfo {
+export function getPhoneNumberToUserInfo(userIdToInfo: UserIdToInfo): UserIdToInfo {
   const phoneNumberToUserInfo: UserIdToInfo = {};
   for (let [_userId, userInfo] of Object.entries(userIdToInfo)) {
     const phoneNumber = userInfo.phoneNumber;
@@ -250,3 +233,37 @@ export const studentsUsers: ContactWithUserId[] = [
     name: 'Yiwei Wu'
   }
 ];
+
+function getInnerHeight() {
+  // There are also 64px for the AppHeader.
+  // TODO: hide AppHeader when width > height , and just show the back and menu buttons.
+  return window.innerHeight - 64;
+}
+function getInnerWidth() {
+  return window.innerWidth;
+}
+
+export function getBoardRatio(boardImage: Image) {
+  const isFullWidth = isBoardFullWidth(boardImage);
+  // I want to make sure we have at least 160px left for the video chat.
+  const innerWidth = getInnerWidth() - (isFullWidth ? 0 : 160);
+  const innerHeight = getInnerHeight() - (isFullWidth ? 160 : 0);
+
+  const boardWidth = boardImage.width;
+  const boardHeight = boardImage.height;
+  const widthRatio = innerWidth / boardWidth;
+  const heightRatio = innerHeight / boardHeight;
+  return Math.min(widthRatio, heightRatio);
+}
+
+// The board will either be full width or full height
+export function isBoardFullWidth(boardImage: Image) {
+  const innerWidth = getInnerWidth();
+  const innerHeight = getInnerHeight();
+
+  const boardWidth = boardImage.width;
+  const boardHeight = boardImage.height;
+  const widthRatio = innerWidth / boardWidth;
+  const heightRatio = innerHeight / boardHeight;
+  return widthRatio < heightRatio;
+}

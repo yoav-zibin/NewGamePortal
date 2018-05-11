@@ -39,11 +39,7 @@ function restoreOldState(): StoreState | undefined {
 }
 
 export const persistedOldStore: StoreState | undefined = restoreOldState();
-export const store: Store<StoreState> = createStore(
-  reducer,
-  <any>undefined,
-  enhancer
-);
+export const store: Store<StoreState> = createStore(reducer, <any>undefined, enhancer);
 
 function saveStateInLocalStorage(state: StoreState) {
   localStorage.setItem(REDUX_STATE_LOCAL_STORAGE_KEY, JSON.stringify(state));
@@ -72,8 +68,7 @@ export function trimState(state: StoreState): StoreState {
   // If there are matches, delete the match that has the oldest lastUpdatedOn and return.
   if (state.matchesList.length > 0) {
     let oldestMatch = state.matchesList.reduce(
-      (accum, curr) =>
-        accum.lastUpdatedOn > curr.lastUpdatedOn ? curr : accum,
+      (accum, curr) => (accum.lastUpdatedOn > curr.lastUpdatedOn ? curr : accum),
       state.matchesList[0]
     );
 
@@ -122,4 +117,41 @@ export function dispatch(action: Action) {
   checkCondition('actionType', actionType.length === 1);
   actionWithType.type = actionType[0];
   store.dispatch(actionWithType);
+}
+
+if (!isInUnitTests) {
+  window.addEventListener('resize', handleResize);
+  window.addEventListener('orientationchange', handleResize);
+}
+let isThrottled = false;
+function handleResize() {
+  if (!isThrottled) {
+    setDimensions();
+    const callback = () => {
+      isThrottled = false;
+      setDimensions();
+    };
+    setTimeout(callback, 250);
+    isThrottled = true;
+  }
+}
+
+function setDimensions() {
+  const windowWidth = window.innerWidth;
+  const windowHeight = window.innerHeight;
+  const windowDimensions = store.getState().windowDimensions;
+  if (
+    windowDimensions &&
+    windowDimensions.windowWidth === windowWidth &&
+    windowDimensions.windowHeight === windowHeight
+  ) {
+    return;
+  }
+  console.log('setDimensions: windowWidth=', windowWidth, ' windowHeight=', windowHeight);
+  dispatch({
+    setWindowDimensions: {
+      windowWidth,
+      windowHeight
+    }
+  });
 }

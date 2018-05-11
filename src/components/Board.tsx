@@ -1,7 +1,7 @@
 import * as React from 'react';
 import * as Konva from 'konva';
 import { Layer, Stage } from 'react-konva';
-import { MatchInfo, GameSpec, PieceState, MatchState } from '../types';
+import { MatchInfo, GameSpec, PieceState, MatchState, WindowDimensions } from '../types';
 import CanvasImage from './CanvasImage';
 import { red500 } from 'material-ui/styles/colors';
 import Shuffle from 'material-ui/svg-icons/av/shuffle';
@@ -15,38 +15,37 @@ import { connect } from 'react-redux';
 import { StoreState } from '../types/index';
 import { ourFirebase } from '../services/firebase';
 import { MatchStateHelper } from '../services/matchStateHelper';
-import { deepCopy, isApp, checkCondition } from '../globals';
+import { deepCopy, isApp, checkCondition, getBoardRatio } from '../globals';
 
 const dragStartMp3 = require('../sounds/drag-start.mp3');
 const diceMp3 = require('../sounds/dice.mp3');
 const clickMp3 = require('../sounds/click.mp3');
 
-interface BoardProps {
+interface BoardPropsFromState {
+  // Passed from store state.
   myUserId: string;
+  audioMute: boolean;
+  windowDimensions: WindowDimensions | undefined;
+}
+interface BoardProps extends BoardPropsFromState {
+  // Passed from PlayingScreen
   gameSpec: GameSpec;
   matchInfo: MatchInfo;
-  audioMute: boolean;
 }
 
 interface BoardState {
-  innerWidth: number;
-  innerHeight: number;
   selectedPieceIndex: number;
   tooltipPosition: {
     x: number;
     y: number;
   };
-  throttled: boolean;
   animatingTime: number;
-  timer: any;
 }
 
 let diceAudio = new Audio(diceMp3);
 let dragStartAudio = new Audio(dragStartMp3);
 let clickAudio = new Audio(clickMp3);
 
-// TODO: fix z-index (when you start to drag something, it should have the max z-index).
-// TODO: shuffling doesn't work (e.g. in scrabble).
 /**
  * A reusable board class, that given a board image and pieces in props
  * can draw the board and piece on top of it using konva.
@@ -58,16 +57,11 @@ class Board extends React.Component<BoardProps, BoardState> {
 
   state: BoardState = {
     selectedPieceIndex: -1, // If it's not -1, then we show cards options.
-    innerHeight: window.innerHeight,
-    innerWidth: window.innerWidth,
     tooltipPosition: {
       x: 0,
       y: 0
     },
-    // for throttling window resize event
-    throttled: false,
-    animatingTime: 0.5,
-    timer: null
+    animatingTime: 0.5
   };
 
   audioPlaying(sound: HTMLAudioElement) {
@@ -97,6 +91,7 @@ class Board extends React.Component<BoardProps, BoardState> {
     if (prevMatchState.length === 0) {
       return;
     }
+    const ratio = this.getRatio();
     const nextMatchState = nextProps.matchInfo.matchState;
     let audioToPlay: HTMLAudioElement | null = null;
     for (let i = 0; i < nextMatchState.length; i++) {
@@ -110,7 +105,6 @@ class Board extends React.Component<BoardProps, BoardState> {
         prevMatchState[i].y !== nextMatchState[i].y
       ) {
         // the position is changed. Call animation.
-        const ratio = this.getRatio();
         imageNode.to({
           duration: this.state.animatingTime,
           x: nextMatchState[i].x / 100 * this.props.gameSpec.board.width * ratio,
@@ -165,21 +159,6 @@ class Board extends React.Component<BoardProps, BoardState> {
     }
   }
 
-  // resize the board (also for correctly displaying on mobile)
-  componentDidMount() {
-    window.addEventListener('resize', this.handleResize);
-    window.addEventListener('orientationchange', this.handleResize);
-  }
-
-  componentWillUnmount() {
-    window.removeEventListener('resize', this.handleResize);
-    window.removeEventListener('orientationchange', this.handleResize);
-    // make sure to clear the timer before unmounting
-    if (this.state.timer) {
-      clearTimeout(this.state.timer);
-    }
-  }
-
   handleAnimation(index: number, kind: string) {
     const imageNode = (this.refs['canvasImage' + index] as CanvasImage).imageNode;
     if (kind === 'card') {
@@ -207,29 +186,6 @@ class Board extends React.Component<BoardProps, BoardState> {
       });
       tween.play();
     }
-  }
-
-  handleResize = () => {
-    if (!this.state.throttled) {
-      this.setDimensions();
-      let timer = setTimeout(() => this.setState({ timer: null, throttled: false }), 250);
-      this.setState({
-        throttled: true,
-        timer: timer
-      });
-    }
-  };
-
-  setDimensions() {
-    const innerWidth = window.innerWidth;
-    const innerHeight = window.innerHeight;
-    if (this.state.innerWidth === innerWidth && this.state.innerHeight === innerHeight) {
-      return;
-    }
-    this.setState({
-      innerWidth,
-      innerHeight
-    });
   }
 
   // We need to do that because when we render the component,
@@ -355,14 +311,12 @@ class Board extends React.Component<BoardProps, BoardState> {
   }
 
   getRatio() {
-    return Math.min(
-      this.state.innerWidth / this.props.gameSpec.board.width,
-      this.state.innerHeight / this.props.gameSpec.board.height
-    );
+    const boardImage = this.props.gameSpec.board;
+    return getBoardRatio(boardImage);
   }
 
   render() {
-    console.log('render test');
+    console.log('Board render');
     let boardImage = this.props.gameSpec.board.downloadURL;
     const width = this.props.gameSpec.board.width;
     const height = this.props.gameSpec.board.height;
@@ -498,10 +452,11 @@ class Board extends React.Component<BoardProps, BoardState> {
   }
 }
 
-const mapStateToProps = (state: StoreState) => {
+const mapStateToProps = (state: StoreState): BoardPropsFromState => {
   return {
     myUserId: state.myUser.myUserId,
-    audioMute: state.audioMute
+    audioMute: state.audioMute,
+    windowDimensions: state.windowDimensions
   };
 };
 export default connect(mapStateToProps)(Board);
