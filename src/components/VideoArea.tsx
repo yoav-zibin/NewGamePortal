@@ -19,14 +19,14 @@ function getStyles(videoChatWidthHeight: number): CSSPropertiesIndexer {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-around',
-      flexFlow: 'row wrap',
-      overflowY: 'scroll'
+      flexFlow: 'row wrap'
     },
     centerItem: {
       textAlign: 'center',
       lineHeight: widthHeight,
       overflow: 'hidden',
       whiteSpace: 'nowrap',
+      backgroundColor: 'yellow',
       width: widthHeight,
       height: widthHeight
     }

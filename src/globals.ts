@@ -296,3 +296,7 @@ export function getVideoChatWidthHeight(boardImage: Image, participantsNum: numb
   }
   return widthHeight - 8; // To get 4px margins.
 }
+
+export function setLoadingSpinnerVisible(isVisible: boolean) {
+  document.getElementById('loadingSpinner')!.style.display = isVisible ? 'block' : 'none';
+}
