@@ -140,7 +140,7 @@ function onDeviceReady() {
     windows: {}
   });
   push.on('registration', (data: any) => {
-    console.log('The phone gap reg id is ' + data.registrationId);
+    console.log('The phone gap reg id is ', data.registrationId);
     ourFirebase.addFcmToken(data.registrationId, isIos ? 'ios' : 'android');
   });
   push.on('notification', (data: any) => {

@@ -80,15 +80,11 @@ class ContactsList extends React.Component<Props, State> {
   handleRequest = (chosenRequest: DataSourceConfig, index: number) => {
     console.log(chosenRequest);
     const chosenText = chosenRequest.text;
-    let chosenUser = this.props.users.find(
-      user => user.displayName === chosenText
-    );
+    let chosenUser = this.props.users.find(user => user.displayName === chosenText);
     if (chosenUser) {
       this.handleAddUser(chosenUser.userId);
     } else {
-      let chosenNotUser = this.props.notUsers.find(
-        user => user.name === chosenText
-      );
+      let chosenNotUser = this.props.notUsers.find(user => user.name === chosenText);
       if (chosenNotUser) {
         this.handleAddNotUser(chosenNotUser.phoneNumber);
       } else {
@@ -114,18 +110,13 @@ class ContactsList extends React.Component<Props, State> {
       // phoneNumber is already in our list.
       return;
     }
-    const phoneNumbersNotFound = [phoneNumber].concat(
-      this.state.phoneNumbersNotFound
-    );
+    const phoneNumbersNotFound = [phoneNumber].concat(this.state.phoneNumbersNotFound);
     this.setState({ phoneNumbersNotFound });
   };
 
   handleRequestNumber = (chosenRequest: string) => {
     const myCountryCode = this.props.myCountryCode;
-    let phoneInfo: PhoneNumInfo | null = checkPhoneNumber(
-      chosenRequest,
-      myCountryCode
-    );
+    let phoneInfo: PhoneNumInfo | null = checkPhoneNumber(chosenRequest, myCountryCode);
     console.log(
       'request number is ',
       chosenRequest,
@@ -180,7 +171,7 @@ class ContactsList extends React.Component<Props, State> {
   };
 
   sendSms = (phoneNum: string, message: string) => {
-    console.log('number=' + phoneNum + ', message= ' + message);
+    console.log('number=', phoneNum, ', message= ', message);
 
     const options = {
       replaceLineBreaks: false, // true to replace \n by a new line, false by default
@@ -193,7 +184,7 @@ class ContactsList extends React.Component<Props, State> {
       console.log('Message sent successfully');
     };
     const error = (e: any) => {
-      console.log('Message Error: ' + e);
+      console.log('Message Error: ', e);
     };
 
     if (isAndroid) {
@@ -205,9 +196,7 @@ class ContactsList extends React.Component<Props, State> {
   filterParticipants(contacts: UserInfo[]): UserInfo[] {
     let participantsUserIds = this.getMatch().participantsUserIds;
     // Filter out existing participants.
-    return contacts.filter(
-      contact => participantsUserIds.indexOf(contact.userId) === -1
-    );
+    return contacts.filter(contact => participantsUserIds.indexOf(contact.userId) === -1);
   }
 
   render() {
@@ -235,9 +224,7 @@ class ContactsList extends React.Component<Props, State> {
           value: (
             <MenuItem
               primaryText={username.name}
-              rightIcon={
-                username.isUser ? <PersonAdd /> : <CommunicationTextsms />
-              }
+              rightIcon={username.isUser ? <PersonAdd /> : <CommunicationTextsms />}
             />
           )
         }))}
@@ -273,10 +260,7 @@ class ContactsList extends React.Component<Props, State> {
               return (
                 <ListItem
                   key={phoneNumber}
-                  primaryText={formatPhoneNumber(
-                    this.props.myCountryCode,
-                    phoneNumber
-                  )}
+                  primaryText={formatPhoneNumber(this.props.myCountryCode, phoneNumber)}
                   onClick={() => this.handleAddNotUser(phoneNumber)}
                   rightIcon={<CommunicationTextsms />}
                 />
@@ -306,13 +290,8 @@ class ContactsList extends React.Component<Props, State> {
                 return (
                   <ListItem
                     key={contact.phoneNumber}
-                    primaryText={
-                      contact.name === UNKNOWN_NAME ? '' : contact.name
-                    }
-                    secondaryText={formatPhoneNumber(
-                      this.props.myCountryCode,
-                      contact.phoneNumber
-                    )}
+                    primaryText={contact.name === UNKNOWN_NAME ? '' : contact.name}
+                    secondaryText={formatPhoneNumber(this.props.myCountryCode, contact.phoneNumber)}
                     onClick={() => this.handleAddNotUser(contact.phoneNumber)}
                     rightIcon={<CommunicationTextsms />}
                   />
@@ -328,9 +307,7 @@ class ContactsList extends React.Component<Props, State> {
 
 function formatPhoneNumber(myCountryCode: string, phoneNumber: string) {
   const parsed = checkPhoneNumber(phoneNumber, myCountryCode);
-  return parsed && parsed.isValidNumber
-    ? parsed.internationalFormat
-    : phoneNumber;
+  return parsed && parsed.isValidNumber ? parsed.internationalFormat : phoneNumber;
 }
 
 const mapStateToProps = (state: StoreState, ownProps: Props) => {
@@ -339,16 +316,11 @@ const mapStateToProps = (state: StoreState, ownProps: Props) => {
   const notUsers: Contact[] = [];
   const allUserNames: UserName[] = [];
   const phoneNumberToInfo = getPhoneNumberToUserInfo(state.userIdToInfo);
-  for (let [phoneNumber, contact] of Object.entries(
-    state.phoneNumberToContact
-  )) {
+  for (let [phoneNumber, contact] of Object.entries(state.phoneNumberToContact)) {
     if (!phoneNumberToInfo[phoneNumber]) {
       notUsers.push(contact);
       let userName: UserName = {
-        name:
-          contact.name +
-          ' ' +
-          formatPhoneNumber(myCountryCode, contact.phoneNumber),
+        name: contact.name + ' ' + formatPhoneNumber(myCountryCode, contact.phoneNumber),
         isUser: false
       };
       allUserNames.push(userName);

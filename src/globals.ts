@@ -256,11 +256,7 @@ export function getBoardRatio(boardImage: Image) {
   const boardHeight = boardImage.height;
   const widthRatio = innerWidth / boardWidth;
   const heightRatio = innerHeight / boardHeight;
-  const ratio = Math.min(widthRatio, heightRatio);
-  // console.log(
-  //   "BoardRatio=", ratio, "widthRatio=", widthRatio, "heightRatio=",
-  //   heightRatio, "innerWidth=", innerWidth, "innerHeight=", innerHeight);
-  return ratio;
+  return Math.min(widthRatio, heightRatio);
 }
 
 // The board will either be full width or full height
