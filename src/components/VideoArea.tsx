@@ -20,7 +20,8 @@ const styles: CSSPropertiesIndexer = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-around',
-    flexFlow: 'row wrap'
+    flexFlow: 'row wrap',
+    overflowY: 'scroll'
   },
   centerItem: {
     textAlign: 'center',

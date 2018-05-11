@@ -86,7 +86,10 @@ export namespace videoChat {
     }
     // When you stop a video track, it can never be reopened.
     // set localMediaStream to be null
-    localMediaStream.stop();
+    if (!isIos) {
+      localMediaStream.getVideoTracks()[0].stop();
+    }
+    localMediaStream.getAudioTracks()[0].stop();
     localMediaStream = null;
 
     // refresh video elements if using the iOS app
