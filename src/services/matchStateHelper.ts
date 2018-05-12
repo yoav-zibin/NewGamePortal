@@ -20,7 +20,7 @@ export class MatchStateHelper {
   dragTo(pieceIndex: number, x: number, y: number) {
     checkCondition('dragToXY', -100 <= x && x <= 100 && -100 <= y && y <= 100);
     const pieceSpec = this.getPieceSpec(pieceIndex);
-    checkCondition('dragTo', pieceSpec.isDraggable);
+    checkCondition('dragTo', pieceSpec.isDraggable || pieceSpec.elementKind === 'standard');
     const pieceState = this.getPieceState(pieceIndex);
     pieceState.x = x;
     pieceState.y = y;
