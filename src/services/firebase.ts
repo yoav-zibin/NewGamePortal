@@ -323,8 +323,9 @@ export namespace ourFirebase {
       }
     }
     // Verify all cards have a deck.
+
     for (let [_gameSpecId, gameSpec] of Object.entries(gameSpecs.gameSpecIdToGameSpec)) {
-      let newPieces: Piece[] = [];
+      // let newPieces: Piece[] = [];
       for (let piece of gameSpec.pieces) {
         const isCard = gameSpecs.elementIdToElement[piece.element.elementId].elementKind === 'card';
         checkCondition('cards', (piece.deckPieceIndex !== -1) === isCard);
@@ -334,7 +335,8 @@ export namespace ourFirebase {
             let newPiece = deepCopy(piece);
             newPiece.initialState.x = 28;
             newPiece.initialState.y = 7.3;
-            newPieces!.push(newPiece);
+            gameSpec.pieces.push(newPiece)
+            // newPieces!.push(newPiece);
           }
           if (piece.element.elementKind.endsWith('Deck')) {
             // ignore piece;
@@ -342,18 +344,23 @@ export namespace ourFirebase {
             piece.element.elementKind = 'standard';
           }
         }
-
-        // if (_gameSpecId === '-KxLz3Bm_TbQv7Y2MmvM') {
-         // if (piece.element.elementId === '-KxLHdYYTHiX9HtmGdhj') {
-
-         // }
+        // Adding more pieces to Blue Nile, gameSpecId is -KxLz3Bm_TbQv7Y2MmvM
+        if (_gameSpecId === '-KxLz3Bm_TbQv7Y2MmvM') {
+          if (piece.element.elementId === '-KxLHdZqRg6fmEBk51N9') {
+            for (let i = 0; i < 41; i++) {
+              let newPiece = deepCopy(piece);
+              gameSpec.pieces.push(newPiece);
+            }
+          }
         }
-      // }
-      if (newPieces!) {
-        for (let newPiece of newPieces!) {
-            gameSpec.pieces.push(newPiece!);
-        }
+
+        // Adding more pieces to
       }
+      // if (newPieces!) {
+      //   for (let newPiece of newPieces!) {
+      //     gameSpec.pieces.push(newPiece!);
+      //   }
+      // }
     }
     return gameSpecs;
   }
