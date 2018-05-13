@@ -312,7 +312,7 @@ class Board extends React.Component<BoardProps, BoardState> {
     }
   }
 
-  hideCardOptions() {
+  hideCardOptions = () => {
     console.log('hideCardOptions');
     this.setState({
       selectedPieceIndex: -1
@@ -346,7 +346,7 @@ class Board extends React.Component<BoardProps, BoardState> {
         height={height * ratio}
         width={width * ratio}
         src={boardImage}
-        onTouchStart={() => this.hideCardOptions()}
+        onClick={this.hideCardOptions}
       />
     );
 
@@ -375,6 +375,10 @@ class Board extends React.Component<BoardProps, BoardState> {
           x={piece.x * width / 100 * ratio}
           y={piece.y * height / 100 * ratio}
           src={imageSrc}
+          onMouseUp={() => {
+            console.log('onMouseUp');
+            this.handleTouchEnd(index, kind, piece, ratio);
+          }}
           onTouchEnd={() => {
             console.log('onTouchEnd');
             this.handleTouchEnd(index, kind, piece, ratio);
