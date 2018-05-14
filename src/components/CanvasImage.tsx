@@ -24,6 +24,15 @@ interface CanvasImageState {
   image: any;
 }
 
+// Drag distance property. If you start to drag a node you may want to wait
+// until pointer is moved to some distance from start point,
+// only then start dragging. Default is 3px.
+// I'm increasing it from 3 to 5 because I saw cases where a tap on card dragged it.
+(Konva as any).dragDistance = 5;
+
+// May increase performance (but reduce quality on retina displays).
+// (Konva as any).pixelRatio = 1
+
 // Two goals:
 // 1) I want to drag a bit above the finger (so you can see where to drop it),
 // 2) Make sure the piece aren't dragged completely outside the board.

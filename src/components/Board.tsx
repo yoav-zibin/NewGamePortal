@@ -45,9 +45,10 @@ interface BoardState {
   animatingTime: number;
 }
 
-let diceAudio = new Audio(diceMp3);
-let dragStartAudio = new Audio(dragStartMp3);
-let clickAudio = new Audio(clickMp3);
+const diceAudio = new Audio(diceMp3);
+const dragStartAudio = new Audio(dragStartMp3);
+const clickAudio = new Audio(clickMp3);
+const cardTooltipMargin = 10; // 10px
 
 /**
  * A reusable board class, that given a board image and pieces in props
@@ -311,11 +312,17 @@ class Board extends React.Component<BoardProps, BoardState> {
         selectedPieceIndex: cardIndex
       });
       this.setCardTooltipVisible(true);
+      // When opening the tooltip, I want to make sure the card is closest to user.
+      this.helper.setMaxZ(cardIndex);
+      ourFirebase.updatePieceState(this.mutableMatch, cardIndex);
     }
   }
 
   hideCardOptions = () => {
     console.log('hideCardOptions');
+    if (this.state.selectedPieceIndex === -1) {
+      return;
+    }
     this.setState({
       selectedPieceIndex: -1
     });
@@ -407,10 +414,12 @@ class Board extends React.Component<BoardProps, BoardState> {
       const cardElement = gameSpec.pieces[selectedPieceIndex].element;
       const cardMiddleX = cardState.x + 100 * (cardElement.width / width) / 2;
       const cardMiddleY = cardState.y + 100 * (cardElement.height / height) / 2;
-      const tooltipLeft = tooltipPosition.x + 5;
-      const tooltipTop = tooltipPosition.y + 5;
-      const tooltipBottom = height * ratio - tooltipPosition.y - tooltipPosition.height + 5;
-      const tooltipRight = width * ratio - tooltipPosition.x - tooltipPosition.width + 5;
+      const tooltipLeft = tooltipPosition.x + cardTooltipMargin;
+      const tooltipTop = tooltipPosition.y + cardTooltipMargin;
+      const tooltipBottom =
+        height * ratio - tooltipPosition.y - tooltipPosition.height + cardTooltipMargin;
+      const tooltipRight =
+        width * ratio - tooltipPosition.x - tooltipPosition.width + cardTooltipMargin;
       const style =
         cardMiddleX < 50
           ? cardMiddleY < 50
