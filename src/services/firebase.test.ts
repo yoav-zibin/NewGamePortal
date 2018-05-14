@@ -5,20 +5,9 @@
 (global as any).XMLHttpRequest = require('xmlhttprequest').XMLHttpRequest;
 
 import { ourFirebase } from './firebase';
-import {
-  MatchInfo,
-  PhoneNumberToContact,
-  GameSpecs,
-  UserInfo
-} from '../types/index';
+import { MatchInfo, PhoneNumberToContact, GameSpecs, UserInfo } from '../types/index';
 import { store } from '../stores';
-import {
-  checkCondition,
-  prettyJson,
-  findMatch,
-  deepCopy,
-  platform
-} from '../globals';
+import { checkCondition, prettyJson, findMatch, deepCopy, platform } from '../globals';
 import { MatchStateHelper } from './matchStateHelper';
 
 const testConfig = {
@@ -38,9 +27,7 @@ const existingUserId = 'wnSB3rTfCLRHkgfGM6jZtaw7EpB3';
 function createMatch() {
   const state = store.getState();
   const gamesList = state.gamesList;
-  const gameInfo = gamesList.find(gameInList =>
-    gameInList.gameName.includes('opoly')
-  )!;
+  const gameInfo = gamesList.find(gameInList => gameInList.gameName.includes('opoly'))!;
   return ourFirebase.createMatch(gameInfo);
 }
 
@@ -90,20 +77,13 @@ function expectEqual<T>(actual: T, expected: T) {
   if (!deepEquals(actual, expected)) {
     console.error('expectEqual: actual=', actual, ' expected=', expected);
     throw new Error(
-      'expectEqual: actual=' +
-        JSON.stringify(actual) +
-        ' expected=' +
-        JSON.stringify(expected)
+      'expectEqual: actual=' + JSON.stringify(actual) + ' expected=' + JSON.stringify(expected)
     );
   }
 }
 
 function checkGameSpecs(gameSpecs: GameSpecs) {
-  const {
-    elementIdToElement,
-    imageIdToImage,
-    gameSpecIdToGameSpec
-  } = gameSpecs;
+  const { elementIdToElement, imageIdToImage, gameSpecIdToGameSpec } = gameSpecs;
   Object.keys(gameSpecIdToGameSpec).forEach(gameSpecId => {
     const gameSpec = gameSpecIdToGameSpec[gameSpecId];
     expectEqual(gameSpec.board, imageIdToImage[gameSpec.board.imageId]);
@@ -119,10 +99,7 @@ function checkGameSpecs(gameSpecs: GameSpecs) {
           piece.element.elementKind === 'card'
         );
         const deck = gameSpec.pieces[piece.deckPieceIndex].element;
-        checkCondition(
-          'deckPieceIndex points to a deck',
-          deck.elementKind.endsWith('Deck')
-        );
+        checkCondition('deckPieceIndex points to a deck', deck.elementKind.endsWith('Deck'));
       }
     });
   });
@@ -134,17 +111,11 @@ function checkGameSpecs(gameSpecs: GameSpecs) {
     // Some checks based on the element kind
     switch (element.elementKind) {
       case 'standard':
-        checkCondition(
-          'standard piece has 1 image',
-          element.images.length === 1
-        );
+        checkCondition('standard piece has 1 image', element.images.length === 1);
         break;
       case 'toggable':
       case 'dice':
-        checkCondition(
-          'toggable|diece piece has 1 or more images',
-          element.images.length >= 1
-        );
+        checkCondition('toggable|diece piece has 1 or more images', element.images.length >= 1);
         break;
       case 'card':
         checkCondition('card piece has 2 images', element.images.length === 2);
@@ -253,10 +224,9 @@ it('addParticipants', () => {
   const match: MatchInfo = createMatch();
   ourFirebase.addParticipant(match, existingUserId);
   expectEqual(
-    findMatch(
-      store.getState().matchesList,
-      match.matchId
-    )!.participantsUserIds.indexOf(existingUserId) !== -1,
+    findMatch(store.getState().matchesList, match.matchId)!.participantsUserIds.indexOf(
+      existingUserId
+    ) !== -1,
     true
   );
 });
@@ -279,16 +249,13 @@ it('Should update the phone numbers', done => {
     },
     '+1234567890123456789': {
       phoneNumber: '+1234567890123456789',
-      name:
-        '………nameThatsVeryLong שם בעברית nameThatsVeryLong nameThatsVeryLong nameThatsVeryLong!'
+      name: '………nameThatsVeryLong שם בעברית nameThatsVeryLong nameThatsVeryLong nameThatsVeryLong!'
     },
     '+666666': {
       phoneNumber: '+666666',
       name: 'name666666'
     }
   };
-  ourFirebase.storeContacts(phoneNumbers);
-  // check if store has been updated
   store.subscribe(() => {
     const userIdToInfo = store.getState().userIdToInfo;
     const uid = ourFirebase.getUserId();
@@ -302,6 +269,7 @@ it('Should update the phone numbers', done => {
       done();
     }
   });
+  ourFirebase.storeContacts(phoneNumbers);
 });
 
 it('pingOpponentsInMatch', () => {
@@ -312,20 +280,14 @@ it('pingOpponentsInMatch', () => {
 it('leaveSinglePlayerMatch', () => {
   const match: MatchInfo = createMatch();
   ourFirebase.leaveMatch(match);
-  expectEqual(
-    findMatch(store.getState().matchesList, match.matchId) === undefined,
-    true
-  );
+  expectEqual(findMatch(store.getState().matchesList, match.matchId) === undefined, true);
 });
 
 it('leaveMultiPlayerMatch', () => {
   const match: MatchInfo = createMatch();
   ourFirebase.addParticipant(match, existingUserId);
   ourFirebase.leaveMatch(match);
-  expectEqual(
-    findMatch(store.getState().matchesList, match.matchId) === undefined,
-    true
-  );
+  expectEqual(findMatch(store.getState().matchesList, match.matchId) === undefined, true);
 });
 
 it('fetch signal list from firebase', done => {
