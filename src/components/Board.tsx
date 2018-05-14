@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as Konva from 'konva';
 import { Layer, Stage } from 'react-konva';
 import { MatchInfo, GameSpec, PieceState, MatchState, WindowDimensions } from '../types';
-import CanvasImage from './CanvasImage';
+import CanvasImage, { setCurrentlyDragging } from './CanvasImage';
 import { red500 } from 'material-ui/styles/colors';
 import Shuffle from 'material-ui/svg-icons/av/shuffle';
 import Person from 'material-ui/svg-icons/social/person';
@@ -55,10 +55,6 @@ let clickAudio = new Audio(clickMp3);
  * Should also add drag and drop functionality later on.
  */
 class Board extends React.Component<BoardProps, BoardState> {
-  mutableMatch: MatchInfo = null as any;
-  helper: MatchStateHelper = null as any;
-
-  cardsMenuRef: any = (React as any).createRef();
 
   state: BoardState = {
     selectedPieceIndex: -1, // If it's not -1, then we show cards options.
@@ -70,6 +66,10 @@ class Board extends React.Component<BoardProps, BoardState> {
     },
     animatingTime: 0.5
   };
+
+  private mutableMatch: MatchInfo = null as any;
+  private helper: MatchStateHelper = null as any;
+  private cardsMenuRef: any = (React as any).createRef();
 
   audioPlaying(sound: HTMLAudioElement) {
     if (isApp && !this.props.audioMute) {
@@ -231,13 +231,32 @@ class Board extends React.Component<BoardProps, BoardState> {
     imageNode.setZIndex(maxZ);
   };
 
-  handleTouchEnd = (index: number, kind: string, piece: PieceState, ratio: number) => {
-    console.log('handleTouchEnd: ', index);
+  handleDragEnd = (index: number) => {
+    this.handleTouchOrDrag(index, true);
+  };
+  
+  handleTouchEnd = (index: number) => {
+    this.handleTouchOrDrag(index, false);
+  };
+
+  handleTouchOrDrag = (index: number, isDragEnd: boolean) => {
+    // I wish I could do everything just with onTouchEnd (without using onDragEnd),
+    // BUT we need both:
+    // We need onTouchEnd to support clicking on cards.
+    // We need onDragEnd because you can drag pieces almost outside the board
+    // (so your finger is out),
+    // and then onTouchEnd isn't fired (only onDragEnd).
+    console.log((isDragEnd ? "onDragEnd" : "onTouchEnd"), ' piece index=', index);
+    const ratio = this.getRatio();
+    const state: MatchState = this.mutableMatch.matchState;
+    const piece: PieceState = state[index];
+    const gameSpec = this.props.gameSpec;
+    const pieceSpec = gameSpec.pieces[index];
+    const kind = pieceSpec.element.elementKind;
     let position = (this.refs[
       'canvasImage' + index
     ] as CanvasImage).imageNode.getAbsolutePosition();
 
-    const gameSpec = this.props.gameSpec;
     let width = gameSpec.board.width;
     let height = gameSpec.board.height;
 
@@ -245,24 +264,28 @@ class Board extends React.Component<BoardProps, BoardState> {
     let startY = piece.y;
     let endX = position.x / ratio / width * 100;
     let endY = position.y / ratio / height * 100;
-    let distance = Math.sqrt((startX - endX) * (startX - endX) + (startY - endY) * (startY - endY));
-
-    console.log('distance', distance);
-    if (distance < 0.00001) {
-      // it's a touch instead of drag. I set it as 0,0001 because sometimes touch cause a tiny distance.
-      if (kind === 'toggable') {
-        this.togglePiece(index);
-      } else if (kind === 'dice') {
-        this.rollDice(index);
-      } else if (kind === 'card') {
-        this.toggleCardOptions('canvasImage' + index, index);
-      }
-    } else {
+    if (isDragEnd) {
       // it's a drag
       this.helper.dragTo(index, endX, endY);
       const match: MatchInfo = this.mutableMatch;
       ourFirebase.updatePieceState(match, index);
       this.hideCardOptions();
+    } else {
+      // onTouchEnd is fired both when clicking or dragging, so I look at distance squared.
+      let distanceSq = ((startX - endX) * (startX - endX) + (startY - endY) * (startY - endY));
+      // it's a touch instead of drag. I set it as 0,0001 because sometimes touch cause a tiny distance.
+      if (distanceSq > 0.0001) {
+        console.log("Ignoring onTouchEnd distanceSq=", distanceSq);
+      } else {
+        // It's a click!
+        if (kind === 'toggable') {
+          this.togglePiece(index);
+        } else if (kind === 'dice') {
+          this.rollDice(index);
+        } else if (kind === 'card') {
+          this.toggleCardOptions('canvasImage' + index, index);
+        }
+      }
     }
   };
 
@@ -346,24 +369,22 @@ class Board extends React.Component<BoardProps, BoardState> {
         height={height * ratio}
         width={width * ratio}
         src={boardImage}
-        onClick={this.hideCardOptions}
+        onMouseDown={this.hideCardOptions}
+        onTouchStart={this.hideCardOptions}
       />
     );
 
     let sortedMatchState = this.sortMatchStateByZ();
 
-    let piecesLayer = sortedMatchState.map(compoundMatchState => {
-      let piece = compoundMatchState.pieceState;
-      let index = compoundMatchState.originalIndex;
+    let piecesLayer = sortedMatchState.map(({pieceState: piece, originalIndex: index}) => {
       const pieceSpec = gameSpec.pieces[index];
-      let kind = pieceSpec.element.elementKind;
+      const kind = pieceSpec.element.elementKind;
       if (kind.endsWith('Deck')) {
         return null;
       }
       let isVisible = piece.cardVisibilityPerIndex[this.selfParticipantIndex()];
       let imageIndex: number =
         pieceSpec.element.elementKind === 'card' ? (isVisible ? 0 : 1) : piece.currentImageIndex;
-      // let zIndex = piece.zDepth;
       let imageSrc: string = pieceSpec.element.images[imageIndex].downloadURL;
       return (
         <CanvasImage
@@ -376,19 +397,22 @@ class Board extends React.Component<BoardProps, BoardState> {
           y={piece.y * height / 100 * ratio}
           src={imageSrc}
           onMouseUp={() => {
-            console.log('onMouseUp');
-            this.handleTouchEnd(index, kind, piece, ratio);
+            this.handleTouchEnd(index);
           }}
           onTouchEnd={() => {
-            console.log('onTouchEnd');
-            this.handleTouchEnd(index, kind, piece, ratio);
+            this.handleTouchEnd(index);
           }}
           onDragStart={() => {
+            console.log('onDragStart');
+            setCurrentlyDragging(true);
             this.audioPlaying(dragStartAudio);
             this.updateZIndex(index);
-            console.log('onDragStart');
             // I know it's against react philosophy, but I don't want to cause rerender when drag starts.
             this.setCardTooltipVisible(false);
+          }}
+          onDragEnd={() => {
+            setCurrentlyDragging(false);
+            this.handleDragEnd(index);
           }}
         />
       );
