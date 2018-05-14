@@ -41,17 +41,17 @@ function dragBoundFunc(this: Konva.Image, pos: Konva.Vector2d): Konva.Vector2d {
   // const imgPos = this.getAbsolutePosition();
   const imgSize = this.getSize();
   const boardSize = this.getParent().getSize();
-  let {x, y} = pos;
+  let { x, y } = pos;
 
   // Goal 1:
-  // I'm dragging 15 pixels above my finger.
+  // I'm dragging 30 pixels above my finger.
   // Note that I can't determine exactly where my finger is:
   // pos is not the place your finger is, but the top-left part of the node, i.e.,
   // the default behavior is to set getAbsolutePosition to be pos.
   // There is a second argument which is the TouchEvent, but it's not passed the first time
   // when touch starts (only when dragging starts).
-  y = y - 15; 
-  
+  y = y - 30;
+
   // Goal 2:
   // Ensure the piece is 50% within the board.
   const marginX = imgSize.width * 0.5;
@@ -60,7 +60,7 @@ function dragBoundFunc(this: Konva.Image, pos: Konva.Vector2d): Konva.Vector2d {
   y = Math.max(-marginY, y);
   x = Math.min(boardSize.width + marginX - imgSize.width, x);
   y = Math.min(boardSize.height + marginY - imgSize.height, y);
-  return {x, y};
+  return { x, y };
 }
 
 class CanvasImage extends React.Component<CanvasImageProps, CanvasImageState> {

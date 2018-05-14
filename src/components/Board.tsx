@@ -55,7 +55,6 @@ let clickAudio = new Audio(clickMp3);
  * Should also add drag and drop functionality later on.
  */
 class Board extends React.Component<BoardProps, BoardState> {
-
   state: BoardState = {
     selectedPieceIndex: -1, // If it's not -1, then we show cards options.
     tooltipPosition: {
@@ -226,33 +225,20 @@ class Board extends React.Component<BoardProps, BoardState> {
   }
 
   updateZIndex = (index: number) => {
-    let maxZ = this.helper.getMaxZ();
     let imageNode = (this.refs['canvasImage' + index] as CanvasImage).imageNode;
-    imageNode.setZIndex(maxZ);
+    // let maxZ = this.helper.getMaxZ();
+    // We had a bug where in Touche, using maxZ above would put the piece behind others.
+    // It's because we don't assign z-index in render
+    // (instead we sort pieces by zDepth, and loop accordingly).
+    // Therefore, we should just put a really really big number here, e.g.,
+    // validateNumber(pieceState.zDepth, 1, 100000000000000000);
+    imageNode.setZIndex(100000000000000001);
   };
 
   handleDragEnd = (index: number) => {
-    this.handleTouchOrDrag(index, true);
-  };
-  
-  handleTouchEnd = (index: number) => {
-    this.handleTouchOrDrag(index, false);
-  };
-
-  handleTouchOrDrag = (index: number, isDragEnd: boolean) => {
-    // I wish I could do everything just with onTouchEnd (without using onDragEnd),
-    // BUT we need both:
-    // We need onTouchEnd to support clicking on cards.
-    // We need onDragEnd because you can drag pieces almost outside the board
-    // (so your finger is out),
-    // and then onTouchEnd isn't fired (only onDragEnd).
-    console.log((isDragEnd ? "onDragEnd" : "onTouchEnd"), ' piece index=', index);
+    console.log('onDragEnd piece index=', index);
     const ratio = this.getRatio();
-    const state: MatchState = this.mutableMatch.matchState;
-    const piece: PieceState = state[index];
     const gameSpec = this.props.gameSpec;
-    const pieceSpec = gameSpec.pieces[index];
-    const kind = pieceSpec.element.elementKind;
     let position = (this.refs[
       'canvasImage' + index
     ] as CanvasImage).imageNode.getAbsolutePosition();
@@ -260,32 +246,25 @@ class Board extends React.Component<BoardProps, BoardState> {
     let width = gameSpec.board.width;
     let height = gameSpec.board.height;
 
-    let startX = piece.x;
-    let startY = piece.y;
     let endX = position.x / ratio / width * 100;
     let endY = position.y / ratio / height * 100;
-    if (isDragEnd) {
-      // it's a drag
-      this.helper.dragTo(index, endX, endY);
-      const match: MatchInfo = this.mutableMatch;
-      ourFirebase.updatePieceState(match, index);
-      this.hideCardOptions();
-    } else {
-      // onTouchEnd is fired both when clicking or dragging, so I look at distance squared.
-      let distanceSq = ((startX - endX) * (startX - endX) + (startY - endY) * (startY - endY));
-      // it's a touch instead of drag. I set it as 0,0001 because sometimes touch cause a tiny distance.
-      if (distanceSq > 0.0001) {
-        console.log("Ignoring onTouchEnd distanceSq=", distanceSq);
-      } else {
-        // It's a click!
-        if (kind === 'toggable') {
-          this.togglePiece(index);
-        } else if (kind === 'dice') {
-          this.rollDice(index);
-        } else if (kind === 'card') {
-          this.toggleCardOptions('canvasImage' + index, index);
-        }
-      }
+    this.helper.dragTo(index, endX, endY);
+    const match: MatchInfo = this.mutableMatch;
+    ourFirebase.updatePieceState(match, index);
+    this.hideCardOptions();
+  };
+
+  handleTap = (index: number) => {
+    const gameSpec = this.props.gameSpec;
+    const pieceSpec = gameSpec.pieces[index];
+    const kind = pieceSpec.element.elementKind;
+    console.log('onTap piece index=', index);
+    if (kind === 'toggable') {
+      this.togglePiece(index);
+    } else if (kind === 'dice') {
+      this.rollDice(index);
+    } else if (kind === 'card') {
+      this.toggleCardOptions('canvasImage' + index, index);
     }
   };
 
@@ -340,7 +319,7 @@ class Board extends React.Component<BoardProps, BoardState> {
     this.setState({
       selectedPieceIndex: -1
     });
-  }
+  };
 
   getRatio() {
     const boardImage = this.props.gameSpec.board;
@@ -369,14 +348,14 @@ class Board extends React.Component<BoardProps, BoardState> {
         height={height * ratio}
         width={width * ratio}
         src={boardImage}
-        onMouseDown={this.hideCardOptions}
-        onTouchStart={this.hideCardOptions}
+        onClick={this.hideCardOptions}
+        onTap={this.hideCardOptions}
       />
     );
 
     let sortedMatchState = this.sortMatchStateByZ();
 
-    let piecesLayer = sortedMatchState.map(({pieceState: piece, originalIndex: index}) => {
+    let piecesLayer = sortedMatchState.map(({ pieceState: piece, originalIndex: index }) => {
       const pieceSpec = gameSpec.pieces[index];
       const kind = pieceSpec.element.elementKind;
       if (kind.endsWith('Deck')) {
@@ -396,11 +375,11 @@ class Board extends React.Component<BoardProps, BoardState> {
           x={piece.x * width / 100 * ratio}
           y={piece.y * height / 100 * ratio}
           src={imageSrc}
-          onMouseUp={() => {
-            this.handleTouchEnd(index);
+          onClick={() => {
+            this.handleTap(index);
           }}
-          onTouchEnd={() => {
-            this.handleTouchEnd(index);
+          onTap={() => {
+            this.handleTap(index);
           }}
           onDragStart={() => {
             console.log('onDragStart');
