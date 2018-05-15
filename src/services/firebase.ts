@@ -335,6 +335,12 @@ export namespace ourFirebase {
             newPiece.initialState.x = 28;
             newPiece.initialState.y = 7.3;
             newPieces!.push(newPiece);
+          } else if (piece.element.elementId === '-KxLHdYX937bfhOU04NP') {
+            piece.initialState.x = 48.8;
+            piece.initialState.y = 7.3;
+          } else if (piece.element.elementId === '-KxLHdYLpBVqGTr6C9-C') {
+            piece.initialState.x = 38;
+            piece.initialState.y = 7.3;
           }
           if (piece.element.elementKind.endsWith('Deck')) {
             // ignore piece;
@@ -343,15 +349,21 @@ export namespace ourFirebase {
           }
         }
 
-        // if (_gameSpecId === '-KxLz3Bm_TbQv7Y2MmvM') {
-         // if (piece.element.elementId === '-KxLHdYYTHiX9HtmGdhj') {
-
-         // }
+        if (_gameSpecId === '-KxLz3FKTdapLIInm8GT') {
+          if (piece.element.elementId === '-KxLHdZEbxmx1JxNADd_') {
+            for (let i = 0; i < 24; i++) {
+              let newPiece = deepCopy(piece);
+              newPieces!.push(newPiece);
+            }
+          }
+          if (piece.element.elementId === '-KxLHdZFYwCkxuYejHug') {
+            //
+          }
         }
-      // }
+      }
       if (newPieces!) {
         for (let newPiece of newPieces!) {
-            gameSpec.pieces.push(newPiece!);
+          gameSpec.pieces.push(newPiece!);
         }
       }
     }

@@ -237,6 +237,8 @@ class Board extends React.Component<BoardProps, BoardState> {
     let endX = position.x / ratio / width * 100;
     let endY = position.y / ratio / height * 100;
     let distance = Math.sqrt((startX - endX) * (startX - endX) + (startY - endY) * (startY - endY));
+    console.log(startX + ' ' + startY);
+    console.log(endX + ' ' + endY);
 
     console.log('distance' + distance);
     if (distance < 0.00001) {
