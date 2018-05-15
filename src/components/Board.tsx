@@ -364,21 +364,22 @@ class Board extends React.Component<BoardProps, BoardState> {
 
     let piecesLayer = sortedMatchState.map(({ pieceState: piece, originalIndex: index }) => {
       const pieceSpec = gameSpec.pieces[index];
-      const kind = pieceSpec.element.elementKind;
+      const element = pieceSpec.element;
+      const kind = element.elementKind;
       if (kind.endsWith('Deck')) {
         return null;
       }
       let isVisible = piece.cardVisibilityPerIndex[this.selfParticipantIndex()];
-      let imageIndex: number =
-        pieceSpec.element.elementKind === 'card' ? (isVisible ? 0 : 1) : piece.currentImageIndex;
-      let imageSrc: string = pieceSpec.element.images[imageIndex].downloadURL;
+      const isCard = element.elementKind === 'card';
+      let imageIndex: number = isCard ? (isVisible ? 0 : 1) : piece.currentImageIndex;
+      let imageSrc: string = element.images[imageIndex].downloadURL;
       return (
         <CanvasImage
           ref={'canvasImage' + index}
           key={index}
-          draggable={pieceSpec.element.isDraggable}
-          height={pieceSpec.element.height * ratio}
-          width={pieceSpec.element.width * ratio}
+          draggable={element.isDraggable}
+          height={element.height * ratio}
+          width={element.width * ratio}
           x={piece.x * width / 100 * ratio}
           y={piece.y * height / 100 * ratio}
           src={imageSrc}

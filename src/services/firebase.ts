@@ -191,6 +191,7 @@ export namespace ourFirebase {
     const phoneNumber = user.phoneNumber ? user.phoneNumber : phoneNumberForSignInAnonymously;
 
     Raven.setUserContext({
+      name: displayNameForSignIn,
       phoneNumber: phoneNumber,
       countryCode: myCountryCodeForSignInWithPhoneNumber,
       userId: uid
