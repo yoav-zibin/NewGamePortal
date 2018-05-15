@@ -1,6 +1,7 @@
 import * as React from 'react';
 import Board from './Board';
 import VideoArea from './VideoArea';
+import { ourFirebase } from '../services/firebase';
 import {
   StoreState,
   MatchInfo,
@@ -130,6 +131,7 @@ class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
               this.setState({
                 isCallOngoing: !this.state.isCallOngoing
               });
+              ourFirebase.pingOpponentsInMatch(this.props.matchInfo!);
             }}
             label={'Call'}
             icon={<StartCall color={green500} />}
