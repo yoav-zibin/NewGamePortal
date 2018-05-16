@@ -249,6 +249,7 @@ class Board extends React.Component<BoardProps, BoardState> {
 
     let endX = position.x / ratio / width * 100;
     let endY = position.y / ratio / height * 100;
+    console.log(endX + ' ' + endY);
     this.helper.dragTo(index, endX, endY);
     const match: MatchInfo = this.mutableMatch;
     ourFirebase.updatePieceState(match, index);

@@ -369,6 +369,8 @@ export namespace ourFirebase {
     // Verify all cards have a deck.
     for (let [_gameSpecId, gameSpec] of Object.entries(gameSpecs.gameSpecIdToGameSpec)) {
       let newPieces: Piece[] = [];
+      let haveCopiedRedPieceForNewBoku = false;
+      let haveCopiedBlackPieceForNewBoku = false;
       for (let piece of gameSpec.pieces) {
         const isCard = gameSpecs.elementIdToElement[piece.element.elementId].elementKind === 'card';
         checkCondition('cards', (piece.deckPieceIndex !== -1) === isCard);
@@ -379,6 +381,12 @@ export namespace ourFirebase {
             newPiece.initialState.x = 28;
             newPiece.initialState.y = 7.3;
             newPieces!.push(newPiece);
+          } else if (piece.element.elementId === '-KxLHdYX937bfhOU04NP') {
+            piece.initialState.x = 48.8;
+            piece.initialState.y = 7.3;
+          } else if (piece.element.elementId === '-KxLHdYLpBVqGTr6C9-C') {
+            piece.initialState.x = 38;
+            piece.initialState.y = 7.3;
           }
           if (piece.element.elementKind.endsWith('Deck')) {
             // ignore piece;
@@ -387,12 +395,29 @@ export namespace ourFirebase {
           }
         }
 
-        // if (_gameSpecId === '-KxLz3Bm_TbQv7Y2MmvM') {
-        // if (piece.element.elementId === '-KxLHdYYTHiX9HtmGdhj') {
-
-        // }
+        // for -KxLz3FKTdapLIInm8GT, New Boku, make more pieces"
+        if (_gameSpecId === '-KxLz3FKTdapLIInm8GT') {
+          if (
+            piece.element.elementId === '-KxLHdZEbxmx1JxNADd_' &&
+            !haveCopiedBlackPieceForNewBoku
+          ) {
+            for (let i = 0; i < 24; i++) {
+              let newPiece = deepCopy(piece);
+              newPieces!.push(newPiece);
+            }
+            haveCopiedBlackPieceForNewBoku = true;
+          } else if (
+            piece.element.elementId === '-KxLHdZFYwCkxuYejHug' &&
+            !haveCopiedRedPieceForNewBoku
+          ) {
+            for (let i = 0; i < 24; i++) {
+              let newPiece = deepCopy(piece);
+              newPieces!.push(newPiece);
+            }
+            haveCopiedRedPieceForNewBoku = true;
+          }
+        }
       }
-      // }
       if (newPieces!) {
         for (let newPiece of newPieces!) {
           gameSpec.pieces.push(newPiece!);
