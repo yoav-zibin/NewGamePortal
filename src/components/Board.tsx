@@ -2,15 +2,14 @@ import * as React from 'react';
 import * as Konva from 'konva';
 import { Layer, Stage } from 'react-konva';
 import { MatchInfo, GameSpec, PieceState, MatchState, WindowDimensions } from '../types';
-import CanvasImage from './CanvasImage';
+import CanvasImage, { setCurrentlyDragging } from './CanvasImage';
 import { red500 } from 'material-ui/styles/colors';
 import Shuffle from 'material-ui/svg-icons/av/shuffle';
 import Person from 'material-ui/svg-icons/social/person';
 import People from 'material-ui/svg-icons/social/people';
 import PeopleOutline from 'material-ui/svg-icons/social/people-outline';
 
-import { IconButton, IconMenu, MenuItem } from 'material-ui';
-import MoreVertIcon from 'material-ui/svg-icons/navigation/more-vert';
+import { Menu, MenuItem } from 'material-ui';
 import { connect } from 'react-redux';
 import { StoreState } from '../types/index';
 import { ourFirebase } from '../services/firebase';
@@ -40,13 +39,16 @@ interface BoardState {
   tooltipPosition: {
     x: number;
     y: number;
+    height: number;
+    width: number;
   };
   animatingTime: number;
 }
 
-let diceAudio = new Audio(diceMp3);
-let dragStartAudio = new Audio(dragStartMp3);
-let clickAudio = new Audio(clickMp3);
+const diceAudio = new Audio(diceMp3);
+const dragStartAudio = new Audio(dragStartMp3);
+const clickAudio = new Audio(clickMp3);
+const cardTooltipMargin = 10; // 10px
 
 /**
  * A reusable board class, that given a board image and pieces in props
@@ -54,17 +56,20 @@ let clickAudio = new Audio(clickMp3);
  * Should also add drag and drop functionality later on.
  */
 class Board extends React.Component<BoardProps, BoardState> {
-  mutableMatch: MatchInfo = null as any;
-  helper: MatchStateHelper = null as any;
-
   state: BoardState = {
     selectedPieceIndex: -1, // If it's not -1, then we show cards options.
     tooltipPosition: {
       x: 0,
-      y: 0
+      y: 0,
+      height: 0,
+      width: 0
     },
     animatingTime: 0.5
   };
+
+  private mutableMatch: MatchInfo = null as any;
+  private helper: MatchStateHelper = null as any;
+  private cardsMenuRef: any = (React as any).createRef();
 
   audioPlaying(sound: HTMLAudioElement) {
     if (isApp && !this.props.audioMute) {
@@ -94,10 +99,11 @@ class Board extends React.Component<BoardProps, BoardState> {
       return;
     }
     const ratio = this.getRatio();
+    const gameSpec = this.props.gameSpec;
     const nextMatchState = nextProps.matchInfo.matchState;
     let audioToPlay: HTMLAudioElement | null = null;
     for (let i = 0; i < nextMatchState.length; i++) {
-      const kind = this.props.gameSpec.pieces[i].element.elementKind;
+      const kind = gameSpec.pieces[i].element.elementKind;
       if (kind.endsWith('Deck')) {
         continue;
       }
@@ -109,8 +115,8 @@ class Board extends React.Component<BoardProps, BoardState> {
         // the position is changed. Call animation.
         imageNode.to({
           duration: this.state.animatingTime,
-          x: nextMatchState[i].x / 100 * this.props.gameSpec.board.width * ratio,
-          y: nextMatchState[i].y / 100 * this.props.gameSpec.board.height * ratio
+          x: nextMatchState[i].x / 100 * gameSpec.board.width * ratio,
+          y: nextMatchState[i].y / 100 * gameSpec.board.height * ratio
         });
         audioToPlay = clickAudio;
       } else if (
@@ -220,42 +226,47 @@ class Board extends React.Component<BoardProps, BoardState> {
   }
 
   updateZIndex = (index: number) => {
-    let maxZ = this.helper.getMaxZ();
     let imageNode = (this.refs['canvasImage' + index] as CanvasImage).imageNode;
-    imageNode.setZIndex(maxZ);
+    // let maxZ = this.helper.getMaxZ();
+    // We had a bug where in Touche, using maxZ above would put the piece behind others.
+    // It's because we don't assign z-index in render
+    // (instead we sort pieces by zDepth, and loop accordingly).
+    // Therefore, we should just put a really really big number here, e.g.,
+    // validateNumber(pieceState.zDepth, 1, 100000000000000000);
+    imageNode.setZIndex(100000000000000001);
   };
 
-  handleTouchEnd = (index: number, kind: string, startX: number, startY: number, ratio: number) => {
-    console.log('handleTouchEnd' + index);
+  handleDragEnd = (index: number) => {
+    console.log('onDragEnd piece index=', index);
+    const ratio = this.getRatio();
+    const gameSpec = this.props.gameSpec;
     let position = (this.refs[
       'canvasImage' + index
     ] as CanvasImage).imageNode.getAbsolutePosition();
 
-    let width = this.props.gameSpec.board.width;
-    let height = this.props.gameSpec.board.height;
+    let width = gameSpec.board.width;
+    let height = gameSpec.board.height;
 
     let endX = position.x / ratio / width * 100;
     let endY = position.y / ratio / height * 100;
-    let distance = Math.sqrt((startX - endX) * (startX - endX) + (startY - endY) * (startY - endY));
-    console.log(startX + ' ' + startY);
     console.log(endX + ' ' + endY);
+    this.helper.dragTo(index, endX, endY);
+    const match: MatchInfo = this.mutableMatch;
+    ourFirebase.updatePieceState(match, index);
+    this.hideCardOptions();
+  };
 
-    console.log('distance' + distance);
-    if (distance < 0.00001) {
-      // it's a touch instead of drag. I set it as 0,0001 because sometimes touch cause a tiny distance.
-      if (kind === 'toggable') {
-        this.togglePiece(index);
-      } else if (kind === 'dice') {
-        this.rollDice(index);
-      } else if (kind === 'card') {
-        this.toggleCardOptions('canvasImage' + index, index);
-      }
-    } else {
-      // it's a drag
-      this.helper.dragTo(index, endX, endY);
-      const match: MatchInfo = this.mutableMatch;
-      ourFirebase.updatePieceState(match, index);
-      this.hideCardOptions();
+  handleTap = (index: number) => {
+    const gameSpec = this.props.gameSpec;
+    const pieceSpec = gameSpec.pieces[index];
+    const kind = pieceSpec.element.elementKind;
+    console.log('onTap piece index=', index);
+    if (kind === 'toggable') {
+      this.togglePiece(index);
+    } else if (kind === 'dice') {
+      this.rollDice(index);
+    } else if (kind === 'card') {
+      this.toggleCardOptions('canvasImage' + index, index);
     }
   };
 
@@ -291,33 +302,51 @@ class Board extends React.Component<BoardProps, BoardState> {
     } else {
       const imageNode = (this.refs[refString] as CanvasImage).imageNode;
       let position = imageNode.getAbsolutePosition();
+      const imageSize = imageNode.getSize();
       this.setState({
         tooltipPosition: {
           x: position.x,
-          y: position.y
+          y: position.y,
+          height: imageSize.height,
+          width: imageSize.width
         },
         selectedPieceIndex: cardIndex
       });
+      this.setCardTooltipVisible(true);
+      // When opening the tooltip, I want to make sure the card is closest to user.
+      this.helper.setMaxZ(cardIndex);
+      ourFirebase.updatePieceState(this.mutableMatch, cardIndex);
     }
   }
 
-  hideCardOptions() {
+  hideCardOptions = () => {
     console.log('hideCardOptions');
+    if (this.state.selectedPieceIndex === -1) {
+      return;
+    }
     this.setState({
       selectedPieceIndex: -1
     });
-  }
+  };
 
   getRatio() {
     const boardImage = this.props.gameSpec.board;
     return getBoardRatio(boardImage);
   }
 
+  setCardTooltipVisible(isVisible: boolean) {
+    console.log('setCardTooltipVisible: ', this.cardsMenuRef);
+    if (this.cardsMenuRef && this.cardsMenuRef.current) {
+      this.cardsMenuRef.current.refs.scrollContainer.style.display = isVisible ? 'initial' : 'none';
+    }
+  }
+
   render() {
     console.log('Board render');
-    let boardImage = this.props.gameSpec.board.downloadURL;
-    const width = this.props.gameSpec.board.width;
-    const height = this.props.gameSpec.board.height;
+    const gameSpec = this.props.gameSpec;
+    let boardImage = gameSpec.board.downloadURL;
+    const width = gameSpec.board.width;
+    const height = gameSpec.board.height;
     const ratio = this.getRatio();
     const match = this.mutableMatch;
     this.helper = new MatchStateHelper(match);
@@ -327,45 +356,51 @@ class Board extends React.Component<BoardProps, BoardState> {
         height={height * ratio}
         width={width * ratio}
         src={boardImage}
-        onTouchStart={() => this.hideCardOptions()}
+        onClick={this.hideCardOptions}
+        onTap={this.hideCardOptions}
       />
     );
 
     let sortedMatchState = this.sortMatchStateByZ();
 
-    let piecesLayer = sortedMatchState.map(compoundMatchState => {
-      let piece = compoundMatchState.pieceState;
-      let index = compoundMatchState.originalIndex;
-      const pieceSpec = this.props.gameSpec.pieces[index];
-      let kind = pieceSpec.element.elementKind;
+    let piecesLayer = sortedMatchState.map(({ pieceState: piece, originalIndex: index }) => {
+      const pieceSpec = gameSpec.pieces[index];
+      const element = pieceSpec.element;
+      const kind = element.elementKind;
       if (kind.endsWith('Deck')) {
         return null;
       }
       let isVisible = piece.cardVisibilityPerIndex[this.selfParticipantIndex()];
-      let imageIndex: number =
-        pieceSpec.element.elementKind === 'card' ? (isVisible ? 0 : 1) : piece.currentImageIndex;
-      // let zIndex = piece.zDepth;
-      let imageSrc: string = pieceSpec.element.images[imageIndex].downloadURL;
+      const isCard = element.elementKind === 'card';
+      let imageIndex: number = isCard ? (isVisible ? 0 : 1) : piece.currentImageIndex;
+      let imageSrc: string = element.images[imageIndex].downloadURL;
       return (
         <CanvasImage
           ref={'canvasImage' + index}
           key={index}
-          draggable={pieceSpec.element.isDraggable}
-          height={pieceSpec.element.height * ratio}
-          width={pieceSpec.element.width * ratio}
+          draggable={element.isDraggable}
+          height={element.height * ratio}
+          width={element.width * ratio}
           x={piece.x * width / 100 * ratio}
           y={piece.y * height / 100 * ratio}
           src={imageSrc}
-          onTouchEnd={() => {
-            console.log('onTouchEnd');
-            let startX = piece.x;
-            let startY = piece.y;
-            this.handleTouchEnd(index, kind, startX, startY, ratio);
+          onClick={() => {
+            this.handleTap(index);
+          }}
+          onTap={() => {
+            this.handleTap(index);
           }}
           onDragStart={() => {
+            console.log('onDragStart');
+            setCurrentlyDragging(true);
             this.audioPlaying(dragStartAudio);
             this.updateZIndex(index);
-            console.log('onDragStart');
+            // I know it's against react philosophy, but I don't want to cause rerender when drag starts.
+            this.setCardTooltipVisible(false);
+          }}
+          onDragEnd={() => {
+            setCurrentlyDragging(false);
+            this.handleDragEnd(index);
           }}
         />
       );
@@ -374,26 +409,44 @@ class Board extends React.Component<BoardProps, BoardState> {
     const selectedPieceIndex = this.state.selectedPieceIndex;
     let toolTipLayer: JSX.Element | null = null;
     if (selectedPieceIndex !== -1) {
-      const cardVisibilityPerIndex = match.matchState[selectedPieceIndex].cardVisibilityPerIndex;
+      const cardState = match.matchState[selectedPieceIndex];
+      const cardVisibilityPerIndex = cardState.cardVisibilityPerIndex;
+      const tooltipPosition = this.state.tooltipPosition;
+
+      const cardElement = gameSpec.pieces[selectedPieceIndex].element;
+      const cardMiddleX = cardState.x + 100 * (cardElement.width / width) / 2;
+      const cardMiddleY = cardState.y + 100 * (cardElement.height / height) / 2;
+      const tooltipLeft = tooltipPosition.x + cardTooltipMargin;
+      const tooltipTop = tooltipPosition.y + cardTooltipMargin;
+      const tooltipBottom =
+        height * ratio - tooltipPosition.y - tooltipPosition.height + cardTooltipMargin;
+      const tooltipRight =
+        width * ratio - tooltipPosition.x - tooltipPosition.width + cardTooltipMargin;
+      const style =
+        cardMiddleX < 50
+          ? cardMiddleY < 50
+            ? {
+                left: tooltipLeft,
+                top: tooltipTop
+              }
+            : { left: tooltipLeft, bottom: tooltipBottom }
+          : cardMiddleY < 50
+            ? {
+                right: tooltipRight,
+                top: tooltipTop
+              }
+            : { right: tooltipRight, bottom: tooltipBottom };
+
       toolTipLayer = (
-        <IconMenu
-          iconButtonElement={
-            <IconButton>
-              <MoreVertIcon />
-            </IconButton>
-          }
-          anchorOrigin={{ horizontal: 'left', vertical: 'top' }}
-          targetOrigin={{ horizontal: 'left', vertical: 'top' }}
-          className="my-tooltip"
+        <Menu
+          ref={this.cardsMenuRef}
+          desktop={true} // more compact
           style={{
-            left: this.state.tooltipPosition.x,
-            top: this.state.tooltipPosition.y,
+            ...style,
             position: 'absolute',
             display: 'initial',
             zIndex: 100,
-            background: 'white',
-            width: '40px',
-            height: '40px'
+            background: 'white'
           }}
         >
           <MenuItem
@@ -406,7 +459,7 @@ class Board extends React.Component<BoardProps, BoardState> {
           />
           <MenuItem
             rightIcon={<People />}
-            primaryText={'Show everyone'}
+            primaryText={'Show all'}
             disabled={
               Object.keys(cardVisibilityPerIndex).length === match.participantsUserIds.length
             }
@@ -425,12 +478,12 @@ class Board extends React.Component<BoardProps, BoardState> {
           <MenuItem
             style={{ color: red500 }}
             rightIcon={<Shuffle color={red500} />}
-            primaryText={'Shuffle deck'}
+            primaryText={'Shuffle'}
             onClick={() => {
-              this.shuffleDeck(this.props.gameSpec.pieces[selectedPieceIndex].deckPieceIndex);
+              this.shuffleDeck(gameSpec.pieces[selectedPieceIndex].deckPieceIndex);
             }}
           />
-        </IconMenu>
+        </Menu>
       );
     }
 

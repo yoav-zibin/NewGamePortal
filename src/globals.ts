@@ -256,11 +256,7 @@ export function getBoardRatio(boardImage: Image) {
   const boardHeight = boardImage.height;
   const widthRatio = innerWidth / boardWidth;
   const heightRatio = innerHeight / boardHeight;
-  const ratio = Math.min(widthRatio, heightRatio);
-  // console.log(
-  //   "BoardRatio=", ratio, "widthRatio=", widthRatio, "heightRatio=",
-  //   heightRatio, "innerWidth=", innerWidth, "innerHeight=", innerHeight);
-  return ratio;
+  return Math.min(widthRatio, heightRatio);
 }
 
 // The board will either be full width or full height
@@ -296,3 +292,20 @@ export function getVideoChatWidthHeight(boardImage: Image, participantsNum: numb
   }
   return widthHeight - 8; // To get 4px margins.
 }
+
+export function setLoadingSpinnerVisible(isVisible: boolean) {
+  document.getElementById('loadingSpinner')!.style.display = isVisible ? 'block' : 'none';
+}
+
+export const playersColors: string[] = [
+  'blue',
+  'red',
+  'brown',
+  'purple',
+  'pink',
+  'yellow',
+  'orange',
+  'silver',
+  'green',
+  'gray'
+];

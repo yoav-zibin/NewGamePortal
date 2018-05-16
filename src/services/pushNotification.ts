@@ -20,20 +20,20 @@ export const initPushNotification = () => {
         return messaging.getToken();
       })
       .then(token => {
-        console.log('Notification permission granted :)' + token);
+        console.log('Notification permission granted :)', token);
         if (token) {
           ourFirebase.addFcmToken(token, 'web');
         }
       })
       .catch(error => {
-        console.log('Notification permission denied :/' + error);
+        console.log('Notification permission denied :/', error);
       });
   }
   messaging.onTokenRefresh(function() {
     messaging
       .getToken()
       .then(refreshedToken => {
-        console.log('refreshedToken=' + refreshedToken);
+        console.log('refreshedToken=', refreshedToken);
         if (refreshedToken) {
           ourFirebase.addFcmToken(refreshedToken, 'web');
         }

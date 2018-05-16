@@ -5,7 +5,14 @@ import * as ReactDOM from 'react-dom';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import { Provider } from 'react-redux';
 import { Route, BrowserRouter } from 'react-router-dom';
-import { isIos, isAndroid, checkCondition, studentsUsers, isApp } from './globals';
+import {
+  isIos,
+  isAndroid,
+  checkCondition,
+  studentsUsers,
+  isApp,
+  setLoadingSpinnerVisible
+} from './globals';
 import { store } from './stores/index';
 import App from './App';
 import './index.css';
@@ -32,7 +39,7 @@ function reactRender() {
   }
   wasReactRenderCalled = true;
 
-  document.getElementById('loadingSpinner')!.style.display = 'none';
+  setLoadingSpinnerVisible(false);
   ReactDOM.render(
     <MuiThemeProvider>
       <Provider store={store}>
@@ -133,7 +140,7 @@ function onDeviceReady() {
     windows: {}
   });
   push.on('registration', (data: any) => {
-    console.log('The phone gap reg id is ' + data.registrationId);
+    console.log('The phone gap reg id is ', data.registrationId);
     ourFirebase.addFcmToken(data.registrationId, isIos ? 'ios' : 'android');
   });
   push.on('notification', (data: any) => {

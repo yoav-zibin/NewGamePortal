@@ -1,6 +1,7 @@
 import * as React from 'react';
 import Board from './Board';
 import VideoArea from './VideoArea';
+import { ourFirebase } from '../services/firebase';
 import {
   StoreState,
   MatchInfo,
@@ -12,7 +13,13 @@ import {
 } from '../types/index';
 import { connect } from 'react-redux';
 import { History } from 'history';
-import { getOpponents, findMatch, isBoardFullWidth, getBoardRatio } from '../globals';
+import {
+  getOpponents,
+  findMatch,
+  isBoardFullWidth,
+  getBoardRatio,
+  setLoadingSpinnerVisible
+} from '../globals';
 import { videoChat } from '../services/videoChat';
 import RaisedButton from 'material-ui/RaisedButton';
 import Chip from 'material-ui/Chip';
@@ -38,10 +45,12 @@ interface PlayingScreenProps extends PlayingScreenPropsFromState {
 const styles: CSSPropertiesIndexer = {
   playingScreenContainerRow: {
     display: 'flex',
+    alignItems: 'center',
     flexDirection: 'row'
   },
   playingScreenContainerColumn: {
     display: 'flex',
+    alignItems: 'center',
     flexDirection: 'column'
   },
   chipsRow: {
@@ -80,7 +89,7 @@ class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
       let screenShotWidth = screenShot.width;
       let screenShotHeight = screenShot.height;
       const ratio = getBoardRatio(screenShot);
-      document.getElementById('loadingSpinner')!.style.display = 'block';
+      setLoadingSpinnerVisible(true);
       return (
         <>
           <div style={styles.playingScreenContainer}>
@@ -94,7 +103,7 @@ class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
       );
     }
 
-    document.getElementById('loadingSpinner')!.style.display = 'none';
+    setLoadingSpinnerVisible(false);
     const participantsUserIds = this.props.matchInfo!.participantsUserIds;
     const opponents = getOpponents(
       participantsUserIds,
@@ -122,6 +131,7 @@ class PlayingScreen extends React.Component<PlayingScreenProps, {}> {
               this.setState({
                 isCallOngoing: !this.state.isCallOngoing
               });
+              ourFirebase.pingOpponentsInMatch(this.props.matchInfo!);
             }}
             label={'Call'}
             icon={<StartCall color={green500} />}

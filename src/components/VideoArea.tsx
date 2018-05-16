@@ -2,7 +2,7 @@ import * as React from 'react';
 import { CSSPropertiesIndexer, Opponent, WindowDimensions, GameSpec } from '../types/index';
 import { videoChat } from '../services/videoChat';
 
-import { checkCondition, isIos, getVideoChatWidthHeight } from '../globals';
+import { checkCondition, isIos, getVideoChatWidthHeight, playersColors } from '../globals';
 
 function getStyles(videoChatWidthHeight: number): CSSPropertiesIndexer {
   const widthHeight = videoChatWidthHeight + 'px';
@@ -19,14 +19,14 @@ function getStyles(videoChatWidthHeight: number): CSSPropertiesIndexer {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-around',
-      flexFlow: 'row wrap',
-      overflowY: 'scroll'
+      flexFlow: 'row wrap'
     },
     centerItem: {
       textAlign: 'center',
       lineHeight: widthHeight,
       overflow: 'hidden',
       whiteSpace: 'nowrap',
+      backgroundColor: '#fdfddd',
       width: widthHeight,
       height: widthHeight
     }
@@ -78,11 +78,17 @@ class VideoArea extends React.Component<Props> {
     }
     const participants = opponents.concat();
     participants.unshift({ userId: 'Me', name: 'Me' });
-
     return (
       <div style={styles.videoChatContainer} ref={ele => (this.container = ele)}>
         {participants.map((participant, index) => (
-          <div key={participant.userId} style={styles.videoChatItem}>
+          <div
+            key={participant.userId}
+            style={{
+              ...styles.videoChatItem,
+              border: '2px solid',
+              borderColor: playersColors[index]
+            }}
+          >
             <video id={'videoElement' + index} style={styles.videoChatItem} />
             <div id={'videoParticipantName' + index} style={styles.centerItem}>
               {participant.name}

@@ -191,6 +191,7 @@ export namespace ourFirebase {
     const phoneNumber = user.phoneNumber ? user.phoneNumber : phoneNumberForSignInAnonymously;
 
     Raven.setUserContext({
+      name: displayNameForSignIn,
       phoneNumber: phoneNumber,
       countryCode: myCountryCodeForSignInWithPhoneNumber,
       userId: uid
@@ -311,6 +312,48 @@ export namespace ourFirebase {
       '-KxLHdaHqRj2RTr-f_9x': 1.5
     };
 
+    // Want to resize all elements of the following gamespecs
+    const gameSpecElementsToResize = [
+      '-L-m0_fVl_1k-KtOhfeI', // Go
+      '-L-db4M-NKnZlguWs7xv' // Clue
+    ];
+    // Get all elementIds and add them to elementIdToResizingFactor
+    for (let gameSpecId of gameSpecElementsToResize) {
+      const spec = gameSpecs.gameSpecIdToGameSpec[gameSpecId];
+      if (spec) {
+        for (let piece of spec.pieces) {
+          const elementId = piece.element.elementId;
+          console.log('resizing for', gameSpecId);
+          elementIdToResizingFactor[elementId] = 1.5;
+        }
+      }
+    }
+
+    // For the listed game specs, all their elements should be hidden at start of game
+    const switchCardImages = [
+      '-KxLz3GDxUi9QADh3jN0', // Simply Ingenious
+      '-L-db4M-NKnZlguWs7xv', // Clue
+      '-L01xDqdP8hN1PCJuwI8', // Texas Hold 'em
+      '-L01xupWIg2jOCp9Sh_K', // Crazy Eights
+      '-L0DEfpWO-G2hX3Wcp8-', // Spades
+      '-L0r6qHkR2fkeCk6B7zB' // Bananagrams
+    ];
+    for (let gameSpecId of switchCardImages) {
+      const spec = gameSpecs.gameSpecIdToGameSpec[gameSpecId];
+      if (spec) {
+        console.log('Changing images for', gameSpecId);
+        for (let piece of spec.pieces) {
+          const images = piece.element.images;
+          if (images.length < 2) {
+            continue;
+          }
+          const temp = images[0];
+          images[0] = images[1];
+          images[1] = temp;
+        }
+      }
+    }
+
     for (let [elementId, element] of Object.entries(gameSpecs.elementIdToElement)) {
       let resizingFactor = elementIdToResizingFactor[elementId];
       if (resizingFactor) {
@@ -322,6 +365,7 @@ export namespace ourFirebase {
         element.isDraggable = true;
       }
     }
+
     // Verify all cards have a deck.
     for (let [_gameSpecId, gameSpec] of Object.entries(gameSpecs.gameSpecIdToGameSpec)) {
       let newPieces: Piece[] = [];
@@ -351,6 +395,7 @@ export namespace ourFirebase {
           }
         }
 
+        // for -KxLz3FKTdapLIInm8GT, New Boku, make more pieces"
         if (_gameSpecId === '-KxLz3FKTdapLIInm8GT') {
           if (
             piece.element.elementId === '-KxLHdZEbxmx1JxNADd_' &&

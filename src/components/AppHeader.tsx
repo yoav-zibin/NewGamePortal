@@ -125,11 +125,11 @@ class AppHeader extends React.Component<Props, {}> {
   };
 
   render() {
-    if (shouldHideAppHeader()) {
-      return null;
-    }
-    let volume = this.props.audioMute ? <VolumeUp /> : <VolumeMute />;
+    let volume = this.props.audioMute ? <VolumeMute /> : <VolumeUp />;
     if (this.onPlayingScreen() && this.props.matchInfo) {
+      if (shouldHideAppHeader()) {
+        return null;
+      }
       // We're on Playing Screen, which needs 'add' button and mute button
       console.log('ON PLAYING SCREEN');
       const isInviteFriendDisabled =
