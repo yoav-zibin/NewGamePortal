@@ -42,13 +42,13 @@ interface BoardState {
     height: number;
     width: number;
   };
-  animatingTime: number;
 }
 
 const diceAudio = new Audio(diceMp3);
 const dragStartAudio = new Audio(dragStartMp3);
 const clickAudio = new Audio(clickMp3);
 const cardTooltipMargin = 10; // 10px
+const animatingTime = 0.5;
 
 /**
  * A reusable board class, that given a board image and pieces in props
@@ -63,8 +63,7 @@ class Board extends React.Component<BoardProps, BoardState> {
       y: 0,
       height: 0,
       width: 0
-    },
-    animatingTime: 0.5
+    }
   };
 
   private mutableMatch: MatchInfo = null as any;
@@ -114,7 +113,7 @@ class Board extends React.Component<BoardProps, BoardState> {
       ) {
         // the position is changed. Call animation.
         imageNode.to({
-          duration: this.state.animatingTime,
+          duration: animatingTime,
           x: nextMatchState[i].x / 100 * gameSpec.board.width * ratio,
           y: nextMatchState[i].y / 100 * gameSpec.board.height * ratio
         });
@@ -165,7 +164,7 @@ class Board extends React.Component<BoardProps, BoardState> {
     if (kind === 'card') {
       let tween = new Konva.Tween({
         node: imageNode,
-        duration: this.state.animatingTime,
+        duration: animatingTime,
         scaleX: 0.001,
         onFinish: function() {
           tween.reverse();
@@ -179,7 +178,7 @@ class Board extends React.Component<BoardProps, BoardState> {
         offsetY: imageNode.height() / 2,
         x: imageNode.x() + imageNode.width() / 2,
         y: imageNode.y() + imageNode.height() / 2,
-        duration: this.state.animatingTime,
+        duration: animatingTime,
         rotation: 360,
         onFinish: function() {
           tween.reset();
