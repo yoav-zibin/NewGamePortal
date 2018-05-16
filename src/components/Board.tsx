@@ -42,12 +42,13 @@ interface BoardState {
     height: number;
     width: number;
   };
-  animatingTime: number;
 }
 
-let diceAudio = new Audio(diceMp3);
-let dragStartAudio = new Audio(dragStartMp3);
-let clickAudio = new Audio(clickMp3);
+const diceAudio = new Audio(diceMp3);
+const dragStartAudio = new Audio(dragStartMp3);
+const clickAudio = new Audio(clickMp3);
+const cardTooltipMargin = 10; // 10px
+const animatingTime = 0.5;
 
 /**
  * A reusable board class, that given a board image and pieces in props
@@ -62,8 +63,7 @@ class Board extends React.Component<BoardProps, BoardState> {
       y: 0,
       height: 0,
       width: 0
-    },
-    animatingTime: 0.5
+    }
   };
 
   private mutableMatch: MatchInfo = null as any;
@@ -113,7 +113,7 @@ class Board extends React.Component<BoardProps, BoardState> {
       ) {
         // the position is changed. Call animation.
         imageNode.to({
-          duration: this.state.animatingTime,
+          duration: animatingTime,
           x: nextMatchState[i].x / 100 * gameSpec.board.width * ratio,
           y: nextMatchState[i].y / 100 * gameSpec.board.height * ratio
         });
@@ -164,7 +164,7 @@ class Board extends React.Component<BoardProps, BoardState> {
     if (kind === 'card') {
       let tween = new Konva.Tween({
         node: imageNode,
-        duration: this.state.animatingTime,
+        duration: animatingTime,
         scaleX: 0.001,
         onFinish: function() {
           tween.reverse();
@@ -178,7 +178,7 @@ class Board extends React.Component<BoardProps, BoardState> {
         offsetY: imageNode.height() / 2,
         x: imageNode.x() + imageNode.width() / 2,
         y: imageNode.y() + imageNode.height() / 2,
-        duration: this.state.animatingTime,
+        duration: animatingTime,
         rotation: 360,
         onFinish: function() {
           tween.reset();
@@ -248,6 +248,7 @@ class Board extends React.Component<BoardProps, BoardState> {
 
     let endX = position.x / ratio / width * 100;
     let endY = position.y / ratio / height * 100;
+    console.log(endX + ' ' + endY);
     this.helper.dragTo(index, endX, endY);
     const match: MatchInfo = this.mutableMatch;
     ourFirebase.updatePieceState(match, index);
@@ -311,11 +312,17 @@ class Board extends React.Component<BoardProps, BoardState> {
         selectedPieceIndex: cardIndex
       });
       this.setCardTooltipVisible(true);
+      // When opening the tooltip, I want to make sure the card is closest to user.
+      this.helper.setMaxZ(cardIndex);
+      ourFirebase.updatePieceState(this.mutableMatch, cardIndex);
     }
   }
 
   hideCardOptions = () => {
     console.log('hideCardOptions');
+    if (this.state.selectedPieceIndex === -1) {
+      return;
+    }
     this.setState({
       selectedPieceIndex: -1
     });
@@ -357,21 +364,22 @@ class Board extends React.Component<BoardProps, BoardState> {
 
     let piecesLayer = sortedMatchState.map(({ pieceState: piece, originalIndex: index }) => {
       const pieceSpec = gameSpec.pieces[index];
-      const kind = pieceSpec.element.elementKind;
+      const element = pieceSpec.element;
+      const kind = element.elementKind;
       if (kind.endsWith('Deck')) {
         return null;
       }
       let isVisible = piece.cardVisibilityPerIndex[this.selfParticipantIndex()];
-      let imageIndex: number =
-        pieceSpec.element.elementKind === 'card' ? (isVisible ? 0 : 1) : piece.currentImageIndex;
-      let imageSrc: string = pieceSpec.element.images[imageIndex].downloadURL;
+      const isCard = element.elementKind === 'card';
+      let imageIndex: number = isCard ? (isVisible ? 0 : 1) : piece.currentImageIndex;
+      let imageSrc: string = element.images[imageIndex].downloadURL;
       return (
         <CanvasImage
           ref={'canvasImage' + index}
           key={index}
-          draggable={pieceSpec.element.isDraggable}
-          height={pieceSpec.element.height * ratio}
-          width={pieceSpec.element.width * ratio}
+          draggable={element.isDraggable}
+          height={element.height * ratio}
+          width={element.width * ratio}
           x={piece.x * width / 100 * ratio}
           y={piece.y * height / 100 * ratio}
           src={imageSrc}
@@ -407,10 +415,12 @@ class Board extends React.Component<BoardProps, BoardState> {
       const cardElement = gameSpec.pieces[selectedPieceIndex].element;
       const cardMiddleX = cardState.x + 100 * (cardElement.width / width) / 2;
       const cardMiddleY = cardState.y + 100 * (cardElement.height / height) / 2;
-      const tooltipLeft = tooltipPosition.x + 5;
-      const tooltipTop = tooltipPosition.y + 5;
-      const tooltipBottom = height * ratio - tooltipPosition.y - tooltipPosition.height + 5;
-      const tooltipRight = width * ratio - tooltipPosition.x - tooltipPosition.width + 5;
+      const tooltipLeft = tooltipPosition.x + cardTooltipMargin;
+      const tooltipTop = tooltipPosition.y + cardTooltipMargin;
+      const tooltipBottom =
+        height * ratio - tooltipPosition.y - tooltipPosition.height + cardTooltipMargin;
+      const tooltipRight =
+        width * ratio - tooltipPosition.x - tooltipPosition.width + cardTooltipMargin;
       const style =
         cardMiddleX < 50
           ? cardMiddleY < 50

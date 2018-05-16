@@ -123,7 +123,7 @@ export class MatchStateHelper {
     return Math.max(...this.match.matchState.map(pieceState => pieceState.zDepth));
   }
 
-  private setMaxZ(pieceIndex: number) {
+  setMaxZ(pieceIndex: number) {
     this.getPieceState(pieceIndex).zDepth = this.getMaxZ() + 1;
   }
 

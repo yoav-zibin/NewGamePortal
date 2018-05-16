@@ -191,6 +191,7 @@ export namespace ourFirebase {
     const phoneNumber = user.phoneNumber ? user.phoneNumber : phoneNumberForSignInAnonymously;
 
     Raven.setUserContext({
+      name: displayNameForSignIn,
       phoneNumber: phoneNumber,
       countryCode: myCountryCodeForSignInWithPhoneNumber,
       userId: uid
@@ -313,7 +314,6 @@ export namespace ourFirebase {
 
     // Want to resize all elements of the following gamespecs
     const gameSpecElementsToResize = [
-      '-L-m0_fVl_1k-KtOhfeI', // Go
       '-L-db4M-NKnZlguWs7xv' // Clue
     ];
     // Get all elementIds and add them to elementIdToResizingFactor
@@ -368,7 +368,9 @@ export namespace ourFirebase {
     // Verify all cards have a deck.
 
     for (let [_gameSpecId, gameSpec] of Object.entries(gameSpecs.gameSpecIdToGameSpec)) {
-      // let newPieces: Piece[] = [];
+      let newPieces: Piece[] = [];
+      let haveCopiedRedPieceForNewBoku = false;
+      let haveCopiedBlackPieceForNewBoku = false;
       for (let piece of gameSpec.pieces) {
         const isCard = gameSpecs.elementIdToElement[piece.element.elementId].elementKind === 'card';
         checkCondition('cards', (piece.deckPieceIndex !== -1) === isCard);
@@ -378,8 +380,13 @@ export namespace ourFirebase {
             let newPiece = deepCopy(piece);
             newPiece.initialState.x = 28;
             newPiece.initialState.y = 7.3;
-            gameSpec.pieces.push(newPiece);
-            // newPieces!.push(newPiece);
+            newPieces!.push(newPiece);
+          } else if (piece.element.elementId === '-KxLHdYX937bfhOU04NP') {
+            piece.initialState.x = 48.8;
+            piece.initialState.y = 7.3;
+          } else if (piece.element.elementId === '-KxLHdYLpBVqGTr6C9-C') {
+            piece.initialState.x = 38;
+            piece.initialState.y = 7.3;
           }
           if (piece.element.elementKind.endsWith('Deck')) {
             // ignore piece;
@@ -388,21 +395,41 @@ export namespace ourFirebase {
           }
         }
 
-        // Adding more pieces to Blue Nile, gameSpecId: -KxLz3Bm_TbQv7Y2MmvM
-        // if (_gameSpecId === '-KxLz3Bm_TbQv7Y2MmvM') {
-        //   if (piece.element.elementId === '-KxLHdYYTHiX9HtmGdhj') {
-        //     for (let i = 0; i < 41; i++) {
-        //       let newPiece = deepCopy(piece);
-        //       gameSpec.pieces.push(newPiece);
-        //     }
-        //   }
-        // }
+        // for -KxLz3FKTdapLIInm8GT, New Boku, make more pieces"
+        if (_gameSpecId === '-KxLz3FKTdapLIInm8GT') {
+          if (
+            piece.element.elementId === '-KxLHdZEbxmx1JxNADd_' &&
+            !haveCopiedBlackPieceForNewBoku
+          ) {
+            for (let i = 0; i < 24; i++) {
+              let newPiece = deepCopy(piece);
+              newPieces!.push(newPiece);
+            }
+            haveCopiedBlackPieceForNewBoku = true;
+          } else if (
+            piece.element.elementId === '-KxLHdZFYwCkxuYejHug' &&
+            !haveCopiedRedPieceForNewBoku
+          ) {
+            for (let i = 0; i < 24; i++) {
+              let newPiece = deepCopy(piece);
+              newPieces!.push(newPiece);
+            }
+            haveCopiedRedPieceForNewBoku = true;
+          }
+        }
+
+        // For Chaturaji, add another dice
+        if (_gameSpecId === '-L0GqDgd4ZlXxT9Zv3-9') {
+          if (piece.element.elementKind === 'dice') {
+            newPieces!.push(deepCopy(piece));
+          }
+        }
       }
-      // if (newPieces!) {
-      //   for (let newPiece of newPieces!) {
-      //     gameSpec.pieces.push(newPiece!);
-      //   }
-      // }
+      if (newPieces!) {
+        for (let newPiece of newPieces!) {
+          gameSpec.pieces.push(newPiece!);
+        }
+      }
     }
     return gameSpecs;
   }

@@ -296,3 +296,16 @@ export function getVideoChatWidthHeight(boardImage: Image, participantsNum: numb
 export function setLoadingSpinnerVisible(isVisible: boolean) {
   document.getElementById('loadingSpinner')!.style.display = isVisible ? 'block' : 'none';
 }
+
+export const playersColors: string[] = [
+  'blue',
+  'red',
+  'brown',
+  'purple',
+  'pink',
+  'yellow',
+  'orange',
+  'silver',
+  'green',
+  'gray'
+];
