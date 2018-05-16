@@ -416,6 +416,13 @@ export namespace ourFirebase {
             haveCopiedRedPieceForNewBoku = true;
           }
         }
+
+        // For Chaturaji, add another dice
+        if (_gameSpecId === '-L0GqDgd4ZlXxT9Zv3-9') {
+          if (piece.element.elementKind === 'dice') {
+            newPieces!.push(deepCopy(piece));
+          }
+        }
       }
       if (newPieces!) {
         for (let newPiece of newPieces!) {
