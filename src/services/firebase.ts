@@ -325,8 +325,8 @@ export namespace ourFirebase {
     // Verify all cards have a deck.
     for (let [_gameSpecId, gameSpec] of Object.entries(gameSpecs.gameSpecIdToGameSpec)) {
       let newPieces: Piece[] = [];
-      let haveCopiedRedPieceForChess = false;
-      let haveCopiedBlackPieceForChess = false;
+      let haveCopiedRedPieceForNewBoku = false;
+      let haveCopiedBlackPieceForNewBoku = false;
       for (let piece of gameSpec.pieces) {
         const isCard = gameSpecs.elementIdToElement[piece.element.elementId].elementKind === 'card';
         checkCondition('cards', (piece.deckPieceIndex !== -1) === isCard);
@@ -352,21 +352,24 @@ export namespace ourFirebase {
         }
 
         if (_gameSpecId === '-KxLz3FKTdapLIInm8GT') {
-          if (piece.element.elementId === '-KxLHdZEbxmx1JxNADd_' && !haveCopiedBlackPieceForChess) {
-            for (let i = 0; i < 24; i++) {
-              let newPiece = deepCopy(piece);
-              newPieces!.push(newPiece);
-            }
-            haveCopiedBlackPieceForChess = true;
-          } else if (
-            piece.element.elementId === '-KxLHdZFYwCkxuYejHug' &&
-            !haveCopiedRedPieceForChess
+          if (
+            piece.element.elementId === '-KxLHdZEbxmx1JxNADd_' &&
+            !haveCopiedBlackPieceForNewBoku
           ) {
             for (let i = 0; i < 24; i++) {
               let newPiece = deepCopy(piece);
               newPieces!.push(newPiece);
             }
-            haveCopiedRedPieceForChess = true;
+            haveCopiedBlackPieceForNewBoku = true;
+          } else if (
+            piece.element.elementId === '-KxLHdZFYwCkxuYejHug' &&
+            !haveCopiedRedPieceForNewBoku
+          ) {
+            for (let i = 0; i < 24; i++) {
+              let newPiece = deepCopy(piece);
+              newPieces!.push(newPiece);
+            }
+            haveCopiedRedPieceForNewBoku = true;
           }
         }
       }
