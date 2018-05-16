@@ -314,7 +314,6 @@ export namespace ourFirebase {
 
     // Want to resize all elements of the following gamespecs
     const gameSpecElementsToResize = [
-      '-L-m0_fVl_1k-KtOhfeI', // Go
       '-L-db4M-NKnZlguWs7xv' // Clue
     ];
     // Get all elementIds and add them to elementIdToResizingFactor
