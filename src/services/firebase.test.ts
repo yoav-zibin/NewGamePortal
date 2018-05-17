@@ -209,7 +209,7 @@ it('Should update the match state', () => {
 
   const piece = spec.pieces.find(p => p.element.elementKind === 'card')!;
   const pieceIndex = spec.pieces.indexOf(piece);
-  matchStateHelper.showMe(pieceIndex);
+  matchStateHelper.showOnlyMe(pieceIndex);
   ourFirebase.updateMatchState(match);
 
   matchStateHelper.showEveryone(pieceIndex);

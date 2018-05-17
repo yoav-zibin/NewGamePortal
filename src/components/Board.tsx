@@ -177,27 +177,32 @@ class Board extends React.Component<BoardProps, BoardState> {
 
   handleAnimation(index: number, kind: string) {
     const imageNode = (this.refs['canvasImage' + index] as CanvasImage).imageNode;
-    let tween = kind === 'card' ? new Konva.Tween({
-      node: imageNode,
-      duration: animatingTime,
-      scaleX: 0.001,
-      onFinish: function() {
-        tween.reverse();
-      }
-    }) : 
-    // toggable or dice.
-    new Konva.Tween({
-      node: imageNode,
-      offsetX: imageNode.width() / 2,
-      offsetY: imageNode.height() / 2,
-      x: imageNode.x() + imageNode.width() / 2,
-      y: imageNode.y() + imageNode.height() / 2,
-      duration: animatingTime,
-      rotation: 360,
-      onFinish: function() {
-        tween.reset();
-      }
-    });
+    // todo: show who caused the animation using stroke.
+    // imageNode.stroke('black');
+    // imageNode.strokeWidth(20);
+    let tween =
+      kind === 'card'
+        ? new Konva.Tween({
+            node: imageNode,
+            duration: animatingTime,
+            scaleX: 0.001,
+            onFinish: function() {
+              tween.reverse();
+            }
+          })
+        : // toggable or dice.
+          new Konva.Tween({
+            node: imageNode,
+            offsetX: imageNode.width() / 2,
+            offsetY: imageNode.height() / 2,
+            x: imageNode.x() + imageNode.width() / 2,
+            y: imageNode.y() + imageNode.height() / 2,
+            duration: animatingTime,
+            rotation: 360,
+            onFinish: function() {
+              tween.reset();
+            }
+          });
     tween.play();
     this.tweensToDestroy.push(tween);
   }
@@ -285,7 +290,7 @@ class Board extends React.Component<BoardProps, BoardState> {
 
   makeCardVisibleToSelf(index: number) {
     const match: MatchInfo = this.mutableMatch;
-    this.helper.showMe(index);
+    this.helper.showOnlyMe(index);
     ourFirebase.updatePieceState(match, index);
     console.log('card show to me:', index);
     this.hideCardOptions();
@@ -388,12 +393,17 @@ class Board extends React.Component<BoardProps, BoardState> {
       const isCard = element.elementKind === 'card';
       const visibilityIndices: string[] = Object.keys(visibility);
       const visibilityNum = visibilityIndices.length;
-      const cardStroke = !isCard ? undefined : 
-        visibilityNum === 1 ? playersColors[Number(visibilityIndices[0])] :
-        visibilityNum === 0 || visibilityNum === this.props.matchInfo.participantsUserIds.length ? undefined :
-        'black'; // If multiple users can see, show black
-        // TODO: I should animate the colors changing, instead of black. We can use onFinish
-        // to create an infinite animation that loops the colors that can see the card.
+      const cardStroke = !isCard
+        ? undefined
+        : visibilityNum === 1
+          ? playersColors[Number(visibilityIndices[0])]
+          : visibilityNum === 0 || visibilityNum === this.props.matchInfo.participantsUserIds.length
+            ? undefined
+            : 'black'; // If multiple users can see, show black
+      // Black can't happen now that I changed showMe to showOnlyMe.
+      // But if we want to support in the future multiple users that can see a card,
+      // then I should animate the colors changing. We can use onFinish
+      // to create an infinite animation that loops the colors that can see the card.
       const imageIndex: number = isCard ? (isVisible ? 0 : 1) : piece.currentImageIndex;
       const imageSrc: string = element.images[imageIndex].downloadURL;
       return (
@@ -435,6 +445,9 @@ class Board extends React.Component<BoardProps, BoardState> {
     if (selectedPieceIndex !== -1) {
       const cardState = match.matchState[selectedPieceIndex];
       const cardVisibilityPerIndex = cardState.cardVisibilityPerIndex;
+      const visibilityNum = Object.keys(cardVisibilityPerIndex).length;
+      const shownToAll = visibilityNum === match.participantsUserIds.length;
+      const hiddenFromAll = visibilityNum === 0;
       const tooltipPosition = this.state.tooltipPosition;
 
       const cardElement = gameSpec.pieces[selectedPieceIndex].element;
@@ -475,8 +488,8 @@ class Board extends React.Component<BoardProps, BoardState> {
         >
           <MenuItem
             rightIcon={<Person />}
-            primaryText={'Show me'}
-            disabled={cardVisibilityPerIndex[this.selfParticipantIndex()]}
+            primaryText={'Show only me'}
+            disabled={cardVisibilityPerIndex[this.selfParticipantIndex()] && !shownToAll}
             onClick={() => {
               this.makeCardVisibleToSelf(selectedPieceIndex);
             }}
@@ -484,9 +497,7 @@ class Board extends React.Component<BoardProps, BoardState> {
           <MenuItem
             rightIcon={<People />}
             primaryText={'Show all'}
-            disabled={
-              Object.keys(cardVisibilityPerIndex).length === match.participantsUserIds.length
-            }
+            disabled={shownToAll}
             onClick={() => {
               this.makeCardVisibleToAll(selectedPieceIndex);
             }}
@@ -494,7 +505,7 @@ class Board extends React.Component<BoardProps, BoardState> {
           <MenuItem
             rightIcon={<PeopleOutline />}
             primaryText={'Hide'}
-            disabled={Object.keys(cardVisibilityPerIndex).length === 0}
+            disabled={hiddenFromAll}
             onClick={() => {
               this.makeCardHiddenToAll(selectedPieceIndex);
             }}
