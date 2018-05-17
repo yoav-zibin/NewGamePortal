@@ -18,6 +18,8 @@ interface CanvasImageProps extends KonvaNodeProps {
   draggable?: boolean;
   onDragStart?: (e: React.SyntheticEvent<{}>) => void;
   onDragEnd?: (e: React.SyntheticEvent<{}>) => void;
+  stroke?: string;
+  strokeWidth?: number;
 }
 
 interface CanvasImageState {

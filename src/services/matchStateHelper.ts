@@ -48,12 +48,13 @@ export class MatchStateHelper {
     this.getPieceState(diceIndex).zDepth += 1;
   }
 
-  // Show a card to me (look/peek at the card).
-  showMe(cardIndex: number) {
+  // Show a card only to me (look/peek at the card).
+  showOnlyMe(cardIndex: number) {
     this.checkCard(cardIndex);
     const myUserId = store.getState().myUser.myUserId;
     const myIndex = this.match.participantsUserIds.indexOf(myUserId);
     const pieceState = this.getPieceState(cardIndex);
+    pieceState.cardVisibilityPerIndex = {};
     pieceState.cardVisibilityPerIndex[myIndex] = true;
   }
 
