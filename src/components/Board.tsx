@@ -14,7 +14,7 @@ import { connect } from 'react-redux';
 import { StoreState } from '../types/index';
 import { ourFirebase } from '../services/firebase';
 import { MatchStateHelper } from '../services/matchStateHelper';
-import { deepCopy, isApp, checkCondition, getBoardRatio } from '../globals';
+import { deepCopy, isApp, checkCondition, getBoardRatio, playersColors } from '../globals';
 
 const dragStartMp3 = require('../sounds/drag-start.mp3');
 const diceMp3 = require('../sounds/dice.mp3');
@@ -69,6 +69,7 @@ class Board extends React.Component<BoardProps, BoardState> {
   private mutableMatch: MatchInfo = null as any;
   private helper: MatchStateHelper = null as any;
   private cardsMenuRef: any = (React as any).createRef();
+  private tweensToDestroy: Konva.Tween[] = [];
 
   audioPlaying(sound: HTMLAudioElement) {
     if (isApp && !this.props.audioMute) {
@@ -91,8 +92,20 @@ class Board extends React.Component<BoardProps, BoardState> {
     return this.props.matchInfo.participantsUserIds.indexOf(this.props.myUserId);
   }
 
+  destroyTweens() {
+    if (this.tweensToDestroy.length === 0) {
+      return;
+    }
+    console.log('destroyTweens');
+    for (let tween of this.tweensToDestroy) {
+      tween.destroy();
+    }
+    this.tweensToDestroy = [];
+  }
+
   componentWillUpdate(nextProps: BoardProps) {
     console.log('Board componentWillUpdate');
+    this.destroyTweens();
     const prevMatchState = this.props.matchInfo.matchState;
     if (prevMatchState.length === 0) {
       return;
@@ -158,34 +171,35 @@ class Board extends React.Component<BoardProps, BoardState> {
       ourFirebase.updateMatchState(this.mutableMatch);
     }
   }
+  componentWillUnmount() {
+    this.destroyTweens();
+  }
 
   handleAnimation(index: number, kind: string) {
     const imageNode = (this.refs['canvasImage' + index] as CanvasImage).imageNode;
-    if (kind === 'card') {
-      let tween = new Konva.Tween({
-        node: imageNode,
-        duration: animatingTime,
-        scaleX: 0.001,
-        onFinish: function() {
-          tween.reverse();
-        }
-      });
-      tween.play();
-    } else {
-      let tween = new Konva.Tween({
-        node: imageNode,
-        offsetX: imageNode.width() / 2,
-        offsetY: imageNode.height() / 2,
-        x: imageNode.x() + imageNode.width() / 2,
-        y: imageNode.y() + imageNode.height() / 2,
-        duration: animatingTime,
-        rotation: 360,
-        onFinish: function() {
-          tween.reset();
-        }
-      });
-      tween.play();
-    }
+    let tween = kind === 'card' ? new Konva.Tween({
+      node: imageNode,
+      duration: animatingTime,
+      scaleX: 0.001,
+      onFinish: function() {
+        tween.reverse();
+      }
+    }) : 
+    // toggable or dice.
+    new Konva.Tween({
+      node: imageNode,
+      offsetX: imageNode.width() / 2,
+      offsetY: imageNode.height() / 2,
+      x: imageNode.x() + imageNode.width() / 2,
+      y: imageNode.y() + imageNode.height() / 2,
+      duration: animatingTime,
+      rotation: 360,
+      onFinish: function() {
+        tween.reset();
+      }
+    });
+    tween.play();
+    this.tweensToDestroy.push(tween);
   }
 
   // We need to do that because when we render the component,
@@ -369,10 +383,19 @@ class Board extends React.Component<BoardProps, BoardState> {
       if (kind.endsWith('Deck')) {
         return null;
       }
-      let isVisible = piece.cardVisibilityPerIndex[this.selfParticipantIndex()];
+      const visibility = piece.cardVisibilityPerIndex;
+      const isVisible = visibility[this.selfParticipantIndex()];
       const isCard = element.elementKind === 'card';
-      let imageIndex: number = isCard ? (isVisible ? 0 : 1) : piece.currentImageIndex;
-      let imageSrc: string = element.images[imageIndex].downloadURL;
+      const visibilityIndices: string[] = Object.keys(visibility);
+      const visibilityNum = visibilityIndices.length;
+      const cardStroke = !isCard ? undefined : 
+        visibilityNum === 1 ? playersColors[Number(visibilityIndices[0])] :
+        visibilityNum === 0 || visibilityNum === this.props.matchInfo.participantsUserIds.length ? undefined :
+        'black'; // If multiple users can see, show black
+        // TODO: I should animate the colors changing, instead of black. We can use onFinish
+        // to create an infinite animation that loops the colors that can see the card.
+      const imageIndex: number = isCard ? (isVisible ? 0 : 1) : piece.currentImageIndex;
+      const imageSrc: string = element.images[imageIndex].downloadURL;
       return (
         <CanvasImage
           ref={'canvasImage' + index}
@@ -382,6 +405,8 @@ class Board extends React.Component<BoardProps, BoardState> {
           width={element.width * ratio}
           x={piece.x * width / 100 * ratio}
           y={piece.y * height / 100 * ratio}
+          stroke={cardStroke}
+          strokeWidth={8 * ratio}
           src={imageSrc}
           onClick={() => {
             this.handleTap(index);
