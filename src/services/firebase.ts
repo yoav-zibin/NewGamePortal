@@ -344,7 +344,8 @@ export namespace ourFirebase {
       '-L-9-GuzOZJ6sRAVCh6b', // Five Card Stud
       '-L-9qTVLsumaP9TBL9_O', // diaoyu (changed name: Go Fish)
       '-L-lw5cA3nHJlK8Lc5V9', // Dueling Nobles
-      '-L-mhJby9spVzuJTrwti' // Dominion
+      '-L-mhJby9spVzuJTrwti', // Dominion
+      '-L-Dz-grEYa6LrM6Bnuz'  // Contract bridge
     ];
     for (let gameSpecId of switchCardImages) {
       const spec = gameSpecs.gameSpecIdToGameSpec[gameSpecId];
