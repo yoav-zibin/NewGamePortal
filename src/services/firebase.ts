@@ -427,6 +427,31 @@ export namespace ourFirebase {
           }
         }
 
+        // For BlueNile, gameSpecID: -KxLz3Bm_TbQv7Y2MmvM, add more pieces
+        if (_gameSpecId === '-KxLz3Bm_TbQv7Y2MmvM') {
+          if (piece.element.elementId === '-KxLHdZqRg6fmEBk51N9') {
+            for (let i = 0; i < 41; i++) {
+              let newPiece = deepCopy(piece);
+              newPieces!.push(newPiece);
+            }
+          }
+        }
+
+        // For three_men_initial, gameSpecID: , add more pieces
+        if (_gameSpecId === '-KxLz3Hi15gL3gipt36x') {
+          if (piece.element.elementId === '-KxLHdZIHiDchR59OItH') {
+            for (let i = 0; i < 2; i++) {
+              let newPiece = deepCopy(piece);
+              newPieces!.push(newPiece);
+            }
+          } else if (piece.element.elementId === '-KxLHdZIHiDchR59OItI') {
+            for (let i = 0; i < 2; i++) {
+              let newPiece = deepCopy(piece);
+              newPieces!.push(newPiece);
+            }
+          }
+        }
+
         // For Chaturaji, add another dice
         if (_gameSpecId === '-L0GqDgd4ZlXxT9Zv3-9') {
           if (piece.element.elementKind === 'dice') {
