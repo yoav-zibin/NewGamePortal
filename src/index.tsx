@@ -5,20 +5,12 @@ import * as ReactDOM from 'react-dom';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import { Provider } from 'react-redux';
 import { Route, BrowserRouter } from 'react-router-dom';
-import {
-  isIos,
-  isAndroid,
-  checkCondition,
-  studentsUsers,
-  isApp,
-  setLoadingSpinnerVisible
-} from './globals';
+import { isIos, isAndroid, checkCondition, isApp, setLoadingSpinnerVisible } from './globals';
 import { store } from './stores/index';
 import App from './App';
 import './index.css';
 import { ourFirebase } from './services/firebase';
 import { videoChat } from './services/videoChat';
-import { Contact, PhoneNumberToContact } from './types';
 import * as Raven from 'raven-js';
 import * as sentryRelease from './sentry-config.json';
 
@@ -70,29 +62,6 @@ console.log('Page init with parameters:', searchParameters);
 ourFirebase.reactRender = reactRender;
 ourFirebase.init(); // might call reactRender immediately if there is nothing in the local storage.
 registerServiceWorker();
-
-if (searchParameters.match('^[?][0-9]$')) {
-  const myUserIndex = Number(searchParameters.substr(1));
-  // These phone numbers are also in our firebase rules (so we can do testing).
-  const testUsers: Contact[] = [];
-  for (let i = 0; i < 10; i++) {
-    testUsers.push({
-      phoneNumber: '+1111111111' + i,
-      name: 'Test user ' + i
-    });
-  }
-  // For faking our contacts on web.
-  const myUser = testUsers[myUserIndex] || testUsers[0];
-  console.log('My fake user is: ', myUser);
-  ourFirebase.signInAnonymously(myUser.phoneNumber, 'Test user ' + myUserIndex);
-  if (myUserIndex >= 1) {
-    let currentContacts: PhoneNumberToContact = {};
-    for (let contact of testUsers.concat(studentsUsers)) {
-      currentContacts[contact.phoneNumber] = contact;
-    }
-    ourFirebase.storeContacts(currentContacts);
-  }
-}
 
 function delayReactRender() {
   // reactRender might also be called from ourFirebase after onAuthStateChanged is called.

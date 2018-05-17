@@ -128,7 +128,10 @@ class Board extends React.Component<BoardProps, BoardState> {
         imageNode.to({
           duration: animatingTime,
           x: nextMatchState[i].x / 100 * gameSpec.board.width * ratio,
-          y: nextMatchState[i].y / 100 * gameSpec.board.height * ratio
+          y: nextMatchState[i].y / 100 * gameSpec.board.height * ratio,
+          // TODO: show the color of the user that did the change.
+          stroke: 'black',
+          strokeWidth: 20
         });
         audioToPlay = clickAudio;
       } else if (
@@ -393,12 +396,13 @@ class Board extends React.Component<BoardProps, BoardState> {
       const isCard = element.elementKind === 'card';
       const visibilityIndices: string[] = Object.keys(visibility);
       const visibilityNum = visibilityIndices.length;
-      const cardStroke = !isCard
-        ? undefined
-        : visibilityNum === 1
-          ? playersColors[Number(visibilityIndices[0])]
-          : visibilityNum === 0 || visibilityNum === this.props.matchInfo.participantsUserIds.length
-            ? undefined
+      const cardStroke =
+        !isCard ||
+        visibilityNum === 0 ||
+        visibilityNum === this.props.matchInfo.participantsUserIds.length
+          ? undefined
+          : visibilityNum === 1
+            ? playersColors[Number(visibilityIndices[0])]
             : 'black'; // If multiple users can see, show black
       // Black can't happen now that I changed showMe to showOnlyMe.
       // But if we want to support in the future multiple users that can see a card,

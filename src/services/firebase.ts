@@ -128,6 +128,9 @@ export namespace ourFirebase {
   ): Promise<any> {
     checkFunctionIsCalledOnce('signInWithPhoneNumber');
     checkCondition('countryCode', countryCode.length === 2);
+    // TODO: choose language based on country (once we i18n)
+    // e.g. http://download.geonames.org/export/dump/countryInfo.txt
+    firebase.auth().languageCode = 'en';
     const applicationVerifier: firebase.auth.ApplicationVerifier = new firebase.auth.RecaptchaVerifier(
       'recaptcha-container',
       {
@@ -341,7 +344,7 @@ export namespace ourFirebase {
       '-L-9-GuzOZJ6sRAVCh6b', // Five Card Stud
       '-L-9qTVLsumaP9TBL9_O', // diaoyu (changed name: Go Fish)
       '-L-lw5cA3nHJlK8Lc5V9', // Dueling Nobles
-      '-L-mhJby9spVzuJTrwti', // Dominion
+      '-L-mhJby9spVzuJTrwti' // Dominion
     ];
     for (let gameSpecId of switchCardImages) {
       const spec = gameSpecs.gameSpecIdToGameSpec[gameSpecId];
