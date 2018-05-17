@@ -33,6 +33,19 @@ declare global {
 }
 
 export function checkPhoneNumber(phoneNumber: string, regionCode: string): PhoneNumInfo | null {
+  if (regionCode === 'US' && phoneNumber.match(/^123555123[1-8]$/)) {
+    // our test phone numbers
+    phoneNumber = '+1' + phoneNumber;
+    return {
+      number: phoneNumber,
+      isPossibleNumber: true,
+      isValidNumber: true,
+      isValidNumberForRegion: true,
+      maybeMobileNumber: true,
+      internationalFormat: phoneNumber,
+      e164Format: phoneNumber
+    };
+  }
   try {
     return parsePhoneNumber(phoneNumber, regionCode);
   } catch (e) {
@@ -45,7 +58,9 @@ export const platform: PlatformType =
     ? 'tests'
     : window.location.search === '?platform=ios'
       ? 'ios'
-      : window.location.search === '?platform=android' ? 'android' : 'web';
+      : window.location.search === '?platform=android'
+        ? 'android'
+        : 'web';
 export const isTests = platform === 'tests';
 export const isIos = platform === 'ios';
 export const isAndroid = platform === 'android';
