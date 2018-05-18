@@ -265,7 +265,6 @@ export namespace ourFirebase {
         };
         return gameInfo;
       });
-      gameList.sort((g1, g2) => g1.gameName.localeCompare(g2.gameName));
       dispatch({ setGamesList: gameList });
     });
   }
