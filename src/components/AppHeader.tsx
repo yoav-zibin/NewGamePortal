@@ -207,8 +207,8 @@ class AppHeader extends React.Component<Props, {}> {
               <Dialog
                 title={'Rules for ' + this.props.matchInfo.game.gameName}
                 actions={actions}
-                contentStyle={{ width: '90%', maxWidth: 'none' }}
-                autoDetectWindowHeight={false}
+                contentStyle={{ width: '99%', maxWidth: 'none' }}
+                autoDetectWindowHeight={true}
                 autoScrollBodyContent={false}
                 modal={false}
                 open={this.state.showRules}
