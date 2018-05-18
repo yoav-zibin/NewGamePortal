@@ -312,7 +312,10 @@ export namespace ourFirebase {
       '-KxLHdaHqRj2RTr-f_9z': 1.5,
       '-KxLHdaHqRj2RTr-f_9y': 1.5,
       '-KxLHdaHqRj2RTr-f_9w': 1.5,
-      '-KxLHdaHqRj2RTr-f_9x': 1.5
+      '-KxLHdaHqRj2RTr-f_9x': 1.5,
+      // wuziqi gameSpecId: "-KzKeLTztuc88-oLtUjZ"
+      '-L-D32t8tptFtTuCD5zQ': 1.5,
+      '-L-D31CjnDuFP43sWNGG': 1.5
     };
 
     // Want to resize all elements of the following gamespecs
@@ -379,7 +382,10 @@ export namespace ourFirebase {
       let newPieces: Piece[] = [];
       let haveCopiedRedPieceForNewBoku = false;
       let haveCopiedBlackPieceForNewBoku = false;
+      let haveCopiedWhitePieceForWuziqi = false;
+      let haveCopiedBlackPieceForWuziqi = false;
       for (let piece of gameSpec.pieces) {
+        console.log('32dice show', _gameSpecId);
         const isCard = gameSpecs.elementIdToElement[piece.element.elementId].elementKind === 'card';
         checkCondition('cards', (piece.deckPieceIndex !== -1) === isCard);
         // for -KxLz3CaPRPIBc-0mRP7, Chess, make elementKind to be "standard for all of them"
@@ -430,6 +436,37 @@ export namespace ourFirebase {
         if (_gameSpecId === '-L0GqDgd4ZlXxT9Zv3-9') {
           if (piece.element.elementKind === 'dice') {
             newPieces!.push(deepCopy(piece));
+          }
+        }
+        // for -L-4HlYZ13tpCgM8M-4H, 32dices, make all of the dices to be draggable
+        if (_gameSpecId === '-L-4HlYZ13tpCgM8M-4H' && piece.element.elementKind === 'dice') {
+          piece.element.isDraggable = true;
+          if (piece.element.elementId === '-L-D31CjnDuFP43sWNGG') {
+            // remove redundant dice
+            piece.initialState.x = -100;
+          }
+        }
+
+        // for -L-D3klCiTu3_0yYXDVu, Wuziqi, make more pieces, make them larger"
+        if (_gameSpecId === '-L-D3klCiTu3_0yYXDVu') {
+          if (
+            piece.element.elementId === '-L-D32t8tptFtTuCD5zQ' &&
+            !haveCopiedWhitePieceForWuziqi
+          ) {
+            for (let i = 0; i < 150; i++) {
+              let newPiece = deepCopy(piece);
+              newPieces!.push(newPiece);
+            }
+            haveCopiedWhitePieceForWuziqi = true;
+          } else if (
+            piece.element.elementId === '-L-D31CjnDuFP43sWNGG' &&
+            !haveCopiedBlackPieceForWuziqi
+          ) {
+            for (let i = 0; i < 150; i++) {
+              let newPiece = deepCopy(piece);
+              newPieces!.push(newPiece);
+            }
+            haveCopiedBlackPieceForWuziqi = true;
           }
         }
       }
