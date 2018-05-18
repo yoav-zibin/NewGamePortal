@@ -315,25 +315,15 @@ export namespace ourFirebase {
       '-KxLHdaHqRj2RTr-f_9x': 1.5,
       // wuziqi gameSpecId: "-KzKeLTztuc88-oLtUjZ"
       '-L-D32t8tptFtTuCD5zQ': 1.5,
-      '-L-D31CjnDuFP43sWNGG': 1.5
+      '-L-D31CjnDuFP43sWNGG': 1.5,
+      // Clue gameSpecId: '-L-db4M-NKnZlguWs7xv', resize board pieces, not cards
+      '-L-dSYpgkkP8VkSTZ7KK': 2,
+      '-L-dSTNc7aivSSEG8dBP': 2,
+      '-L-dSd-o1P94VK-Cvldy': 2,
+      '-L-dSA7CMYdk3RFhJc0_': 2,
+      '-L-dSf-GqwOBRnu8Ml4K': 2,
+      '-L-dSb65g1V0aacou5wy': 2
     };
-
-    // Want to resize all elements of the following gamespecs
-    const gameSpecElementsToResize = [
-      '-L-db4M-NKnZlguWs7xv' // Clue
-    ];
-    // Get all elementIds and add them to elementIdToResizingFactor
-    for (let gameSpecId of gameSpecElementsToResize) {
-      const spec = gameSpecs.gameSpecIdToGameSpec[gameSpecId];
-      if (spec) {
-        for (let piece of spec.pieces) {
-          const elementId = piece.element.elementId;
-          console.log('resizing for', gameSpecId);
-          elementIdToResizingFactor[elementId] = 1.5;
-        }
-      }
-    }
-
     // For the listed game specs, all their elements should be hidden at start of game
     const switchCardImages = [
       '-KxLz3GDxUi9QADh3jN0', // Simply Ingenious
@@ -385,7 +375,7 @@ export namespace ourFirebase {
       let haveCopiedWhitePieceForWuziqi = false;
       let haveCopiedBlackPieceForWuziqi = false;
       for (let piece of gameSpec.pieces) {
-        console.log('32dice show', _gameSpecId);
+        // console.log('32dice show', _gameSpecId);
         const isCard = gameSpecs.elementIdToElement[piece.element.elementId].elementKind === 'card';
         checkCondition('cards', (piece.deckPieceIndex !== -1) === isCard);
         // for -KxLz3CaPRPIBc-0mRP7, Chess, make elementKind to be "standard for all of them"
@@ -406,6 +396,29 @@ export namespace ourFirebase {
             // ignore piece;
           } else if (piece.element.elementKind !== 'standard') {
             piece.element.elementKind = 'standard';
+          }
+        } else if (_gameSpecId === '-L-db4M-NKnZlguWs7xv') {
+          console.log(piece.element.elementKind);
+          if (piece.element.elementKind === 'cardsDeck') {
+            let index = gameSpec.pieces.indexOf(piece);
+            if (index === 0) {
+              piece.initialState.x = 90;
+              piece.initialState.y = 10;
+            } else if (index === 29) {
+              piece.initialState.x = 90;
+              piece.initialState.y = 30;
+            } else {
+              piece.initialState.x = 90;
+              piece.initialState.y = 50;
+            }
+          } else if (piece.element.elementKind === 'dice') {
+            piece.initialState.x = 90;
+            piece.initialState.y = 70;
+          } else if (piece.element.elementKind === 'standard') {
+            if (piece.element.elementId === '-L-dSf-GqwOBRnu8Ml4K') {
+              piece.initialState.x = 81.89;
+              piece.initialState.y = 60;
+            }
           }
         }
 
@@ -885,6 +898,7 @@ export namespace ourFirebase {
     const piecesState: fbr.PiecesState = {};
     checkMatchState(matchState, gameSpecId);
     let pieceIndex = 0;
+    console.log(matchState);
     for (let pieceState of matchState) {
       piecesState[pieceIndex] = convertPieceState(pieceState);
       pieceIndex++;
