@@ -114,6 +114,9 @@ function onDeviceReady() {
   });
   push.on('notification', (data: any) => {
     console.log('PushNotification notification:', data);
+    console.log(data.message);
+    console.log(data.additionalData.foreground);
+    console.log(data.additionalData.background);
     // TODO(Priyanka): show a message that when the user clicks on it will open the correct match.
     // E.g., you can use a http://www.material-ui.com/#/components/snackbar
     // You can put the data you need in our store (by dispatching an action),
