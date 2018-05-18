@@ -255,7 +255,7 @@ export namespace ourFirebase {
       if (!gameInfos) {
         throw new Error('no games!');
       }
-      const gameList: GameInfo[] = getValues(gameInfos).map(gameInfoFbr => {
+      const gameList: GameInfo[] = convertObjectToArray(gameInfos).map(gameInfoFbr => {
         const screenShotImage = gameInfoFbr.screenShotImage;
         const gameInfo: GameInfo = {
           gameSpecId: gameInfoFbr.gameSpecId,
