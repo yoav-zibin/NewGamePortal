@@ -255,7 +255,7 @@ export namespace ourFirebase {
       if (!gameInfos) {
         throw new Error('no games!');
       }
-      const gameList: GameInfo[] = getValues(gameInfos).map(gameInfoFbr => {
+      const gameList: GameInfo[] = convertObjectToArray(gameInfos).map(gameInfoFbr => {
         const screenShotImage = gameInfoFbr.screenShotImage;
         const gameInfo: GameInfo = {
           gameSpecId: gameInfoFbr.gameSpecId,
@@ -265,7 +265,6 @@ export namespace ourFirebase {
         };
         return gameInfo;
       });
-      gameList.sort((g1, g2) => g1.gameName.localeCompare(g2.gameName));
       dispatch({ setGamesList: gameList });
     });
   }
@@ -337,7 +336,8 @@ export namespace ourFirebase {
       '-L-9-GuzOZJ6sRAVCh6b', // Five Card Stud
       '-L-9qTVLsumaP9TBL9_O', // diaoyu (changed name: Go Fish)
       '-L-lw5cA3nHJlK8Lc5V9', // Dueling Nobles
-      '-L-mhJby9spVzuJTrwti' // Dominion
+      '-L-mhJby9spVzuJTrwti', // Dominion
+      '-L-Dz-grEYa6LrM6Bnuz'  // Contract bridge
     ];
     for (let gameSpecId of switchCardImages) {
       const spec = gameSpecs.gameSpecIdToGameSpec[gameSpecId];
@@ -368,6 +368,7 @@ export namespace ourFirebase {
     }
 
     // Verify all cards have a deck.
+
     for (let [_gameSpecId, gameSpec] of Object.entries(gameSpecs.gameSpecIdToGameSpec)) {
       let newPieces: Piece[] = [];
       let haveCopiedRedPieceForNewBoku = false;
@@ -442,6 +443,31 @@ export namespace ourFirebase {
               newPieces!.push(newPiece);
             }
             haveCopiedRedPieceForNewBoku = true;
+          }
+        }
+
+        // For BlueNile, gameSpecID: -KxLz3Bm_TbQv7Y2MmvM, add more pieces
+        if (_gameSpecId === '-KxLz3Bm_TbQv7Y2MmvM') {
+          if (piece.element.elementId === '-KxLHdZqRg6fmEBk51N9') {
+            for (let i = 0; i < 41; i++) {
+              let newPiece = deepCopy(piece);
+              newPieces!.push(newPiece);
+            }
+          }
+        }
+
+        // For three_men_initial, gameSpecID: , add more pieces
+        if (_gameSpecId === '-KxLz3Hi15gL3gipt36x') {
+          if (piece.element.elementId === '-KxLHdZIHiDchR59OItH') {
+            for (let i = 0; i < 2; i++) {
+              let newPiece = deepCopy(piece);
+              newPieces!.push(newPiece);
+            }
+          } else if (piece.element.elementId === '-KxLHdZIHiDchR59OItI') {
+            for (let i = 0; i < 2; i++) {
+              let newPiece = deepCopy(piece);
+              newPieces!.push(newPiece);
+            }
           }
         }
 

@@ -15,6 +15,7 @@ import VolumeMute from 'material-ui/svg-icons/av/volume-mute';
 import Replay from 'material-ui/svg-icons/av/replay';
 import PersonAdd from 'material-ui/svg-icons/social/person-add';
 import School from 'material-ui/svg-icons/social/school';
+import Feedback from 'material-ui/svg-icons/action/feedback';
 import Delete from 'material-ui/svg-icons/action/delete';
 import { Action } from '../reducers';
 import { dispatch } from '../stores';
@@ -23,6 +24,7 @@ import IconMenu from 'material-ui/IconMenu';
 import { MatchStateHelper } from '../services/matchStateHelper';
 import { ourFirebase } from '../services/firebase';
 import { Divider, Dialog, FlatButton } from 'material-ui';
+import * as Raven from 'raven-js';
 
 interface PropsWithoutRouter {
   matchInfo: MatchInfo | undefined;
@@ -108,6 +110,13 @@ class AppHeader extends React.Component<Props, {}> {
   handleGameRulesClick = () => {
     this.setState({ showRules: true });
   };
+
+  handleFeedbackClick = () => {
+    console.log('Share Feedback');
+    Raven.captureMessage('Sending feedback');
+    Raven.showReportDialog();
+  };
+
   handleDialogClose = () => {
     this.setState({ showRules: false });
   };
@@ -174,6 +183,11 @@ class AppHeader extends React.Component<Props, {}> {
                   onClick={this.handleGameRulesClick}
                   rightIcon={<School />}
                   disabled={isGameRulesDisabled}
+                />
+                <MenuItem
+                  primaryText="Share Feedback"
+                  onClick={this.handleFeedbackClick}
+                  rightIcon={<Feedback />}
                 />
                 <Divider />
                 <MenuItem
