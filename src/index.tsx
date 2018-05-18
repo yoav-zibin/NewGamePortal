@@ -5,7 +5,14 @@ import * as ReactDOM from 'react-dom';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import { Provider } from 'react-redux';
 import { Route, BrowserRouter } from 'react-router-dom';
-import { isIos, isAndroid, checkCondition, isApp, setLoadingSpinnerVisible } from './globals';
+import {
+  isIos,
+  isAndroid,
+  checkCondition,
+  isApp,
+  setLoadingSpinnerVisible,
+  prettyJson
+} from './globals';
 import { store } from './stores/index';
 import App from './App';
 import './index.css';
@@ -113,7 +120,10 @@ function onDeviceReady() {
     ourFirebase.addFcmToken(data.registrationId, isIos ? 'ios' : 'android');
   });
   push.on('notification', (data: any) => {
-    console.log('PushNotification notification:', data);
+    console.log('PushNotification notification:', prettyJson(data));
+    console.log('PushNotification message:', data.message);
+    console.log('PushNotification foreground:', data.additionalData.foreground);
+    console.log('PushNotification background:', data.additionalData.background);
     // TODO(Priyanka): show a message that when the user clicks on it will open the correct match.
     // E.g., you can use a http://www.material-ui.com/#/components/snackbar
     // You can put the data you need in our store (by dispatching an action),
