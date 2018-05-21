@@ -213,9 +213,9 @@ class AppHeader extends React.Component<Props, {}> {
                 title={'Rules for ' + this.props.matchInfo.game.gameName}
                 actions={actions}
                 contentStyle={{
-                  width: '80%',
+                  width: '95%',
                   maxWidth: 'none',
-                  maxHeight: '70%'
+                  maxHeight: '60%'
                 }}
                 bodyStyle={this.styles}
                 autoDetectWindowHeight={true}
