@@ -45,6 +45,8 @@ class AppHeader extends React.Component<Props, {}> {
   styles: React.CSSProperties = {
     WebkitOverflowScrolling: 'touch',
     border: 'none',
+    width: '100%',
+    height: '100%'
   };
 
   routes: StringIndexer = {
@@ -212,10 +214,9 @@ class AppHeader extends React.Component<Props, {}> {
               <Dialog
                 title={'Rules for ' + this.props.matchInfo.game.gameName}
                 actions={actions}
-                contentStyle={{
-                  width: '95%',
+                style={{
+                  width: '100%',
                   maxWidth: 'none',
-                  maxHeight: '60%'
                 }}
                 bodyStyle={this.styles}
                 autoDetectWindowHeight={true}
