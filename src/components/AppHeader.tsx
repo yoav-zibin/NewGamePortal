@@ -223,9 +223,12 @@ class AppHeader extends React.Component<Props, {}> {
                 onRequestClose={this.handleDialogClose}
               >
                 {/* 99% to prevent dialog from having width scrollbar */}
-                <div style={this.styles}>
-                  <iframe src={this.props.matchInfo.game.wikipediaUrl} width="99%" height="99%" />
-                </div>
+                <iframe
+                  style={this.styles}
+                  src={this.props.matchInfo.game.wikipediaUrl}
+                  width="99%"
+                  height="99%"
+                />
               </Dialog>
             </div>
           }
