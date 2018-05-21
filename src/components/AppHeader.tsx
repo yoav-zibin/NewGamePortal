@@ -43,8 +43,11 @@ interface Props extends PropsWithoutRouter {
 
 class AppHeader extends React.Component<Props, {}> {
   styles: React.CSSProperties = {
+    overflow: 'auto',
     WebkitOverflowScrolling: 'touch',
-    border: 'none'
+    border: 'none',
+    width: '100%',
+    height: '40%'
   };
 
   routes: StringIndexer = {
@@ -213,12 +216,12 @@ class AppHeader extends React.Component<Props, {}> {
                 title={'Rules for ' + this.props.matchInfo.game.gameName}
                 actions={actions}
                 contentStyle={{
-                  width: '100%',
+                  width: '80%',
                   maxWidth: 'none'
                 }}
                 bodyStyle={this.styles}
                 autoDetectWindowHeight={false}
-                autoScrollBodyContent={false}
+                autoScrollBodyContent={true}
                 modal={false}
                 open={this.state.showRules}
                 onRequestClose={this.handleDialogClose}
@@ -227,7 +230,7 @@ class AppHeader extends React.Component<Props, {}> {
                   style={{ zIndex: 2000, display: 'block' }}
                   src={this.props.matchInfo.game.wikipediaUrl}
                   width="100%"
-                  height="90vh"
+                  height="40%"
                 />
               </Dialog>
             </div>
