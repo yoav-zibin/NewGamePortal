@@ -213,13 +213,12 @@ class AppHeader extends React.Component<Props, {}> {
                 title={'Rules for ' + this.props.matchInfo.game.gameName}
                 actions={actions}
                 contentStyle={{
-                  width: '90%',
-                  maxWidth: 'none',
-                  maxHeight: '50vh'
+                  width: '100%',
+                  maxWidth: 'none'
                 }}
                 bodyStyle={this.styles}
-                autoDetectWindowHeight={true}
-                autoScrollBodyContent={true}
+                autoDetectWindowHeight={false}
+                autoScrollBodyContent={false}
                 modal={false}
                 open={this.state.showRules}
                 onRequestClose={this.handleDialogClose}
@@ -228,7 +227,7 @@ class AppHeader extends React.Component<Props, {}> {
                   style={{ zIndex: 2000, display: 'block' }}
                   src={this.props.matchInfo.game.wikipediaUrl}
                   width="100%"
-                  height="100%"
+                  height="90vh"
                 />
               </Dialog>
             </div>
