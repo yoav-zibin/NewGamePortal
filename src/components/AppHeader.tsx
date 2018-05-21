@@ -43,7 +43,7 @@ interface Props extends PropsWithoutRouter {
 
 class AppHeader extends React.Component<Props, {}> {
   styles: React.CSSProperties = {
-    overflow: 'scroll',
+    overflowY: 'scroll',
     WebkitOverflowScrolling: 'touch'
   };
 
@@ -213,18 +213,18 @@ class AppHeader extends React.Component<Props, {}> {
                 title={'Rules for ' + this.props.matchInfo.game.gameName}
                 actions={actions}
                 contentStyle={{
-                  width: '75%',
-                  maxWidth: 'none'
+                  width: '75%'
                 }}
+                bodyStyle={this.styles}
                 autoDetectWindowHeight={true}
-                autoScrollBodyContent={false}
+                autoScrollBodyContent={true}
                 modal={false}
                 open={this.state.showRules}
                 onRequestClose={this.handleDialogClose}
               >
                 {/* 99% to prevent dialog from having width scrollbar */}
                 <iframe
-                  style={this.styles}
+                  style={{ zIndex: 2000 }}
                   src={this.props.matchInfo.game.wikipediaUrl}
                   width="99%"
                   height="99%"
