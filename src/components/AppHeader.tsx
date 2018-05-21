@@ -213,8 +213,7 @@ class AppHeader extends React.Component<Props, {}> {
                 title={'Rules for ' + this.props.matchInfo.game.gameName}
                 actions={actions}
                 contentStyle={{
-                  width: '70%',
-                  height: '30%',
+                  width: '90%',
                   maxWidth: 'none',
                   maxHeight: '50vh'
                 }}
