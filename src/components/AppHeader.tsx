@@ -45,12 +45,10 @@ class AppHeader extends React.Component<Props, {}> {
   styles: CSSPropertiesIndexer = {
     bodyStyles: {
       WebkitOverflowScrolling: 'touch',
-      position: 'relative',
+      border: 'none',
       padding: '5px',
-      overflow: 'auto',
-      display: 'block',
-      width: '100%',
-      height: '100%'
+      // overflow: 'auto',
+      // display: 'block',
     },
     contentStyles: {
       maxWidth: 'none',
@@ -233,7 +231,7 @@ class AppHeader extends React.Component<Props, {}> {
                 onRequestClose={this.handleDialogClose}
               >
                 <iframe
-                  style={{ zIndex: 2000, display: 'block', minWidth: '100%'}}
+                  style={{ zIndex: 2000, display: 'block'}}
                   src={this.props.matchInfo.game.wikipediaUrl}
                   width="100%"
                   height="100%"
