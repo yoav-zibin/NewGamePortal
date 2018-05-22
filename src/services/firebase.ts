@@ -337,7 +337,7 @@ export namespace ourFirebase {
       '-L-9qTVLsumaP9TBL9_O', // diaoyu (changed name: Go Fish)
       '-L-lw5cA3nHJlK8Lc5V9', // Dueling Nobles
       '-L-mhJby9spVzuJTrwti', // Dominion
-      '-L-Dz-grEYa6LrM6Bnuz'  // Contract bridge
+      '-L-Dz-grEYa6LrM6Bnuz' // Contract bridge
     ];
     for (let gameSpecId of switchCardImages) {
       const spec = gameSpecs.gameSpecIdToGameSpec[gameSpecId];
@@ -558,7 +558,8 @@ export namespace ourFirebase {
     return vals;
   }
   function convertImage(imageId: string, img: fbr.Image): Image {
-    checkCondition('compressed', img.cloudStoragePath.startsWith('compressed'));
+    // New games have non-compressed images:
+    // checkCondition('compressed', img.cloudStoragePath.startsWith('compressed'));
     return {
       imageId: imageId,
       height: img.height,
