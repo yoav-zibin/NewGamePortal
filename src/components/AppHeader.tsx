@@ -45,17 +45,21 @@ class AppHeader extends React.Component<Props, {}> {
   styles: CSSPropertiesIndexer = {
     bodyStyles: {
       WebkitOverflowScrolling: 'touch',
-      width: '100%',
-      height: '100%',
+      position: 'relative',
+      overflow: 'hidden',
+      // width: '100%',
+      // maxWidth: 'none',
+      // height: '100%',
       padding: '5px',
-      display: 'block',
-      overflow: 'auto'
+      // display: 'block',
+      // overflow: 'auto',
+      // border: 'none'
     },
     contentStyles: {
       maxWidth: 'none',
       width: '100%',
       height: '100%'
-    },
+    }
   };
 
   routes: StringIndexer = {
