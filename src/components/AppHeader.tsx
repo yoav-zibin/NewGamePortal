@@ -3,7 +3,7 @@ import AppBar from 'material-ui/AppBar';
 import IconButton from 'material-ui/IconButton';
 import { red500 } from 'material-ui/styles/colors';
 import NavigationArrowBack from 'material-ui/svg-icons/navigation/arrow-back';
-import { StringIndexer, RouterMatchParams, WindowDimensions } from '../types';
+import { StringIndexer, RouterMatchParams, WindowDimensions, CSSPropertiesIndexer } from '../types';
 import { MatchInfo, StoreState, UserIdToInfo, MyUser } from '../types';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
@@ -42,11 +42,20 @@ interface Props extends PropsWithoutRouter {
 }
 
 class AppHeader extends React.Component<Props, {}> {
-  styles: React.CSSProperties = {
-    WebkitOverflowScrolling: 'touch',
-    border: 'none',
-    width: '100%',
-    height: '100%'
+  styles: CSSPropertiesIndexer = {
+    bodyStyles: {
+      WebkitOverflowScrolling: 'touch',
+      width: '100%',
+      height: '100%',
+      padding: '5px',
+      display: 'block',
+      overflow: 'auto'
+    },
+    contentStyles: {
+      maxWidth: 'none',
+      width: '100%',
+      height: '100%'
+    },
   };
 
   routes: StringIndexer = {
@@ -214,19 +223,16 @@ class AppHeader extends React.Component<Props, {}> {
               <Dialog
                 title={'Rules for ' + this.props.matchInfo.game.gameName}
                 actions={actions}
-                contentStyle={{
-                  maxWidth: 'none',
-                  width: '100%',
-                }}
-                bodyStyle={this.styles}
-                autoDetectWindowHeight={false}
+                contentStyle={this.styles.contentStyles}
+                bodyStyle={this.styles.bodyStyles}
+                autoDetectWindowHeight={true}
                 autoScrollBodyContent={true}
                 modal={false}
                 open={this.state.showRules}
                 onRequestClose={this.handleDialogClose}
               >
                 <iframe
-                  style={{ zIndex: 2000, display: 'block' }}
+                  style={{ zIndex: 2000, display: 'block', minWidth: '100%'}}
                   src={this.props.matchInfo.game.wikipediaUrl}
                   width="100%"
                   height="100%"
