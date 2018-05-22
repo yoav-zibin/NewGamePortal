@@ -46,14 +46,11 @@ class AppHeader extends React.Component<Props, {}> {
     bodyStyles: {
       WebkitOverflowScrolling: 'touch',
       position: 'relative',
-      overflow: 'hidden',
-      // width: '100%',
-      // maxWidth: 'none',
-      // height: '100%',
       padding: '5px',
-      // display: 'block',
-      // overflow: 'auto',
-      // border: 'none'
+      overflow: 'auto',
+      display: 'block',
+      width: '100%',
+      height: '100%'
     },
     contentStyles: {
       maxWidth: 'none',
